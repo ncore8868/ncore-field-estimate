@@ -6649,6 +6649,26 @@
     }
 
 
+    /* === v12: 견적서 화면 저장금액 우선 표시 + 금액 박스 안정화 === */
+    .estimate-total-box {
+      grid-template-columns: 122px minmax(0, 1fr) !important;
+      min-height: 88px !important;
+      height: 88px !important;
+      padding: 0 26px !important;
+    }
+
+    .estimate-total-value {
+      font-size: clamp(25px, 2.15vw, 31px) !important;
+      max-width: 100% !important;
+      overflow: hidden !important;
+    }
+
+    .estimate-total-number,
+    .estimate-total-unit {
+      line-height: 1 !important;
+      white-space: nowrap !important;
+    }
+
   </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -8294,7 +8314,8 @@
       document.getElementById("estimateAddress").textContent = project.address || "-";
       document.getElementById("estimateSavedAt").textContent = saved.savedAt ? formatDateTime(saved.savedAt) : "-";
       document.getElementById("estimateScopeCount").textContent = totalSelected + "개";
-      document.getElementById("estimateTotalAmount").innerHTML = buildWonMarkup(getDisplayTotalAmount(), "estimate-total-number", "estimate-total-unit");
+      const estimateTotalForView = Number(saved.total || getDisplayTotalAmount() || 0);
+      document.getElementById("estimateTotalAmount").innerHTML = buildWonMarkup(estimateTotalForView, "estimate-total-number", "estimate-total-unit");
 
       const summaryGrid = document.getElementById("estimateSummaryGrid");
       summaryGrid.innerHTML = activeRatios.map(item => `
