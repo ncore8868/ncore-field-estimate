@@ -6061,6 +6061,158 @@
       }
     }
 
+
+    /* === v80: 총확인금액 / PDF 금액 / 헤더 정렬 보정 === */
+    .estimate-total-box {
+      min-height: 94px !important;
+      padding: 14px 22px !important;
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      grid-template-rows: auto auto !important;
+      align-content: center !important;
+      gap: 8px !important;
+    }
+
+    .estimate-total-label {
+      min-height: auto !important;
+      display: block !important;
+      white-space: nowrap !important;
+      line-height: 1.06 !important;
+      margin: 0 !important;
+      font-size: 17px !important;
+      letter-spacing: -0.35px !important;
+    }
+
+    .estimate-total-value {
+      min-height: auto !important;
+      display: flex !important;
+      justify-content: flex-end !important;
+      align-items: flex-end !important;
+      line-height: 0.98 !important;
+      letter-spacing: -0.85px !important;
+      font-variant-numeric: tabular-nums lining-nums !important;
+      font-feature-settings: "tnum" 1, "lnum" 1 !important;
+    }
+
+    .estimate-paper-head {
+      min-height: 102px !important;
+      grid-template-columns: minmax(0, 1fr) 320px !important;
+      align-items: center !important;
+    }
+
+    .estimate-head-brand {
+      min-height: 70px !important;
+      align-items: center !important;
+    }
+
+    .estimate-head-title-wrap {
+      min-height: 70px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-self: center !important;
+    }
+
+    .estimate-doc-meta {
+      min-height: 70px !important;
+      align-content: center !important;
+      align-self: center !important;
+    }
+
+    .pdf-topbar {
+      min-height: 100px !important;
+      display: grid !important;
+      grid-template-columns: 270px minmax(0, 1fr) !important;
+      align-items: center !important;
+      gap: 22px !important;
+      padding: 14px 18px !important;
+    }
+
+    .pdf-brand {
+      width: 270px !important;
+      height: 62px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      align-self: center !important;
+    }
+
+    .pdf-brand img {
+      width: 100% !important;
+      max-width: 100% !important;
+      max-height: 62px !important;
+      height: auto !important;
+      object-fit: contain !important;
+      object-position: left center !important;
+      display: block !important;
+      margin: 0 !important;
+    }
+
+    .pdf-title-wrap {
+      min-height: 62px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-self: center !important;
+      text-align: right !important;
+    }
+
+    .pdf-title {
+      margin: 0 0 4px !important;
+      line-height: 1.02 !important;
+    }
+
+    .pdf-date {
+      line-height: 1.1 !important;
+    }
+
+    .pdf-total {
+      min-height: 78px !important;
+      padding: 0 22px !important;
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      align-items: center !important;
+      gap: 14px !important;
+    }
+
+    .pdf-total-label {
+      min-height: 78px !important;
+      display: flex !important;
+      align-items: center !important;
+      white-space: nowrap !important;
+      font-size: 17px !important;
+      font-weight: 900 !important;
+      letter-spacing: -0.35px !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+    }
+
+    .pdf-total-value {
+      min-height: 78px !important;
+      display: flex !important;
+      align-items: baseline !important;
+      justify-content: flex-end !important;
+      gap: 5px !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+      font-size: 31px !important;
+      font-weight: 950 !important;
+      letter-spacing: -0.15px !important;
+      white-space: nowrap !important;
+      font-variant-numeric: tabular-nums lining-nums !important;
+      font-feature-settings: "tnum" 1, "lnum" 1 !important;
+    }
+
+    .pdf-total-number {
+      display: inline-block !important;
+      letter-spacing: -0.05px !important;
+    }
+
+    .pdf-total-unit {
+      display: inline-block !important;
+      margin-left: 3px !important;
+      letter-spacing: 0 !important;
+    }
   </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -6863,6 +7015,14 @@
       return rounded.toLocaleString("ko-KR") + "원";
     }
 
+    function getWonParts(num) {
+      const rounded = Math.round((Number(num) || 0) / 10000) * 10000;
+      return {
+        number: rounded.toLocaleString("ko-KR"),
+        unit: "원"
+      };
+    }
+
     function parseMoney(value) {
       return Number(String(value).replace(/[^0-9]/g, "")) || 0;
     }
@@ -7480,6 +7640,7 @@
       const activeAmounts = getActiveRatioItems();
       const allItemCount = sections.reduce((sum, section) => sum + section.items.length, 0);
       const density = allItemCount > 30 ? "dense-2" : (allItemCount > 17 ? "dense-1" : "");
+      const pdfTotalParts = getWonParts(saved.total || getDisplayTotalAmount());
 
       const summaryKeys = ["demolition", "restoration", "equipment", "waste", "protection"];
       const summaryHtml = summaryKeys.map(key => {
@@ -7548,7 +7709,7 @@
 
           <div class="pdf-total">
             <div class="pdf-total-label">총 확인 금액</div>
-            <div class="pdf-total-value">${escapePdfHtml(formatWon(saved.total || getDisplayTotalAmount()))}</div>
+            <div class="pdf-total-value"><span class="pdf-total-number">${escapePdfHtml(pdfTotalParts.number)}</span><span class="pdf-total-unit">${escapePdfHtml(pdfTotalParts.unit)}</span></div>
           </div>
 
           <div class="pdf-summary">${summaryHtml}</div>
