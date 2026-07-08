@@ -1,11 +1,11 @@
-const CACHE_NAME = "ncore-field-estimate-pwa-v1";
+const CACHE_NAME = "ncore-field-estimate-pwa-v2";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./PretendardVariable.woff2",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
