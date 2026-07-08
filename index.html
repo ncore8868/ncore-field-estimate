@@ -6745,6 +6745,167 @@
       }
     }
 
+    /* === v15 FINAL: 견적서 화면 총확인금액 / PDF 총확인금액 완전 분리 === */
+
+    /* 6단계 견적서 화면 전용 총금액 박스 */
+    .estimate-paper-body .estimate-total-box {
+      width: 100% !important;
+      min-width: 0 !important;
+      height: 88px !important;
+      min-height: 88px !important;
+      padding: 0 22px !important;
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 12px !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      line-height: 1 !important;
+    }
+
+    .estimate-paper-body .estimate-total-label {
+      flex: 0 0 auto !important;
+      min-width: 0 !important;
+      max-width: 94px !important;
+      height: auto !important;
+      min-height: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      white-space: nowrap !important;
+      word-break: keep-all !important;
+      line-height: 1 !important;
+      font-size: 16px !important;
+      font-weight: 900 !important;
+      letter-spacing: -0.04em !important;
+      transform: none !important;
+    }
+
+    .estimate-paper-body .estimate-total-value {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      width: auto !important;
+      height: auto !important;
+      min-height: 0 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: visible !important;
+      text-align: right !important;
+      white-space: nowrap !important;
+      line-height: 1 !important;
+      font-size: clamp(24px, 2.04vw, 28px) !important;
+      font-weight: 950 !important;
+      letter-spacing: -0.045em !important;
+      font-variant-numeric: tabular-nums lining-nums !important;
+      font-feature-settings: "tnum" 1, "lnum" 1 !important;
+      transform: none !important;
+    }
+
+    .estimate-paper-body .estimate-total-number {
+      display: inline-block !important;
+      flex: 0 1 auto !important;
+      min-width: 0 !important;
+      overflow: visible !important;
+      line-height: 1 !important;
+      letter-spacing: -0.045em !important;
+      white-space: nowrap !important;
+    }
+
+    .estimate-paper-body .estimate-total-unit {
+      display: inline-block !important;
+      flex: 0 0 auto !important;
+      margin-left: 0.14em !important;
+      line-height: 1 !important;
+      letter-spacing: -0.035em !important;
+      white-space: nowrap !important;
+    }
+
+    /* 화면 폭이 아주 좁거나 금액이 큰 경우: 라벨을 작게, 금액을 더 안전하게 */
+    @media (max-width: 1366px) {
+      .estimate-paper-body .estimate-total-box {
+        padding: 0 20px !important;
+        gap: 10px !important;
+      }
+
+      .estimate-paper-body .estimate-total-label {
+        max-width: 88px !important;
+        font-size: 15px !important;
+      }
+
+      .estimate-paper-body .estimate-total-value {
+        font-size: clamp(22px, 1.85vw, 26px) !important;
+        letter-spacing: -0.055em !important;
+      }
+    }
+
+    /* PDF 전용 총금액 박스: 화면용 설정과 분리 */
+    .pdf-paper .pdf-total {
+      min-height: 88px !important;
+      height: 88px !important;
+      padding: 0 28px !important;
+      display: grid !important;
+      grid-template-columns: 132px minmax(0, 1fr) !important;
+      align-items: center !important;
+      column-gap: 22px !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    .pdf-paper .pdf-total-label {
+      min-height: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      white-space: nowrap !important;
+      line-height: 1.06 !important;
+      font-size: 17px !important;
+      font-weight: 900 !important;
+      letter-spacing: -0.02em !important;
+    }
+
+    .pdf-paper .pdf-total-value {
+      min-width: 0 !important;
+      width: 100% !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      gap: 0 !important;
+      overflow: visible !important;
+      text-align: right !important;
+      white-space: nowrap !important;
+      line-height: 1 !important;
+      font-size: 31px !important;
+      font-weight: 950 !important;
+      letter-spacing: -0.015em !important;
+      font-variant-numeric: tabular-nums lining-nums !important;
+      font-feature-settings: "tnum" 1, "lnum" 1 !important;
+    }
+
+    .pdf-paper .pdf-total-number {
+      display: inline-block !important;
+      line-height: 1 !important;
+      letter-spacing: -0.01em !important;
+      white-space: nowrap !important;
+    }
+
+    .pdf-paper .pdf-total-unit {
+      display: inline-block !important;
+      flex-shrink: 0 !important;
+      margin-left: 0.18em !important;
+      line-height: 1 !important;
+      letter-spacing: -0.01em !important;
+      white-space: nowrap !important;
+    }
+
   </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
