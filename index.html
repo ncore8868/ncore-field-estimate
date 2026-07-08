@@ -5466,6 +5466,120 @@
       }
     }
 
+
+    /* === v75: 상단 로고 박스 완성 이미지 적용 / 비율 고정 / PDF 중앙 정렬 보정 === */
+    .estimate-head-brand {
+      grid-template-columns: 260px minmax(0, 1fr) !important;
+      gap: 20px !important;
+      align-items: center !important;
+    }
+
+    .estimate-head-logo-wrap {
+      width: 260px !important;
+      height: 78px !important;
+      padding: 0 !important;
+      border-radius: 18px !important;
+      overflow: hidden !important;
+      background: #FFFFFF !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: 0 10px 22px rgba(0,0,0,.14) !important;
+    }
+
+    .estimate-head-logo {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      object-position: center center !important;
+      display: block !important;
+      border-radius: inherit !important;
+    }
+
+    .estimate-watermark {
+      top: 62% !important;
+      width: min(62%, 620px) !important;
+      opacity: .105 !important;
+      filter: grayscale(1) contrast(.92) !important;
+      z-index: 1 !important;
+    }
+
+    .estimate-paper-head,
+    .estimate-paper-body {
+      position: relative !important;
+      z-index: 2 !important;
+    }
+
+    .pdf-topbar {
+      grid-template-columns: 270px minmax(0, 1fr) !important;
+      min-height: 104px !important;
+      align-items: center !important;
+    }
+
+    .pdf-brand {
+      width: 250px !important;
+      height: 75px !important;
+      padding: 0 !important;
+      border-radius: 17px !important;
+      overflow: hidden !important;
+      background: #FFFFFF !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    .pdf-brand img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      object-position: center center !important;
+      display: block !important;
+      border-radius: inherit !important;
+    }
+
+    .pdf-watermark {
+      top: 63% !important;
+      width: 560px !important;
+      max-height: 200px !important;
+      opacity: .11 !important;
+      filter: grayscale(1) contrast(.92) !important;
+      z-index: 1 !important;
+    }
+
+    .pdf-paper > *:not(.pdf-watermark) {
+      position: relative !important;
+      z-index: 2 !important;
+    }
+
+    .pdf-total {
+      min-height: 64px !important;
+      padding: 0 22px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+    }
+
+    .pdf-total-label,
+    .pdf-total-value {
+      display: flex !important;
+      align-items: center !important;
+      margin: 0 !important;
+      line-height: 1 !important;
+    }
+
+    @media (max-height: 720px) and (orientation: landscape) {
+      .estimate-head-brand {
+        grid-template-columns: 230px minmax(0, 1fr) !important;
+        gap: 16px !important;
+      }
+
+      .estimate-head-logo-wrap {
+        width: 230px !important;
+        height: 69px !important;
+        border-radius: 16px !important;
+      }
+    }
+
   </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -5920,7 +6034,7 @@
             <div class="estimate-paper-head">
               <div class="estimate-head-brand">
                 <div class="estimate-head-logo-wrap">
-                  <img class="estimate-head-logo" src="./ncore-logo.png" alt="N-CORE" />
+                  <img class="estimate-head-logo" src="./ncore-logo-box.png" alt="N-CORE" />
                 </div>
                 <div class="estimate-head-title-wrap">
                   <h1 class="estimate-doc-title">현장 견적서</h1>
@@ -6869,6 +6983,7 @@
     }
 
     const NCORE_LOGO_DATA_URI = "./ncore-logo.png";
+    const NCORE_LOGO_BOX_URI = "./ncore-logo-box.png";
 
     function buildPdfRenderPage() {
       calc();
@@ -6927,7 +7042,7 @@
           <img class="pdf-watermark" src="${NCORE_LOGO_DATA_URI}" alt="" aria-hidden="true" />
           <div class="pdf-topbar">
             <div class="pdf-brand">
-              <img src="${NCORE_LOGO_DATA_URI}" alt="N-CORE" />
+              <img src="${NCORE_LOGO_BOX_URI}" alt="N-CORE" />
             </div>
             <div class="pdf-title-wrap">
               <h1 class="pdf-title">현장 견적서</h1>
