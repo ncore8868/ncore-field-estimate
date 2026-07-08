@@ -7481,7 +7481,7 @@
 
     function buildWonMarkup(num, numberClass = "won-number", unitClass = "won-unit") {
       const parts = getWonParts(num);
-      return `<span class="${numberClass}">${escapeHtml(parts.number)}</span><span class="${unitClass}">${escapeHtml(parts.unit)}</span>`;
+      return `<span class="${numberClass}">${escapePdfHtml(parts.number)}</span><span class="${unitClass}">${escapePdfHtml(parts.unit)}</span>`;
     }
 
     function parseMoney(value) {
