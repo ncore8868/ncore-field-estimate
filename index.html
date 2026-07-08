@@ -5580,6 +5580,318 @@
       }
     }
 
+
+    /* === v76: 워터마크를 박스 위 반투명 오버레이로 변경 === */
+    .estimate-paper {
+      position: relative !important;
+      isolation: isolate !important;
+    }
+
+    .estimate-watermark {
+      position: absolute !important;
+      left: 50% !important;
+      top: 67% !important;
+      transform: translate(-50%, -50%) !important;
+      width: min(68%, 700px) !important;
+      max-height: 230px !important;
+      object-fit: contain !important;
+      opacity: .052 !important;
+      z-index: 20 !important;
+      pointer-events: none !important;
+      user-select: none !important;
+      filter: grayscale(1) contrast(.86) !important;
+      mix-blend-mode: multiply !important;
+    }
+
+    .estimate-paper-head,
+    .estimate-paper-body {
+      position: relative !important;
+      z-index: 3 !important;
+    }
+
+    .estimate-paper-head *,
+    .estimate-paper-body * {
+      position: relative;
+    }
+
+    .pdf-paper {
+      position: relative !important;
+      isolation: isolate !important;
+    }
+
+    .pdf-watermark {
+      position: absolute !important;
+      left: 50% !important;
+      top: 66% !important;
+      transform: translate(-50%, -50%) !important;
+      width: 610px !important;
+      max-height: 220px !important;
+      object-fit: contain !important;
+      opacity: .058 !important;
+      z-index: 50 !important;
+      pointer-events: none !important;
+      user-select: none !important;
+      filter: grayscale(1) contrast(.86) !important;
+      mix-blend-mode: multiply !important;
+    }
+
+    .pdf-paper > *:not(.pdf-watermark) {
+      position: relative !important;
+      z-index: 2 !important;
+    }
+
+    .pdf-paper .pdf-watermark {
+      z-index: 50 !important;
+    }
+
+  
+
+    /* === v77: 검은 헤더용 로고 직접 적용 / 상하 여백 균형 / 워터마크 하단 배치 최종 === */
+    .estimate-paper,
+    .pdf-paper {
+      position: relative !important;
+      isolation: isolate !important;
+    }
+
+    .estimate-paper-head {
+      grid-template-columns: minmax(0, 1fr) 320px !important;
+      gap: 16px !important;
+      align-items: center !important;
+      padding: 14px 18px !important;
+    }
+
+    .estimate-head-brand {
+      grid-template-columns: 284px minmax(0, 1fr) !important;
+      gap: 18px !important;
+      align-items: center !important;
+    }
+
+    .estimate-head-logo-wrap {
+      width: 284px !important;
+      height: 64px !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+    }
+
+    .estimate-head-logo {
+      width: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      height: auto !important;
+      object-fit: contain !important;
+      object-position: left center !important;
+      display: block !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+    }
+
+    .estimate-head-title-wrap {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      min-height: 64px !important;
+    }
+
+    .estimate-paper-head .estimate-doc-title {
+      margin: 0 !important;
+      line-height: 1.02 !important;
+    }
+
+    .estimate-paper-head .estimate-doc-sub {
+      margin-top: 6px !important;
+      line-height: 1.35 !important;
+    }
+
+    .estimate-paper-head .estimate-doc-meta {
+      align-self: stretch !important;
+      min-height: 92px !important;
+      display: grid !important;
+      align-content: center !important;
+    }
+
+    .estimate-total-box {
+      min-height: 82px !important;
+      padding: 0 22px !important;
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      align-items: center !important;
+      gap: 12px !important;
+    }
+
+    .estimate-total-label,
+    .estimate-total-value {
+      display: flex !important;
+      align-items: center !important;
+      min-height: 82px !important;
+      margin: 0 !important;
+      line-height: 1 !important;
+    }
+
+    .estimate-total-label {
+      font-size: 18px !important;
+      font-weight: 900 !important;
+      opacity: .98 !important;
+    }
+
+    .estimate-total-value {
+      justify-content: flex-end !important;
+      font-size: 33px !important;
+      font-weight: 950 !important;
+      letter-spacing: -1.3px !important;
+      white-space: nowrap !important;
+    }
+
+    .estimate-watermark {
+      left: 50% !important;
+      top: 84% !important;
+      width: min(54%, 560px) !important;
+      max-height: 170px !important;
+      transform: translate(-50%, -50%) !important;
+      opacity: .038 !important;
+      filter: grayscale(1) brightness(.72) contrast(.88) !important;
+      z-index: 0 !important;
+      mix-blend-mode: normal !important;
+      pointer-events: none !important;
+    }
+
+    .estimate-paper-head,
+    .estimate-paper-body {
+      position: relative !important;
+      z-index: 1 !important;
+    }
+
+    .pdf-topbar {
+      min-height: 96px !important;
+      grid-template-columns: 260px minmax(0, 1fr) !important;
+      gap: 22px !important;
+      align-items: center !important;
+      padding: 15px 18px !important;
+    }
+
+    .pdf-brand {
+      width: 244px !important;
+      height: 56px !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+    }
+
+    .pdf-brand img {
+      width: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      height: auto !important;
+      object-fit: contain !important;
+      object-position: left center !important;
+      display: block !important;
+      margin: 0 !important;
+    }
+
+    .pdf-title-wrap {
+      min-height: 56px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+    }
+
+    .pdf-title {
+      margin: 0 0 6px !important;
+      line-height: 1.02 !important;
+    }
+
+    .pdf-total {
+      min-height: 76px !important;
+      padding: 0 22px !important;
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      align-items: center !important;
+      gap: 12px !important;
+    }
+
+    .pdf-total-label,
+    .pdf-total-value {
+      display: flex !important;
+      align-items: center !important;
+      min-height: 76px !important;
+      margin: 0 !important;
+      line-height: 1 !important;
+    }
+
+    .pdf-total-label {
+      font-size: 17px !important;
+      font-weight: 900 !important;
+    }
+
+    .pdf-total-value {
+      justify-content: flex-end !important;
+      font-size: 32px !important;
+      font-weight: 950 !important;
+      white-space: nowrap !important;
+    }
+
+    .pdf-watermark {
+      left: 50% !important;
+      top: 84% !important;
+      width: 505px !important;
+      max-height: 150px !important;
+      transform: translate(-50%, -50%) !important;
+      opacity: .036 !important;
+      filter: grayscale(1) brightness(.72) contrast(.88) !important;
+      z-index: 0 !important;
+      mix-blend-mode: normal !important;
+      pointer-events: none !important;
+    }
+
+    .pdf-paper > *:not(.pdf-watermark) {
+      position: relative !important;
+      z-index: 1 !important;
+    }
+
+    @media (max-height: 720px) and (orientation: landscape) {
+      .estimate-paper-head {
+        grid-template-columns: minmax(0, 1fr) 300px !important;
+      }
+
+      .estimate-head-brand {
+        grid-template-columns: 248px minmax(0, 1fr) !important;
+        gap: 14px !important;
+      }
+
+      .estimate-head-logo-wrap {
+        width: 248px !important;
+        height: 56px !important;
+      }
+
+      .estimate-total-box {
+        min-height: 76px !important;
+      }
+
+      .estimate-total-label,
+      .estimate-total-value {
+        min-height: 76px !important;
+      }
+
+      .estimate-watermark {
+        top: 85% !important;
+        width: min(50%, 500px) !important;
+      }
+    }
+
   </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
