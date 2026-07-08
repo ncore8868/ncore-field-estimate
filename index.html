@@ -4773,7 +4773,7 @@
       content: "";
       position: absolute;
       inset: 96px 18px 28px;
-      background-image: url("./ncore-logo.png");
+      background-image: url("./ncore-watermark-v7.png");
       background-repeat: no-repeat;
       background-position: center center;
       background-size: min(430px, 58%) auto;
@@ -5037,7 +5037,7 @@
       content: "";
       position: absolute;
       inset: 210px 42px 82px;
-      background-image: url("./ncore-logo.png");
+      background-image: url("./ncore-watermark-v7.png");
       background-repeat: no-repeat;
       background-position: center center;
       background-size: 430px auto;
@@ -5892,6 +5892,175 @@
       }
     }
 
+  
+
+    /* === v78 FINAL: 흰박스 완전 제거 + 새 파일명 캐시 우회 === */
+    .estimate-head-logo-wrap,
+    .pdf-brand {
+      background: transparent !important;
+      background-color: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      outline: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      overflow: visible !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+    }
+
+    .estimate-head-logo-wrap::before,
+    .estimate-head-logo-wrap::after,
+    .pdf-brand::before,
+    .pdf-brand::after {
+      display: none !important;
+      content: none !important;
+      background: transparent !important;
+    }
+
+    .estimate-head-logo {
+      content: url("./ncore-dark-logo-v7.png") !important;
+      width: 292px !important;
+      height: auto !important;
+      max-width: 292px !important;
+      max-height: 70px !important;
+      object-fit: contain !important;
+      object-position: left center !important;
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    .pdf-brand img {
+      content: url("./ncore-dark-logo-v7.png") !important;
+      width: 252px !important;
+      height: auto !important;
+      max-width: 252px !important;
+      max-height: 62px !important;
+      object-fit: contain !important;
+      object-position: left center !important;
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    .estimate-head-brand {
+      grid-template-columns: 305px minmax(0, 1fr) !important;
+      align-items: center !important;
+      gap: 18px !important;
+    }
+
+    .estimate-head-logo-wrap {
+      width: 305px !important;
+      height: 72px !important;
+    }
+
+    .pdf-topbar {
+      grid-template-columns: 270px minmax(0, 1fr) !important;
+      align-items: center !important;
+    }
+
+    .pdf-brand {
+      width: 270px !important;
+      height: 68px !important;
+    }
+
+    .estimate-paper-head {
+      align-items: center !important;
+      padding-top: 14px !important;
+      padding-bottom: 14px !important;
+    }
+
+    .pdf-topbar {
+      padding-top: 15px !important;
+      padding-bottom: 15px !important;
+    }
+
+    .estimate-total-box {
+      min-height: 82px !important;
+      padding: 0 22px !important;
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      align-items: center !important;
+    }
+
+    .estimate-total-label,
+    .estimate-total-value,
+    .pdf-total-label,
+    .pdf-total-value {
+      align-items: center !important;
+      margin: 0 !important;
+      line-height: 1 !important;
+    }
+
+    .estimate-total-label,
+    .estimate-total-value {
+      min-height: 82px !important;
+      display: flex !important;
+    }
+
+    .pdf-total {
+      min-height: 76px !important;
+      padding: 0 22px !important;
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      align-items: center !important;
+    }
+
+    .pdf-total-label,
+    .pdf-total-value {
+      min-height: 76px !important;
+      display: flex !important;
+    }
+
+    .estimate-watermark {
+      content: url("./ncore-watermark-v7.png") !important;
+      top: 84% !important;
+      opacity: .038 !important;
+      z-index: 0 !important;
+      mix-blend-mode: normal !important;
+    }
+
+    .pdf-watermark {
+      content: url("./ncore-watermark-v7.png") !important;
+      top: 84% !important;
+      opacity: .036 !important;
+      z-index: 0 !important;
+      mix-blend-mode: normal !important;
+    }
+
+    .estimate-paper-head,
+    .estimate-paper-body,
+    .pdf-paper > *:not(.pdf-watermark) {
+      position: relative !important;
+      z-index: 1 !important;
+    }
+
+    @media (max-height: 720px) and (orientation: landscape) {
+      .estimate-head-brand {
+        grid-template-columns: 270px minmax(0, 1fr) !important;
+      }
+      .estimate-head-logo-wrap {
+        width: 270px !important;
+        height: 64px !important;
+      }
+      .estimate-head-logo {
+        width: 260px !important;
+        max-width: 260px !important;
+        max-height: 62px !important;
+      }
+    }
+
   </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -6342,11 +6511,11 @@
       <section class="estimate-content">
         <section class="panel estimate-doc">
           <div class="estimate-paper">
-            <img class="estimate-watermark" src="./ncore-logo.png" alt="" aria-hidden="true" />
+            <img class="estimate-watermark" src="./ncore-watermark-v7.png" alt="" aria-hidden="true" />
             <div class="estimate-paper-head">
               <div class="estimate-head-brand">
                 <div class="estimate-head-logo-wrap">
-                  <img class="estimate-head-logo" src="./ncore-logo-box.png" alt="N-CORE" />
+                  <img class="estimate-head-logo" src="./ncore-dark-logo-v7.png" alt="N-CORE" />
                 </div>
                 <div class="estimate-head-title-wrap">
                   <h1 class="estimate-doc-title">현장 견적서</h1>
@@ -7294,8 +7463,8 @@
         .filter(Boolean);
     }
 
-    const NCORE_LOGO_DATA_URI = "./ncore-logo.png";
-    const NCORE_LOGO_BOX_URI = "./ncore-logo-box.png";
+    const NCORE_LOGO_DATA_URI = "./ncore-watermark-v7.png";
+    const NCORE_LOGO_BOX_URI = "./ncore-dark-logo-v7.png";
 
     function buildPdfRenderPage() {
       calc();
