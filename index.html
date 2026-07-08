@@ -6062,36 +6062,42 @@
     }
 
 
-    /* === v80: 총확인금액 / PDF 금액 / 헤더 정렬 보정 === */
+    /* === v90: 총확인금액 / PDF 금액 / 헤더 정렬 재보정 === */
     .estimate-total-box {
-      min-height: 94px !important;
-      padding: 14px 22px !important;
+      min-height: 96px !important;
+      padding: 14px 24px !important;
       display: grid !important;
-      grid-template-columns: 1fr !important;
-      grid-template-rows: auto auto !important;
-      align-content: center !important;
-      gap: 8px !important;
+      grid-template-columns: 78px minmax(0, 1fr) !important;
+      grid-template-rows: 1fr !important;
+      align-items: center !important;
+      column-gap: 16px !important;
+      row-gap: 0 !important;
     }
 
     .estimate-total-label {
       min-height: auto !important;
-      display: block !important;
-      white-space: nowrap !important;
-      line-height: 1.06 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      white-space: normal !important;
+      word-break: keep-all !important;
+      line-height: 1.04 !important;
       margin: 0 !important;
-      font-size: 17px !important;
-      letter-spacing: -0.35px !important;
+      font-size: 16px !important;
+      font-weight: 900 !important;
+      letter-spacing: -0.22px !important;
     }
 
     .estimate-total-value {
       min-height: auto !important;
       display: flex !important;
       justify-content: flex-end !important;
-      align-items: flex-end !important;
-      line-height: 0.98 !important;
-      letter-spacing: -0.85px !important;
+      align-items: center !important;
+      line-height: 1 !important;
+      letter-spacing: 0.08px !important;
       font-variant-numeric: tabular-nums lining-nums !important;
       font-feature-settings: "tnum" 1, "lnum" 1 !important;
+      font-kerning: none !important;
     }
 
     .estimate-paper-head {
@@ -6120,17 +6126,18 @@
     }
 
     .pdf-topbar {
-      min-height: 100px !important;
+      min-height: 102px !important;
       display: grid !important;
-      grid-template-columns: 270px minmax(0, 1fr) !important;
+      grid-template-columns: minmax(0, 1fr) 340px !important;
       align-items: center !important;
       gap: 22px !important;
       padding: 14px 18px !important;
     }
 
     .pdf-brand {
-      width: 270px !important;
-      height: 62px !important;
+      width: 100% !important;
+      max-width: 460px !important;
+      height: 58px !important;
       display: flex !important;
       align-items: center !important;
       justify-content: flex-start !important;
@@ -6138,10 +6145,10 @@
     }
 
     .pdf-brand img {
-      width: 100% !important;
+      width: auto !important;
       max-width: 100% !important;
-      max-height: 62px !important;
-      height: auto !important;
+      max-height: 58px !important;
+      height: 58px !important;
       object-fit: contain !important;
       object-position: left center !important;
       display: block !important;
@@ -6149,69 +6156,76 @@
     }
 
     .pdf-title-wrap {
-      min-height: 62px !important;
+      min-height: 58px !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: center !important;
+      align-items: flex-end !important;
       align-self: center !important;
       text-align: right !important;
+      gap: 4px !important;
     }
 
     .pdf-title {
-      margin: 0 0 4px !important;
-      line-height: 1.02 !important;
+      margin: 0 !important;
+      line-height: 0.98 !important;
     }
 
     .pdf-date {
-      line-height: 1.1 !important;
+      margin: 0 !important;
+      line-height: 1.08 !important;
     }
 
     .pdf-total {
-      min-height: 78px !important;
-      padding: 0 22px !important;
+      min-height: 82px !important;
+      padding: 0 24px !important;
       display: grid !important;
-      grid-template-columns: 1fr auto !important;
+      grid-template-columns: 150px minmax(0, 1fr) !important;
       align-items: center !important;
       gap: 14px !important;
     }
 
     .pdf-total-label {
-      min-height: 78px !important;
+      min-height: auto !important;
       display: flex !important;
       align-items: center !important;
       white-space: nowrap !important;
       font-size: 17px !important;
       font-weight: 900 !important;
-      letter-spacing: -0.35px !important;
+      letter-spacing: -0.22px !important;
       line-height: 1 !important;
       margin: 0 !important;
     }
 
     .pdf-total-value {
-      min-height: 78px !important;
+      min-height: auto !important;
       display: flex !important;
-      align-items: baseline !important;
+      align-items: center !important;
       justify-content: flex-end !important;
-      gap: 5px !important;
+      gap: 8px !important;
       line-height: 1 !important;
       margin: 0 !important;
       font-size: 31px !important;
       font-weight: 950 !important;
-      letter-spacing: -0.15px !important;
+      letter-spacing: 0 !important;
       white-space: nowrap !important;
       font-variant-numeric: tabular-nums lining-nums !important;
       font-feature-settings: "tnum" 1, "lnum" 1 !important;
+      font-kerning: none !important;
     }
 
     .pdf-total-number {
       display: inline-block !important;
-      letter-spacing: -0.05px !important;
+      letter-spacing: 0.24px !important;
+      font-kerning: none !important;
     }
 
     .pdf-total-unit {
       display: inline-block !important;
-      margin-left: 3px !important;
-      letter-spacing: 0 !important;
+      margin-left: 6px !important;
+      padding-left: 1px !important;
+      letter-spacing: 0.08px !important;
+      font-kerning: none !important;
     }
   </style>
   <link rel="manifest" href="./manifest.webmanifest" />
