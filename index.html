@@ -547,6 +547,13 @@
       opacity: .9;
     }
 
+    .nav-btn:disabled {
+      opacity: .56;
+      cursor: wait;
+      box-shadow: none;
+      transform: none;
+    }
+
     .prev {
       background: #FFFFFF;
       border: 1px solid var(--line);
@@ -2808,7 +2815,7 @@
       line-height: 1.45;
     }
 
-    #pdfRenderHost {
+    #imageRenderHost {
       position: fixed;
       left: -20000px;
       top: 0;
@@ -5015,7 +5022,7 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
-    #pdfRenderHost {
+    #imageRenderHost {
       width: 794px;
       height: 1123px;
       background: #FFFFFF;
@@ -7423,28 +7430,28 @@
             <div id="estimateSendStatus" class="estimate-status-value">발송 전</div>
           </div>
 
-          <div class="estimate-send-note">
-            발송 전 고객 정보와 견적 내용을 확인해 주세요.
+          <div class="estimate-status-card">
+            <div class="estimate-status-label">복사할 연락처</div>
+            <div id="estimateCopyPhone" class="estimate-status-value">-</div>
           </div>
 
-          <div class="estimate-pdf-actions">
-            <button type="button" id="pdfShareBtn" class="estimate-pdf-btn primary">PDF 생성 · 공유하기</button>
-            <button type="button" id="pdfSaveBtn" class="estimate-pdf-btn secondary">PDF만 저장</button>
-            <div id="pdfActionStatus" class="estimate-pdf-status">한 장짜리 견적서 PDF를 생성합니다.</div>
+          <div class="estimate-send-note">
+            <strong>발송하기</strong>를 누르면 고객 연락처가 자동으로 복사되고 PNG 견적서 공유창이 열립니다.<br />
+            메시지를 선택한 뒤 수신자 칸에 붙여넣어 주세요.
           </div>
         </aside>
       </section>
 
       <nav class="bottom-nav">
         <button id="page5Prev" class="nav-btn prev">이전</button>
-        <div class="bottom-status">현재 단계: <strong>견적서</strong> PDF 생성 및 공유</div>
+        <div class="bottom-status">연락처 자동복사 · <strong>PNG 견적서</strong> 공유</div>
         <button id="page5Send" class="nav-btn next">발송하기</button>
       </nav>
     </section>
 
   </main>
 
-    <div id="pdfRenderHost" aria-hidden="true"></div>
+    <div id="imageRenderHost" aria-hidden="true"></div>
 
   <div id="exitModal" class="modal-backdrop">
     <div class="modal-card">
@@ -7542,28 +7549,9 @@
     </div>
   </div>
 
-  <div id="sendModal" class="modal-backdrop">
-    <div class="modal-card">
-      <div class="modal-title">견적서 발송</div>
-      <div class="modal-text">
-        발송할 연락처를 입력해 주세요.
-        <input id="sendPhoneInput" class="send-field" type="tel" inputmode="numeric" placeholder="010-0000-0000" />
-        <div class="send-preview">
-          [N-CORE] 현장 견적서가 전송됩니다.<br />
-          총 확인 금액과 세부 작업 범위가 함께 발송됩니다.
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button id="sendCancel" class="modal-btn cancel">취소</button>
-        <button id="sendConfirm" class="modal-btn confirm">발송하기</button>
-      </div>
-    </div>
-  </div>
-
 
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxBct_RGHwnqkF6ONRxQ0bqk3Q4J8dNZJanvPM84UJQaEleIzFP4Lg1suWOkoRc5qzc/exec"; // Apps Script 웹앱 URL
 
@@ -8286,13 +8274,13 @@
         .replace(/'/g, "&#039;");
     }
 
-    function getPdfSafeFileName() {
+    function getPngSafeFileName() {
       const name = (state.project.customerName || "고객").replace(/[\\/:*?"<>|]/g, "").trim() || "고객";
       const date = new Date();
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, "0");
       const d = String(date.getDate()).padStart(2, "0");
-      return `${name}_현장견적서_${y}${m}${d}.pdf`;
+      return `${name}_현장견적서_${y}${m}${d}.png`;
     }
 
     function getPdfDisplaySections() {
@@ -8426,24 +8414,33 @@
       `;
     }
 
-    function setPdfActionState(loading, message) {
-      const shareBtn = document.getElementById("pdfShareBtn");
-      const saveBtn = document.getElementById("pdfSaveBtn");
-      const status = document.getElementById("pdfActionStatus");
+    let preparedEstimatePngFile = null;
+    let prepareEstimatePngToken = 0;
 
-      shareBtn.disabled = loading;
-      saveBtn.disabled = loading;
-      shareBtn.textContent = loading ? "PDF 생성 중..." : "PDF 생성 · 공유하기";
-      saveBtn.textContent = loading ? "잠시만 기다려 주세요" : "PDF만 저장";
-      status.textContent = message || "한 장짜리 견적서 PDF를 생성합니다.";
+    function setSendActionState(loading, message) {
+      const sendBtn = document.getElementById("page5Send");
+      const status = document.getElementById("estimateSendStatus");
+
+      sendBtn.disabled = loading;
+      sendBtn.textContent = loading ? "이미지 준비 중..." : "발송하기";
+      status.textContent = message || "발송 준비 완료";
     }
 
-    async function createEstimatePdfFile() {
-      if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
-        throw new Error("PDF 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
+    function canvasToPngBlob(canvas) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("PNG 이미지 생성에 실패했습니다."));
+        }, "image/png", 1);
+      });
+    }
+
+    async function createEstimatePngFile() {
+      if (!window.html2canvas) {
+        throw new Error("이미지 생성 기능을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
       }
 
-      const host = document.getElementById("pdfRenderHost");
+      const host = document.getElementById("imageRenderHost");
       host.innerHTML = buildPdfRenderPage();
 
       const paper = host.querySelector("#pdfPaper");
@@ -8463,25 +8460,30 @@
         logging: false
       });
 
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-        compress: true
-      });
-
-      const imageData = canvas.toDataURL("image/jpeg", 0.94);
-      pdf.addImage(imageData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
-
       host.innerHTML = "";
-
-      const fileName = getPdfSafeFileName();
-      const blob = pdf.output("blob");
-      return new File([blob], fileName, { type: "application/pdf" });
+      const blob = await canvasToPngBlob(canvas);
+      return new File([blob], getPngSafeFileName(), { type: "image/png" });
     }
 
-    function downloadPdfFile(file) {
+    async function prepareEstimatePng() {
+      const token = ++prepareEstimatePngToken;
+      preparedEstimatePngFile = null;
+      setSendActionState(true, "이미지 준비 중");
+
+      try {
+        const file = await createEstimatePngFile();
+        if (token !== prepareEstimatePngToken) return;
+        preparedEstimatePngFile = file;
+        setSendActionState(false, "발송 준비 완료");
+      } catch (err) {
+        if (token !== prepareEstimatePngToken) return;
+        console.error(err);
+        setSendActionState(false, "이미지 준비 실패");
+        alert(err.message || "PNG 이미지 준비 중 오류가 발생했습니다.");
+      }
+    }
+
+    function downloadPngFile(file) {
       const url = URL.createObjectURL(file);
       const link = document.createElement("a");
       link.href = url;
@@ -8492,46 +8494,75 @@
       window.setTimeout(() => URL.revokeObjectURL(url), 1200);
     }
 
-    async function createAndSharePdf() {
-      setPdfActionState(true, "한 장짜리 PDF를 만들고 있습니다...");
+    function copyPhoneToClipboard(phone) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(phone).then(() => true).catch(() => false);
+      }
 
       try {
-        const file = await createEstimatePdfFile();
+        const textarea = document.createElement("textarea");
+        textarea.value = phone;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        textarea.style.pointerEvents = "none";
+        document.body.appendChild(textarea);
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        const copied = document.execCommand("copy");
+        textarea.remove();
+        return Promise.resolve(copied);
+      } catch (err) {
+        console.error(err);
+        return Promise.resolve(false);
+      }
+    }
 
-        const shareData = {
-          files: [file],
-          title: "N-CORE 현장 견적서",
-          text: `${state.project.customerName || "고객"}님 현장 견적서입니다.`
-        };
+    async function shareEstimatePng() {
+      const phone = String(state.project.phone || state.savedEstimate?.project?.phone || "").trim();
+      if (!phone) {
+        alert("고객 연락처가 없습니다. 이전 단계에서 연락처를 입력해 주세요.");
+        return;
+      }
 
+      if (!preparedEstimatePngFile) {
+        alert("견적서 이미지를 준비하고 있습니다. 잠시 후 다시 눌러 주세요.");
+        prepareEstimatePng();
+        return;
+      }
+
+      const file = preparedEstimatePngFile;
+      const shareData = {
+        files: [file],
+        title: "N-CORE 현장 견적서"
+      };
+      const copyPromise = copyPhoneToClipboard(phone);
+
+      try {
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-          setPdfActionState(true, "공유할 앱을 선택해 주세요.");
-          await navigator.share(shareData);
-          setPdfActionState(false, "공유가 완료되었습니다.");
+          document.getElementById("estimateSendStatus").textContent = "연락처 복사 · 공유창 열림";
+          const sharePromise = navigator.share(shareData);
+          const copied = await copyPromise;
+          await sharePromise;
+          document.getElementById("estimateSendStatus").textContent = copied ? "공유 완료 · 연락처 복사됨" : "공유 완료";
         } else {
-          downloadPdfFile(file);
-          setPdfActionState(false, "공유 기능을 지원하지 않아 PDF 파일을 저장했습니다.");
+          const copied = await copyPromise;
+          downloadPngFile(file);
+          document.getElementById("estimateSendStatus").textContent = copied ? "이미지 저장 · 연락처 복사됨" : "이미지 저장 완료";
+          alert("공유 기능을 지원하지 않아 PNG 견적서를 저장했습니다.");
         }
       } catch (err) {
+        const copied = await copyPromise;
+        if (err && err.name === "AbortError") {
+          document.getElementById("estimateSendStatus").textContent = copied ? "공유 취소 · 연락처 복사됨" : "공유 취소";
+          return;
+        }
         console.error(err);
-        setPdfActionState(false, err.message || "PDF 생성 중 오류가 발생했습니다.");
-        alert(err.message || "PDF 생성 중 오류가 발생했습니다.");
+        document.getElementById("estimateSendStatus").textContent = copied ? "공유 실패 · 연락처 복사됨" : "공유 실패";
+        alert(err.message || "PNG 견적서 공유 중 오류가 발생했습니다.");
       }
     }
 
-    async function createAndSavePdf() {
-      setPdfActionState(true, "한 장짜리 PDF를 만들고 있습니다...");
-
-      try {
-        const file = await createEstimatePdfFile();
-        downloadPdfFile(file);
-        setPdfActionState(false, "PDF 파일이 저장되었습니다.");
-      } catch (err) {
-        console.error(err);
-        setPdfActionState(false, err.message || "PDF 생성 중 오류가 발생했습니다.");
-        alert(err.message || "PDF 생성 중 오류가 발생했습니다.");
-      }
-    }
 
     function renderEstimatePage() {
       calc();
@@ -8548,6 +8579,7 @@
       const project = saved.project || state.project;
       document.getElementById("estimateCustomerName").textContent = project.customerName || "-";
       document.getElementById("estimatePhone").textContent = project.phone || "-";
+      document.getElementById("estimateCopyPhone").textContent = project.phone || "-";
       document.getElementById("estimateAddress").textContent = project.address || "-";
       document.getElementById("estimateSavedAt").textContent = saved.savedAt ? formatDateTime(saved.savedAt) : "-";
       document.getElementById("estimateScopeCount").textContent = totalSelected + "개";
@@ -8584,6 +8616,7 @@
         });
 
       detailGrid.innerHTML = detailSections.join("");
+      prepareEstimatePng();
     }
 
 
@@ -9176,45 +9209,12 @@
     });
 
 
-    document.getElementById("pdfShareBtn").addEventListener("click", () => {
-      createAndSharePdf();
-    });
-
-    document.getElementById("pdfSaveBtn").addEventListener("click", () => {
-      createAndSavePdf();
-    });
-
     document.getElementById("page5Prev").addEventListener("click", () => {
       showPage(4);
     });
 
     document.getElementById("page5Send").addEventListener("click", () => {
-      const modal = document.getElementById("sendModal");
-      const input = document.getElementById("sendPhoneInput");
-      input.value = state.project.phone || "";
-      modal.classList.add("show");
-      setTimeout(() => input.focus(), 60);
-    });
-
-    document.getElementById("sendCancel").addEventListener("click", () => {
-      document.getElementById("sendModal").classList.remove("show");
-    });
-
-    document.getElementById("sendConfirm").addEventListener("click", () => {
-      const input = document.getElementById("sendPhoneInput");
-      const phone = input.value.trim();
-      if (!phone) {
-        alert("연락처를 입력해 주세요.");
-        input.focus();
-        return;
-      }
-
-      state.project.phone = phone;
-      document.getElementById("sendModal").classList.remove("show");
-      document.getElementById("estimatePhone").textContent = phone;
-      document.getElementById("estimateSendStatus").textContent = "발송 완료";
-      document.getElementById("page5Send").textContent = "재발송";
-      alert("발송 기능은 API 연결 단계에서 문자/카카오로 연동됩니다.\n입력 연락처: " + phone);
+      shareEstimatePng();
     });
 
 
