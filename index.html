@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>N-CORE 내부 정보 화면</title>
+  <title>N-CORE 현장 견적 시스템 1.1</title>
   <style>
     :root {
       --bg: #FFFFFF;
@@ -716,6 +716,24 @@
       font-weight: 800;
       color: rgba(17,17,17,.54);
       letter-spacing: 0.2px;
+    }
+
+    .start-version {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 38px;
+      height: 24px;
+      margin-left: 7px;
+      padding: 0 9px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: 0;
+      vertical-align: middle;
+      box-shadow: 0 5px 12px rgba(215,96,22,.16);
     }
 
     .app {
@@ -6934,7 +6952,7 @@
         작업 내용을 확인합니다.
       </div>
       <button id="startBtn" class="start-btn">시작하기</button>
-      <div class="start-foot">N-CORE On-site Check System</div>
+      <div class="start-foot">N-CORE On-site Check System <span class="start-version">1.1</span></div>
     </div>
   </section>
   <div class="portrait-warning">
@@ -7431,20 +7449,20 @@
           </div>
 
           <div class="estimate-status-card">
-            <div class="estimate-status-label">복사할 연락처</div>
+            <div class="estimate-status-label">발송 연락처</div>
             <div id="estimateCopyPhone" class="estimate-status-value">-</div>
           </div>
 
           <div class="estimate-send-note">
-            <strong>발송하기</strong>를 누르면 고객 연락처가 자동으로 복사되고 PNG 견적서 공유창이 열립니다.<br />
-            메시지를 선택한 뒤 수신자 칸에 붙여넣어 주세요.
+            <strong>발송하기</strong>를 누르면 PNG 견적서가 태블릿에 자동 저장되고, 입력한 번호의 문자 작성 화면이 열립니다.<br />
+            문자 화면에서 사진 버튼을 눌러 방금 저장된 이미지를 선택해 주세요.
           </div>
         </aside>
       </section>
 
       <nav class="bottom-nav">
         <button id="page5Prev" class="nav-btn prev">이전</button>
-        <div class="bottom-status">연락처 자동복사 · <strong>PNG 견적서</strong> 공유</div>
+        <div class="bottom-status">PNG 자동 저장 · <strong>문자 작성 화면</strong> 바로 열기</div>
         <button id="page5Send" class="nav-btn next">발송하기</button>
       </nav>
     </section>
@@ -8494,31 +8512,25 @@
       window.setTimeout(() => URL.revokeObjectURL(url), 1200);
     }
 
-    function copyPhoneToClipboard(phone) {
-      if (navigator.clipboard && window.isSecureContext) {
-        return navigator.clipboard.writeText(phone).then(() => true).catch(() => false);
-      }
-
-      try {
-        const textarea = document.createElement("textarea");
-        textarea.value = phone;
-        textarea.setAttribute("readonly", "");
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        textarea.style.pointerEvents = "none";
-        document.body.appendChild(textarea);
-        textarea.select();
-        textarea.setSelectionRange(0, textarea.value.length);
-        const copied = document.execCommand("copy");
-        textarea.remove();
-        return Promise.resolve(copied);
-      } catch (err) {
-        console.error(err);
-        return Promise.resolve(false);
-      }
+    function normalizeSmsPhone(phone) {
+      return String(phone || "").replace(/[^0-9+]/g, "");
     }
 
-    async function shareEstimatePng() {
+    function openSmsComposer(phone) {
+      const normalizedPhone = normalizeSmsPhone(phone);
+      if (!normalizedPhone) {
+        throw new Error("문자 발송 연락처를 확인해 주세요.");
+      }
+
+      const smsLink = document.createElement("a");
+      smsLink.href = `sms:${normalizedPhone}`;
+      smsLink.style.display = "none";
+      document.body.appendChild(smsLink);
+      smsLink.click();
+      window.setTimeout(() => smsLink.remove(), 1200);
+    }
+
+    function sendEstimateBySms() {
       const phone = String(state.project.phone || state.savedEstimate?.project?.phone || "").trim();
       if (!phone) {
         alert("고객 연락처가 없습니다. 이전 단계에서 연락처를 입력해 주세요.");
@@ -8531,35 +8543,35 @@
         return;
       }
 
-      const file = preparedEstimatePngFile;
-      const shareData = {
-        files: [file],
-        title: "N-CORE 현장 견적서"
-      };
-      const copyPromise = copyPhoneToClipboard(phone);
+      const sendBtn = document.getElementById("page5Send");
+      const status = document.getElementById("estimateSendStatus");
 
       try {
-        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-          document.getElementById("estimateSendStatus").textContent = "연락처 복사 · 공유창 열림";
-          const sharePromise = navigator.share(shareData);
-          const copied = await copyPromise;
-          await sharePromise;
-          document.getElementById("estimateSendStatus").textContent = copied ? "공유 완료 · 연락처 복사됨" : "공유 완료";
-        } else {
-          const copied = await copyPromise;
-          downloadPngFile(file);
-          document.getElementById("estimateSendStatus").textContent = copied ? "이미지 저장 · 연락처 복사됨" : "이미지 저장 완료";
-          alert("공유 기능을 지원하지 않아 PNG 견적서를 저장했습니다.");
-        }
+        sendBtn.disabled = true;
+        sendBtn.textContent = "문자창 여는 중...";
+        status.textContent = "PNG 저장 · 문자창 여는 중";
+
+        downloadPngFile(preparedEstimatePngFile);
+
+        window.setTimeout(() => {
+          try {
+            openSmsComposer(phone);
+            status.textContent = "이미지 저장 완료 · 문자 작성";
+          } catch (err) {
+            console.error(err);
+            status.textContent = "이미지 저장 완료 · 문자창 실패";
+            alert(err.message || "문자 작성 화면을 열지 못했습니다.");
+          } finally {
+            sendBtn.disabled = false;
+            sendBtn.textContent = "발송하기";
+          }
+        }, 280);
       } catch (err) {
-        const copied = await copyPromise;
-        if (err && err.name === "AbortError") {
-          document.getElementById("estimateSendStatus").textContent = copied ? "공유 취소 · 연락처 복사됨" : "공유 취소";
-          return;
-        }
         console.error(err);
-        document.getElementById("estimateSendStatus").textContent = copied ? "공유 실패 · 연락처 복사됨" : "공유 실패";
-        alert(err.message || "PNG 견적서 공유 중 오류가 발생했습니다.");
+        sendBtn.disabled = false;
+        sendBtn.textContent = "발송하기";
+        status.textContent = "발송 준비 실패";
+        alert(err.message || "PNG 견적서 저장 중 오류가 발생했습니다.");
       }
     }
 
@@ -9214,7 +9226,7 @@
     });
 
     document.getElementById("page5Send").addEventListener("click", () => {
-      shareEstimatePng();
+      sendEstimateBySms();
     });
 
 
