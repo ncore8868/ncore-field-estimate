@@ -1,4 +1,4 @@
-const CACHE_NAME = "ncore-field-estimate-pwa-v20";
+const CACHE_NAME = "ncore-field-estimate-pwa-v21";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -27,22 +27,44 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
+  const requestUrl = new URL(event.request.url);
+  const isAppPage =
+    event.request.mode === "navigate" ||
+    requestUrl.pathname.endsWith("/") ||
+    requestUrl.pathname.endsWith("/index.html");
+
+  if (isAppPage) {
+    event.respondWith(
+      fetch(event.request, { cache: "no-store" })
         .then((response) => {
-          const requestUrl = new URL(event.request.url);
-          if (requestUrl.origin === self.location.origin) {
+          if (response && response.ok && requestUrl.origin === self.location.origin) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", clone));
           }
           return response;
         })
-        .catch(() => cached || new Response("오프라인 상태입니다. 인터넷 연결 후 다시 시도해 주세요.", {
-          status: 503,
-          headers: { "Content-Type": "text/plain; charset=utf-8" }
-        }));
+        .catch(async () => {
+          return (await caches.match("./index.html")) ||
+            (await caches.match("./")) ||
+            new Response("오프라인 상태입니다. 인터넷 연결 후 다시 시도해 주세요.", {
+              status: 503,
+              headers: { "Content-Type": "text/plain; charset=utf-8" }
+            });
+        })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
+        if (response && response.ok && requestUrl.origin === self.location.origin) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      });
     })
   );
 });

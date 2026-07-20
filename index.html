@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>N-CORE 현장 견적 시스템 1.1</title>
+  <title>N-CORE 내부 정보 화면</title>
   <style>
     :root {
       --bg: #FFFFFF;
@@ -547,13 +547,6 @@
       opacity: .9;
     }
 
-    .nav-btn:disabled {
-      opacity: .56;
-      cursor: wait;
-      box-shadow: none;
-      transform: none;
-    }
-
     .prev {
       background: #FFFFFF;
       border: 1px solid var(--line);
@@ -716,24 +709,6 @@
       font-weight: 800;
       color: rgba(17,17,17,.54);
       letter-spacing: 0.2px;
-    }
-
-    .start-version {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 38px;
-      height: 24px;
-      margin-left: 7px;
-      padding: 0 9px;
-      border-radius: 999px;
-      background: var(--accent);
-      color: #FFFFFF;
-      font-size: 12px;
-      font-weight: 950;
-      letter-spacing: 0;
-      vertical-align: middle;
-      box-shadow: 0 5px 12px rgba(215,96,22,.16);
     }
 
     .app {
@@ -2833,7 +2808,7 @@
       line-height: 1.45;
     }
 
-    #imageRenderHost {
+    #pdfRenderHost {
       position: fixed;
       left: -20000px;
       top: 0;
@@ -5040,7 +5015,7 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
-    #imageRenderHost {
+    #pdfRenderHost {
       width: 794px;
       height: 1123px;
       background: #FFFFFF;
@@ -6931,6 +6906,378 @@
       white-space: nowrap !important;
     }
 
+    /* === v16 FINAL: 담당자 로그인 / 작성자 표시 === */
+    .login-card {
+      width: min(680px, calc(100vw - 64px)) !important;
+      padding: 42px 48px 34px !important;
+    }
+
+    .login-form {
+      width: min(440px, 100%) !important;
+      margin-top: 26px !important;
+      display: grid !important;
+      gap: 14px !important;
+      position: relative !important;
+      z-index: 1 !important;
+    }
+
+    .login-field {
+      text-align: left !important;
+      display: grid !important;
+      gap: 8px !important;
+      font-size: 14px !important;
+      font-weight: 900 !important;
+      color: var(--muted) !important;
+      letter-spacing: -0.25px !important;
+    }
+
+    .login-input {
+      width: 100% !important;
+      height: 58px !important;
+      border: 1px solid rgba(17,17,17,.15) !important;
+      border-radius: 18px !important;
+      background: #fff !important;
+      padding: 0 18px !important;
+      font-size: 20px !important;
+      font-weight: 850 !important;
+      color: var(--ink) !important;
+      outline: none !important;
+      box-sizing: border-box !important;
+    }
+
+    .login-input:focus {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 4px rgba(215,96,22,.12) !important;
+    }
+
+    .login-btn {
+      width: 100% !important;
+      margin-top: 8px !important;
+    }
+
+    .login-btn:disabled {
+      opacity: .58 !important;
+      cursor: not-allowed !important;
+    }
+
+    .login-status {
+      min-height: 22px !important;
+      color: rgba(17,17,17,.62) !important;
+      font-size: 14px !important;
+      font-weight: 800 !important;
+      line-height: 1.45 !important;
+      text-align: center !important;
+      word-break: keep-all !important;
+    }
+
+    .login-status.error {
+      color: #C0392B !important;
+    }
+
+    .staff-session-pill {
+      position: fixed !important;
+      top: 10px !important;
+      right: 12px !important;
+      z-index: 35 !important;
+      min-width: 0 !important;
+      height: 34px !important;
+      padding: 0 8px 0 12px !important;
+      border-radius: 999px !important;
+      border: 1px solid rgba(17,17,17,.12) !important;
+      background: rgba(255,255,255,.94) !important;
+      box-shadow: 0 8px 20px rgba(17,17,17,.08) !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 7px !important;
+      font-size: 12px !important;
+      font-weight: 850 !important;
+      color: rgba(17,17,17,.55) !important;
+      backdrop-filter: blur(10px) !important;
+    }
+
+    .staff-session-pill strong {
+      color: var(--dark) !important;
+      font-size: 13px !important;
+      font-weight: 950 !important;
+      max-width: 86px !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    .staff-session-pill button {
+      height: 24px !important;
+      border: 0 !important;
+      border-radius: 999px !important;
+      padding: 0 10px !important;
+      background: var(--accent) !important;
+      color: #fff !important;
+      font-size: 11px !important;
+      font-weight: 900 !important;
+      cursor: pointer !important;
+    }
+
+    .estimate-doc-meta {
+      min-width: 248px !important;
+      gap: 5px !important;
+      font-size: 12.5px !important;
+    }
+
+    .estimate-doc-meta-row {
+      grid-template-columns: 66px minmax(0, 1fr) !important;
+      gap: 8px !important;
+      min-height: 20px !important;
+    }
+
+    .estimate-doc-meta-row strong {
+      min-width: 0 !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    .pdf-meta {
+      margin-top: 12px !important;
+    }
+
+    .pdf-meta-label,
+    .pdf-meta-value {
+      min-height: 27px !important;
+      font-size: 11.5px !important;
+    }
+
+    /* === v18 FINAL: 담당자 표시를 진행 단계 왼쪽 빈 공간으로 이동 / 공유 버튼 단일화 === */
+    .staff-session-pill {
+      position: fixed !important;
+      top: 28px !important;
+      right: 372px !important;
+      z-index: 28 !important;
+      width: auto !important;
+      max-width: 245px !important;
+      height: 38px !important;
+      padding: 0 8px 0 13px !important;
+      border-radius: 999px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 7px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      pointer-events: auto !important;
+    }
+
+    .staff-session-pill span {
+      flex: 0 0 auto !important;
+      font-size: 11px !important;
+      letter-spacing: -0.02em !important;
+    }
+
+    .staff-session-pill strong {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      max-width: 78px !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      font-size: 13px !important;
+    }
+
+    .staff-session-pill button {
+      flex: 0 0 auto !important;
+      height: 24px !important;
+      padding: 0 9px !important;
+      font-size: 10.5px !important;
+    }
+
+    .estimate-pdf-actions.single-action {
+      display: block !important;
+      margin-top: 14px !important;
+    }
+
+    .estimate-pdf-actions.single-action .estimate-pdf-status {
+      min-height: 46px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      border-radius: 16px !important;
+      background: rgba(215,96,22,.055) !important;
+      border: 1px solid rgba(215,96,22,.14) !important;
+      color: rgba(17,17,17,.72) !important;
+      font-weight: 850 !important;
+      line-height: 1.35 !important;
+    }
+
+    #page5Send.nav-btn.next {
+      min-width: 188px !important;
+    }
+
+    @media (max-width: 1366px) {
+      .staff-session-pill {
+        right: 350px !important;
+        max-width: 222px !important;
+      }
+
+      .staff-session-pill strong {
+        max-width: 64px !important;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .staff-session-pill {
+        right: 326px !important;
+        max-width: 184px !important;
+      }
+
+      .staff-session-pill span {
+        display: none !important;
+      }
+
+      .staff-session-pill strong {
+        max-width: 62px !important;
+      }
+
+      .staff-session-pill button {
+        padding: 0 8px !important;
+      }
+    }
+
+    /* === v19 FINAL: 상단 담당자/진행 박스 균일화 + 단일 공유 버튼 보정 === */
+    .topbar {
+      min-height: 58px !important;
+      align-items: center !important;
+    }
+
+    .logo-mark,
+    .step-pill,
+    .staff-session-pill {
+      height: 46px !important;
+      min-height: 46px !important;
+      box-sizing: border-box !important;
+      border-radius: 999px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      box-shadow: var(--shadow-soft) !important;
+    }
+
+    .logo-mark {
+      border-radius: 12px !important;
+      justify-content: center !important;
+    }
+
+    .step-pill {
+      justify-content: center !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      padding: 0 14px !important;
+      line-height: 1 !important;
+    }
+
+    .staff-session-pill {
+      position: fixed !important;
+      top: 22px !important;
+      right: calc(30px + 305px + var(--outer-gap, 18px)) !important;
+      z-index: 28 !important;
+      width: 252px !important;
+      max-width: 252px !important;
+      padding: 0 8px 0 14px !important;
+      gap: 8px !important;
+      border: 1px solid rgba(17,17,17,.12) !important;
+      background: rgba(255,255,255,.94) !important;
+      color: rgba(17,17,17,.66) !important;
+      overflow: hidden !important;
+      white-space: nowrap !important;
+      font-size: 13px !important;
+      font-weight: 850 !important;
+      line-height: 1 !important;
+    }
+
+    .staff-session-pill span {
+      flex: 0 0 auto !important;
+      font-size: 12px !important;
+      font-weight: 850 !important;
+      color: rgba(17,17,17,.52) !important;
+    }
+
+    .staff-session-pill strong {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      color: var(--dark) !important;
+      font-size: 14px !important;
+      font-weight: 950 !important;
+    }
+
+    .staff-session-pill button {
+      flex: 0 0 auto !important;
+      height: 30px !important;
+      min-height: 30px !important;
+      padding: 0 10px !important;
+      border-radius: 999px !important;
+      border: 0 !important;
+      background: var(--accent) !important;
+      color: #fff !important;
+      font-size: 11px !important;
+      font-weight: 900 !important;
+      line-height: 1 !important;
+    }
+
+    .estimate-pdf-actions.single-action .estimate-pdf-status {
+      min-height: 58px !important;
+      align-items: center !important;
+      word-break: keep-all !important;
+    }
+
+    #page5Send.nav-btn.next {
+      min-width: 188px !important;
+    }
+
+    @media (max-width: 1366px) {
+      .topbar {
+        grid-template-columns: minmax(0, 1fr) 290px !important;
+      }
+
+      #page2 .topbar {
+        grid-template-columns: minmax(0, 1fr) 306px !important;
+      }
+
+      .staff-session-pill {
+        right: calc(30px + 306px + 14px) !important;
+        width: 220px !important;
+        max-width: 220px !important;
+      }
+
+      .staff-session-pill span {
+        font-size: 11px !important;
+      }
+
+      .staff-session-pill strong {
+        font-size: 13px !important;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .staff-session-pill {
+        right: calc(24px + 282px + 12px) !important;
+        width: 184px !important;
+        max-width: 184px !important;
+        padding-left: 10px !important;
+        gap: 6px !important;
+      }
+
+      .staff-session-pill span {
+        display: none !important;
+      }
+
+      .staff-session-pill button {
+        padding: 0 8px !important;
+      }
+    }
+
   </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -6940,19 +7287,39 @@
   <meta name="apple-mobile-web-app-title" content="N-CORE 견적" />
   <link rel="icon" href="./icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icon-192.png" />
+  <!-- v19: 담당자/상단 박스 균일화 + 전송하기 단일 버튼 이미지 저장/첨부 공유 -->
+  <!-- v20: 버튼명 전송하기 변경 / v19 전송 기능 유지 -->
+  <!-- v21: PNG 자동 저장 후 고객번호가 입력된 문자 앱 바로 실행 -->
 </head>
 <body>
 
   <section id="startScreen" class="start-screen">
-    <div class="start-card">
+    <div class="start-card login-card">
       <div class="start-logo">N-CORE</div>
       <h1 class="start-title">현장 견적 시스템</h1>
       <div class="start-subtitle">
-        현장 정보를 입력하고<br />
-        작업 내용을 확인합니다.
+        담당자 확인 후<br />
+        견적 작성을 시작합니다.
       </div>
-      <button id="startBtn" class="start-btn">시작하기</button>
-      <div class="start-foot">N-CORE On-site Check System <span class="start-version">1.1</span></div>
+
+      <form id="loginForm" class="login-form" autocomplete="off">
+        <label class="login-field">
+          <span>담당자</span>
+          <select id="loginStaffSelect" class="login-input" required>
+            <option value="">담당자 목록 불러오는 중...</option>
+          </select>
+        </label>
+
+        <label class="login-field">
+          <span>PIN 번호</span>
+          <input id="loginPin" class="login-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="개인 PIN 입력" autocomplete="off" required />
+        </label>
+
+        <button id="loginBtn" class="start-btn login-btn" type="submit">로그인</button>
+        <div id="loginStatus" class="login-status">담당자관리 시트 기준으로 로그인합니다.</div>
+      </form>
+
+      <div class="start-foot">N-CORE On-site Check System 1.1</div>
     </div>
   </section>
   <div class="portrait-warning">
@@ -6963,6 +7330,11 @@
   </div>
 
   <main class="app">
+    <div id="staffSessionPill" class="staff-session-pill">
+      <span>현재 담당자</span>
+      <strong id="currentStaffName">-</strong>
+      <button id="changeStaffBtn" type="button">담당자 변경</button>
+    </div>
 
 
     <section id="page0" class="screen active">
@@ -6971,7 +7343,7 @@
           <div class="logo-mark">N-CORE</div>
           <div class="brand-text">
             <div class="title">현장 정보 화면</div>
-            <div class="sub">견적서 작성과 발송에 필요한 기본 정보를 입력합니다.</div>
+            <div class="sub">견적서 작성과 공유에 필요한 기본 정보를 입력합니다.</div>
           </div>
         </div>
         <div class="step-pill">
@@ -7396,6 +7768,10 @@
               </div>
               <div class="estimate-doc-meta">
                 <div class="estimate-doc-meta-row">
+                  <span>작성자</span>
+                  <strong id="estimateStaffName">-</strong>
+                </div>
+                <div class="estimate-doc-meta-row">
                   <span>고객명</span>
                   <strong id="estimateCustomerName">-</strong>
                 </div>
@@ -7444,32 +7820,30 @@
           </div>
 
           <div class="estimate-status-card">
-            <div class="estimate-status-label">발송 상태</div>
-            <div id="estimateSendStatus" class="estimate-status-value">발송 전</div>
-          </div>
-
-          <div class="estimate-status-card">
-            <div class="estimate-status-label">발송 연락처</div>
-            <div id="estimateCopyPhone" class="estimate-status-value">-</div>
+            <div class="estimate-status-label">전송 상태</div>
+            <div id="estimateSendStatus" class="estimate-status-value">전송 전</div>
           </div>
 
           <div class="estimate-send-note">
-            <strong>발송하기</strong>를 누르면 PNG 견적서가 태블릿에 자동 저장되고, 입력한 번호의 문자 작성 화면이 열립니다.<br />
-            문자 화면에서 사진 버튼을 눌러 방금 저장된 이미지를 선택해 주세요.
+            전송 전 고객 정보와 연락처를 확인해 주세요.
+          </div>
+
+          <div class="estimate-pdf-actions single-action">
+            <div id="pdfActionStatus" class="estimate-pdf-status">전송하기 버튼을 누르면 PNG를 저장하고 고객번호로 문자 앱을 엽니다.</div>
           </div>
         </aside>
       </section>
 
       <nav class="bottom-nav">
         <button id="page5Prev" class="nav-btn prev">이전</button>
-        <div class="bottom-status">PNG 자동 저장 · <strong>문자 작성 화면</strong> 바로 열기</div>
-        <button id="page5Send" class="nav-btn next">발송하기</button>
+        <div class="bottom-status">현재 단계: <strong>견적서</strong> PNG 저장 후 문자 발송</div>
+        <button id="page5Send" class="nav-btn next">전송하기</button>
       </nav>
     </section>
 
   </main>
 
-    <div id="imageRenderHost" aria-hidden="true"></div>
+    <div id="pdfRenderHost" aria-hidden="true"></div>
 
   <div id="exitModal" class="modal-backdrop">
     <div class="modal-card">
@@ -7567,11 +7941,214 @@
     </div>
   </div>
 
+  <div id="sendModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-title">견적서 발송</div>
+      <div class="modal-text">
+        발송할 연락처를 입력해 주세요.
+        <input id="sendPhoneInput" class="send-field" type="tel" inputmode="numeric" placeholder="010-0000-0000" />
+        <div class="send-preview">
+          [N-CORE] 현장 견적서가 전송됩니다.<br />
+          총 확인 금액과 세부 작업 범위가 함께 발송됩니다.
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="sendCancel" class="modal-btn cancel">취소</button>
+        <button id="sendConfirm" class="modal-btn confirm">전송하기</button>
+      </div>
+    </div>
+  </div>
+
 
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxBct_RGHwnqkF6ONRxQ0bqk3Q4J8dNZJanvPM84UJQaEleIzFP4Lg1suWOkoRc5qzc/exec"; // Apps Script 웹앱 URL
+    const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
+
+    function jsonpRequest(params, timeout = 7000) {
+      if (!GOOGLE_SHEET_API_URL) {
+        return Promise.reject(new Error("Apps Script URL이 설정되지 않았습니다."));
+      }
+
+      return new Promise((resolve, reject) => {
+        const callbackName = "ncoreJsonp_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+        const script = document.createElement("script");
+        const timer = window.setTimeout(() => {
+          cleanup();
+          reject(new Error("서버 응답이 지연되고 있습니다. 인터넷 연결을 확인해 주세요."));
+        }, timeout);
+
+        function cleanup() {
+          window.clearTimeout(timer);
+          try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[callbackName] = (data) => {
+          cleanup();
+          resolve(data || {});
+        };
+
+        const query = new URLSearchParams({
+          ...params,
+          callback: callbackName,
+          t: String(Date.now())
+        });
+
+        script.src = GOOGLE_SHEET_API_URL + "?" + query.toString();
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("로그인 서버에 연결하지 못했습니다."));
+        };
+        document.body.appendChild(script);
+      });
+    }
+
+    function getCurrentStaffName() {
+      return (state.auth && state.auth.staffName) ? state.auth.staffName : "";
+    }
+
+    function updateStaffSessionUI() {
+      const name = getCurrentStaffName() || "-";
+      const label = document.getElementById("currentStaffName");
+      if (label) label.textContent = name;
+    }
+
+    function setLoginStatus(message, isError = false) {
+      const status = document.getElementById("loginStatus");
+      if (!status) return;
+      status.textContent = message || "";
+      status.classList.toggle("error", !!isError);
+    }
+
+    async function loadStaffList() {
+      const select = document.getElementById("loginStaffSelect");
+      const lastStaff = localStorage.getItem(STAFF_STORAGE_KEY) || "";
+      if (!select) return;
+
+      select.disabled = true;
+      select.innerHTML = `<option value="">담당자 목록 불러오는 중...</option>`;
+      setLoginStatus("담당자 목록을 불러오는 중입니다.");
+
+      try {
+        const result = await jsonpRequest({ action: "staffList" });
+        const staffList = Array.isArray(result.staff) ? result.staff : [];
+
+        if (!result.ok) {
+          throw new Error(result.message || "담당자 목록을 불러오지 못했습니다.");
+        }
+
+        if (!staffList.length) {
+          select.innerHTML = `<option value="">등록된 담당자가 없습니다</option>`;
+          setLoginStatus("담당자 목록을 확인할 수 없습니다. 시트 저장 후 새로고침해 주세요.", true);
+          return;
+        }
+
+        select.innerHTML = `<option value="">담당자 선택</option>` + staffList
+          .map(name => `<option value="${escapePdfHtml(name)}">${escapePdfHtml(name)}</option>`)
+          .join("");
+
+        if (lastStaff && staffList.includes(lastStaff)) {
+          select.value = lastStaff;
+        }
+
+        select.disabled = false;
+        setLoginStatus("담당자를 선택하고 개인 PIN을 입력해 주세요.");
+
+      } catch (err) {
+        console.error(err);
+        select.innerHTML = `<option value="">담당자 목록 오류</option>`;
+        setLoginStatus(err.message || "담당자 목록을 불러오지 못했습니다.", true);
+      }
+    }
+
+    async function handleLoginSubmit(event) {
+      event.preventDefault();
+
+      const select = document.getElementById("loginStaffSelect");
+      const pinInput = document.getElementById("loginPin");
+      const loginBtn = document.getElementById("loginBtn");
+
+      const staffName = (select?.value || "").trim();
+      const pin = (pinInput?.value || "").trim();
+
+      if (!staffName) {
+        setLoginStatus("담당자를 선택해 주세요.", true);
+        select?.focus();
+        return;
+      }
+
+      if (!pin) {
+        setLoginStatus("PIN 번호를 입력해 주세요.", true);
+        pinInput?.focus();
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = "확인 중...";
+      setLoginStatus("담당자 PIN을 확인하고 있습니다.");
+
+      try {
+        const result = await jsonpRequest({ action: "login", staffName, pin });
+
+        if (!result.ok) {
+          state.auth = { loggedIn: false, staffName: "" };
+          setLoginStatus(result.message || "담당자 또는 PIN이 맞지 않습니다.", true);
+          pinInput.value = "";
+          pinInput.focus();
+          return;
+        }
+
+        state.auth = { loggedIn: true, staffName: result.staffName || staffName };
+        localStorage.setItem(STAFF_STORAGE_KEY, state.auth.staffName);
+        updateStaffSessionUI();
+        openAppAfterLogin();
+      } catch (err) {
+        console.error(err);
+        setLoginStatus(err.message || "로그인 확인 중 오류가 발생했습니다.", true);
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "로그인";
+      }
+    }
+
+    function openAppAfterLogin() {
+      const startScreen = document.getElementById("startScreen");
+      const app = document.querySelector(".app");
+
+      startScreen.classList.add("hide");
+      setTimeout(() => {
+        startScreen.style.display = "none";
+        app.style.display = "";
+        app.classList.add("show");
+        showPage(0);
+        updateStaffSessionUI();
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }, 150);
+    }
+
+    function showLoginScreen() {
+      const startScreen = document.getElementById("startScreen");
+      const app = document.querySelector(".app");
+      state.auth = { loggedIn: false, staffName: "" };
+      app.classList.remove("show");
+      app.style.display = "none";
+      startScreen.style.display = "flex";
+      startScreen.classList.remove("hide");
+      document.getElementById("loginPin").value = "";
+      setLoginStatus("담당자를 선택하고 개인 PIN을 입력해 주세요.");
+      updateStaffSessionUI();
+      setTimeout(() => document.getElementById("loginPin")?.focus(), 80);
+    }
+
+    function ensureLoggedIn() {
+      if (state.auth && state.auth.loggedIn && state.auth.staffName) return true;
+      alert("담당자 로그인 후 이용해 주세요.");
+      showLoginScreen();
+      return false;
+    }
 
     async function submitEstimateToSheet(payload) {
       if (!GOOGLE_SHEET_API_URL) {
@@ -7641,6 +8218,7 @@
       waste: { truck1: 0, truck25: 0, truck5: 0 },
       extra: { amount: 0, memo: "" },
       project: { customerName: "", phone: "", address: "" },
+      auth: { loggedIn: false, staffName: "" },
       excelRows: [],
       section: "labor",
       totals: { labor: 0, equipment: 0, waste: 0, extra: 0, total: 0 },
@@ -8039,6 +8617,7 @@
 
           rows.push({
             codeNo: "",
+            staffName: getCurrentStaffName(),
             customerName: isFirst ? state.project.customerName : "",
             customerPhone: isFirst ? state.project.phone : "",
             siteAddress: isFirst ? state.project.address : "",
@@ -8060,6 +8639,7 @@
       if (!rows.length) {
         rows.push({
           codeNo: "",
+          staffName: getCurrentStaffName(),
           customerName: state.project.customerName,
           customerPhone: state.project.phone,
           siteAddress: state.project.address,
@@ -8080,6 +8660,7 @@
     function buildSavePayload() {
       return {
         project: { ...state.project },
+        staff: { name: getCurrentStaffName() },
         savedAt: state.savedEstimate?.savedAt || new Date().toISOString(),
         totalAmount: getDisplayTotalAmount(),
         amounts: getDisplayCategoryAmounts(),
@@ -8098,6 +8679,10 @@
     }
 
     function openSaveConfirmModal() {
+      if (!ensureLoggedIn()) {
+        return;
+      }
+
       if (!validateProjectInputs()) {
         showPage(0);
         return;
@@ -8273,6 +8858,7 @@
       state.savedEstimate = {
         savedAt: savedAt.toISOString(),
         project: { ...state.project },
+        staff: { name: getCurrentStaffName() },
         total: getDisplayTotalAmount(),
         amounts: getDisplayCategoryAmounts(),
         ratios: { ...state.ratios },
@@ -8292,13 +8878,13 @@
         .replace(/'/g, "&#039;");
     }
 
-    function getPngSafeFileName() {
+    function getPdfSafeFileName() {
       const name = (state.project.customerName || "고객").replace(/[\\/:*?"<>|]/g, "").trim() || "고객";
       const date = new Date();
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, "0");
       const d = String(date.getDate()).padStart(2, "0");
-      return `${name}_현장견적서_${y}${m}${d}.png`;
+      return `${name}_현장견적서_${y}${m}${d}.pdf`;
     }
 
     function getPdfDisplaySections() {
@@ -8339,6 +8925,7 @@
 
       const saved = state.savedEstimate;
       const project = saved.project || state.project;
+      const staffName = saved.staff?.name || getCurrentStaffName() || "-";
       const totalItems = getSelectedScopeTotal();
       const sections = getPdfDisplaySections();
       const activeAmounts = getActiveRatioItems();
@@ -8398,6 +8985,10 @@
 
           <div class="pdf-meta">
             <div class="pdf-meta-row">
+              <div class="pdf-meta-label">작성자</div>
+              <div class="pdf-meta-value">${escapePdfHtml(staffName)}</div>
+            </div>
+            <div class="pdf-meta-row">
               <div class="pdf-meta-label">고객명</div>
               <div class="pdf-meta-value">${escapePdfHtml(project.customerName || "-")}</div>
             </div>
@@ -8432,33 +9023,68 @@
       `;
     }
 
-    let preparedEstimatePngFile = null;
-    let prepareEstimatePngToken = 0;
+    function setPdfActionState(loading, message) {
+      const shareBtn = document.getElementById("page5Send");
+      const status = document.getElementById("pdfActionStatus");
 
-    function setSendActionState(loading, message) {
-      const sendBtn = document.getElementById("page5Send");
-      const status = document.getElementById("estimateSendStatus");
-
-      sendBtn.disabled = loading;
-      sendBtn.textContent = loading ? "이미지 준비 중..." : "발송하기";
-      status.textContent = message || "발송 준비 완료";
-    }
-
-    function canvasToPngBlob(canvas) {
-      return new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error("PNG 이미지 생성에 실패했습니다."));
-        }, "image/png", 1);
-      });
-    }
-
-    async function createEstimatePngFile() {
-      if (!window.html2canvas) {
-        throw new Error("이미지 생성 기능을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
+      if (shareBtn) {
+        shareBtn.disabled = loading;
+        shareBtn.textContent = loading ? "이미지 생성 중..." : "전송하기";
       }
 
-      const host = document.getElementById("imageRenderHost");
+      if (status) {
+        status.textContent = message || "전송하기 버튼을 누르면 PNG를 저장하고 고객번호로 문자 앱을 엽니다.";
+      }
+    }
+
+
+    async function copyTextToClipboardSafe(text) {
+      const value = String(text || "").trim();
+      if (!value) return false;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(value);
+          return true;
+        } catch (err) {
+          console.warn("clipboard api failed", err);
+        }
+      }
+
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = value;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        textarea.style.top = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        const ok = document.execCommand("copy");
+        textarea.remove();
+        return ok;
+      } catch (err) {
+        console.warn("clipboard fallback failed", err);
+        return false;
+      }
+    }
+
+    function getShareImageSafeFileName() {
+      const name = (state.project.customerName || state.savedEstimate?.project?.customerName || "고객").replace(/[\\/:*?"<>|]/g, "").trim() || "고객";
+      const date = new Date();
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${name}_현장견적서_${y}${m}${d}.png`;
+    }
+
+    async function renderEstimateCanvas() {
+      if (!window.html2canvas) {
+        throw new Error("이미지 생성 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
+      }
+
+      const host = document.getElementById("pdfRenderHost");
       host.innerHTML = buildPdfRenderPage();
 
       const paper = host.querySelector("#pdfPaper");
@@ -8479,29 +9105,46 @@
       });
 
       host.innerHTML = "";
-      const blob = await canvasToPngBlob(canvas);
-      return new File([blob], getPngSafeFileName(), { type: "image/png" });
+      return canvas;
     }
 
-    async function prepareEstimatePng() {
-      const token = ++prepareEstimatePngToken;
-      preparedEstimatePngFile = null;
-      setSendActionState(true, "이미지 준비 중");
+    async function createEstimateImageFile() {
+      const canvas = await renderEstimateCanvas();
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, "image/png");
+      });
 
-      try {
-        const file = await createEstimatePngFile();
-        if (token !== prepareEstimatePngToken) return;
-        preparedEstimatePngFile = file;
-        setSendActionState(false, "발송 준비 완료");
-      } catch (err) {
-        if (token !== prepareEstimatePngToken) return;
-        console.error(err);
-        setSendActionState(false, "이미지 준비 실패");
-        alert(err.message || "PNG 이미지 준비 중 오류가 발생했습니다.");
+      if (!blob) {
+        throw new Error("견적서 이미지 생성에 실패했습니다.");
       }
+
+      return new File([blob], getShareImageSafeFileName(), { type: "image/png" });
     }
 
-    function downloadPngFile(file) {
+    async function createEstimatePdfFile() {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        throw new Error("PDF 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
+      }
+
+      const canvas = await renderEstimateCanvas();
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        compress: true
+      });
+
+      const imageData = canvas.toDataURL("image/jpeg", 0.94);
+      pdf.addImage(imageData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
+
+      const fileName = getPdfSafeFileName();
+      const blob = pdf.output("blob");
+      return new File([blob], fileName, { type: "application/pdf" });
+    }
+
+    function downloadPdfFile(file) {
       const url = URL.createObjectURL(file);
       const link = document.createElement("a");
       link.href = url;
@@ -8512,69 +9155,63 @@
       window.setTimeout(() => URL.revokeObjectURL(url), 1200);
     }
 
-    function normalizeSmsPhone(phone) {
-      return String(phone || "").replace(/[^0-9+]/g, "");
-    }
+    async function createAndSharePdf() {
+      readProjectInputs();
 
-    function openSmsComposer(phone) {
-      const normalizedPhone = normalizeSmsPhone(phone);
-      if (!normalizedPhone) {
-        throw new Error("문자 발송 연락처를 확인해 주세요.");
-      }
+      const project = state.savedEstimate?.project || state.project || {};
+      const phone = String(project.phone || state.project.phone || "").replace(/\D/g, "");
 
-      const smsLink = document.createElement("a");
-      smsLink.href = `sms:${normalizedPhone}`;
-      smsLink.style.display = "none";
-      document.body.appendChild(smsLink);
-      smsLink.click();
-      window.setTimeout(() => smsLink.remove(), 1200);
-    }
-
-    function sendEstimateBySms() {
-      const phone = String(state.project.phone || state.savedEstimate?.project?.phone || "").trim();
       if (!phone) {
-        alert("고객 연락처가 없습니다. 이전 단계에서 연락처를 입력해 주세요.");
+        setPdfActionState(false, "고객 전화번호를 먼저 입력해 주세요.");
+        alert("고객 전화번호를 먼저 입력해 주세요.");
         return;
       }
 
-      if (!preparedEstimatePngFile) {
-        alert("견적서 이미지를 준비하고 있습니다. 잠시 후 다시 눌러 주세요.");
-        prepareEstimatePng();
-        return;
-      }
-
-      const sendBtn = document.getElementById("page5Send");
-      const status = document.getElementById("estimateSendStatus");
+      setPdfActionState(true, "견적서 PNG를 만들고 있습니다...");
 
       try {
-        sendBtn.disabled = true;
-        sendBtn.textContent = "문자창 여는 중...";
-        status.textContent = "PNG 저장 · 문자창 여는 중";
+        const file = await createEstimateImageFile();
 
-        downloadPngFile(preparedEstimatePngFile);
+        // 1) 생성된 견적서를 태블릿 다운로드 폴더에 먼저 저장합니다.
+        downloadPdfFile(file);
 
+        const sendStatus = document.getElementById("estimateSendStatus");
+        if (sendStatus) sendStatus.textContent = "문자 앱 실행 중";
+        setPdfActionState(true, "PNG 저장 완료. 고객번호가 입력된 문자 앱을 여는 중입니다...");
+
+        // 2) 다운로드가 시작될 시간을 조금 준 뒤 고객번호가 입력된 문자 앱을 엽니다.
+        //    순수 웹에서는 이미지를 문자에 자동 첨부할 수 없으므로,
+        //    문자 앱의 사진 버튼에서 방금 저장된 PNG만 선택하면 됩니다.
         window.setTimeout(() => {
-          try {
-            openSmsComposer(phone);
-            status.textContent = "이미지 저장 완료 · 문자 작성";
-          } catch (err) {
-            console.error(err);
-            status.textContent = "이미지 저장 완료 · 문자창 실패";
-            alert(err.message || "문자 작성 화면을 열지 못했습니다.");
-          } finally {
-            sendBtn.disabled = false;
-            sendBtn.textContent = "발송하기";
-          }
-        }, 280);
+          window.location.href = `sms:${phone}`;
+
+          window.setTimeout(() => {
+            if (sendStatus) sendStatus.textContent = "이미지 저장 완료";
+            setPdfActionState(false, "PNG가 저장되었습니다. 문자 앱에서 최근 이미지로 첨부해 주세요.");
+          }, 900);
+        }, 450);
       } catch (err) {
         console.error(err);
-        sendBtn.disabled = false;
-        sendBtn.textContent = "발송하기";
-        status.textContent = "발송 준비 실패";
-        alert(err.message || "PNG 견적서 저장 중 오류가 발생했습니다.");
+        const sendStatus = document.getElementById("estimateSendStatus");
+        if (sendStatus) sendStatus.textContent = "전송 준비 실패";
+        setPdfActionState(false, err.message || "견적서 이미지 생성 중 오류가 발생했습니다.");
+        alert(err.message || "견적서 이미지 생성 중 오류가 발생했습니다.");
       }
     }
 
+    async function createAndSavePdf() {
+      setPdfActionState(true, "한 장짜리 PDF를 만들고 있습니다...");
+
+      try {
+        const file = await createEstimatePdfFile();
+        downloadPdfFile(file);
+        setPdfActionState(false, "PDF 파일이 저장되었습니다.");
+      } catch (err) {
+        console.error(err);
+        setPdfActionState(false, err.message || "PDF 생성 중 오류가 발생했습니다.");
+        alert(err.message || "PDF 생성 중 오류가 발생했습니다.");
+      }
+    }
 
     function renderEstimatePage() {
       calc();
@@ -8589,9 +9226,10 @@
       const totalSelected = getSelectedScopeTotal();
 
       const project = saved.project || state.project;
+      const staffName = saved.staff?.name || getCurrentStaffName() || "-";
+      document.getElementById("estimateStaffName").textContent = staffName;
       document.getElementById("estimateCustomerName").textContent = project.customerName || "-";
       document.getElementById("estimatePhone").textContent = project.phone || "-";
-      document.getElementById("estimateCopyPhone").textContent = project.phone || "-";
       document.getElementById("estimateAddress").textContent = project.address || "-";
       document.getElementById("estimateSavedAt").textContent = saved.savedAt ? formatDateTime(saved.savedAt) : "-";
       document.getElementById("estimateScopeCount").textContent = totalSelected + "개";
@@ -8628,7 +9266,6 @@
         });
 
       detailGrid.innerHTML = detailSections.join("");
-      prepareEstimatePng();
     }
 
 
@@ -9221,30 +9858,54 @@
     });
 
 
+    const legacyPdfShareBtn = document.getElementById("pdfShareBtn");
+    if (legacyPdfShareBtn) {
+      legacyPdfShareBtn.addEventListener("click", () => {
+        createAndSharePdf();
+      });
+    }
+
+    const legacyPdfSaveBtn = document.getElementById("pdfSaveBtn");
+    if (legacyPdfSaveBtn) {
+      legacyPdfSaveBtn.addEventListener("click", () => {
+        createAndSavePdf();
+      });
+    }
+
     document.getElementById("page5Prev").addEventListener("click", () => {
       showPage(4);
     });
 
     document.getElementById("page5Send").addEventListener("click", () => {
-      sendEstimateBySms();
+      createAndSharePdf();
     });
 
+    const sendCancelBtn = document.getElementById("sendCancel");
+    if (sendCancelBtn) {
+      sendCancelBtn.addEventListener("click", () => {
+        document.getElementById("sendModal").classList.remove("show");
+      });
+    }
 
-    const startScreen = document.getElementById("startScreen");
-    const startBtn = document.getElementById("startBtn");
-    const app = document.querySelector(".app");
+    const sendConfirmBtn = document.getElementById("sendConfirm");
+    if (sendConfirmBtn) {
+      sendConfirmBtn.addEventListener("click", () => {
+        document.getElementById("sendModal").classList.remove("show");
+        createAndSharePdf();
+      });
+    }
 
-    startBtn.addEventListener("click", () => {
-      startScreen.classList.add("hide");
-      setTimeout(() => {
-        startScreen.style.display = "none";
-        app.style.display = "";
-        app.classList.add("show");
-        showPage(0);
-        window.scrollTo({ top: 0, behavior: "instant" });
-      }, 150);
-    });
 
+    document.getElementById("loginForm").addEventListener("submit", handleLoginSubmit);
+    document.getElementById("changeStaffBtn").addEventListener("click", showLoginScreen);
+
+    const lastStaffName = localStorage.getItem(STAFF_STORAGE_KEY) || "";
+    if (lastStaffName) {
+      state.auth.staffName = lastStaffName;
+      updateStaffSessionUI();
+    }
+
+    loadStaffList();
     setActive("labor");
   </script>
 
