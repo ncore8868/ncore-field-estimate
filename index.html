@@ -7046,6 +7046,103 @@
       font-size: 11.5px !important;
     }
 
+    /* === v18 FINAL: 담당자 표시를 진행 단계 왼쪽 빈 공간으로 이동 / 공유 버튼 단일화 === */
+    .staff-session-pill {
+      position: fixed !important;
+      top: 28px !important;
+      right: 372px !important;
+      z-index: 28 !important;
+      width: auto !important;
+      max-width: 245px !important;
+      height: 38px !important;
+      padding: 0 8px 0 13px !important;
+      border-radius: 999px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 7px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      pointer-events: auto !important;
+    }
+
+    .staff-session-pill span {
+      flex: 0 0 auto !important;
+      font-size: 11px !important;
+      letter-spacing: -0.02em !important;
+    }
+
+    .staff-session-pill strong {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      max-width: 78px !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      font-size: 13px !important;
+    }
+
+    .staff-session-pill button {
+      flex: 0 0 auto !important;
+      height: 24px !important;
+      padding: 0 9px !important;
+      font-size: 10.5px !important;
+    }
+
+    .estimate-pdf-actions.single-action {
+      display: block !important;
+      margin-top: 14px !important;
+    }
+
+    .estimate-pdf-actions.single-action .estimate-pdf-status {
+      min-height: 46px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      border-radius: 16px !important;
+      background: rgba(215,96,22,.055) !important;
+      border: 1px solid rgba(215,96,22,.14) !important;
+      color: rgba(17,17,17,.72) !important;
+      font-weight: 850 !important;
+      line-height: 1.35 !important;
+    }
+
+    #page5Send.nav-btn.next {
+      min-width: 188px !important;
+    }
+
+    @media (max-width: 1366px) {
+      .staff-session-pill {
+        right: 350px !important;
+        max-width: 222px !important;
+      }
+
+      .staff-session-pill strong {
+        max-width: 64px !important;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .staff-session-pill {
+        right: 326px !important;
+        max-width: 184px !important;
+      }
+
+      .staff-session-pill span {
+        display: none !important;
+      }
+
+      .staff-session-pill strong {
+        max-width: 62px !important;
+      }
+
+      .staff-session-pill button {
+        padding: 0 8px !important;
+      }
+    }
+
   </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -7055,6 +7152,7 @@
   <meta name="apple-mobile-web-app-title" content="N-CORE 견적" />
   <link rel="icon" href="./icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icon-192.png" />
+  <!-- v18: 공유하기 단일 버튼 / 담당자 표시 위치 조정 -->
 </head>
 <body>
 
@@ -7108,7 +7206,7 @@
           <div class="logo-mark">N-CORE</div>
           <div class="brand-text">
             <div class="title">현장 정보 화면</div>
-            <div class="sub">견적서 작성과 발송에 필요한 기본 정보를 입력합니다.</div>
+            <div class="sub">견적서 작성과 공유에 필요한 기본 정보를 입력합니다.</div>
           </div>
         </div>
         <div class="step-pill">
@@ -7585,26 +7683,24 @@
           </div>
 
           <div class="estimate-status-card">
-            <div class="estimate-status-label">발송 상태</div>
-            <div id="estimateSendStatus" class="estimate-status-value">발송 전</div>
+            <div class="estimate-status-label">공유 상태</div>
+            <div id="estimateSendStatus" class="estimate-status-value">공유 전</div>
           </div>
 
           <div class="estimate-send-note">
-            발송 전 고객 정보와 견적 내용을 확인해 주세요.
+            공유 전 고객 정보와 견적 내용을 확인해 주세요.
           </div>
 
-          <div class="estimate-pdf-actions">
-            <button type="button" id="pdfShareBtn" class="estimate-pdf-btn primary">PDF 생성 · 공유하기</button>
-            <button type="button" id="pdfSaveBtn" class="estimate-pdf-btn secondary">PDF만 저장</button>
-            <div id="pdfActionStatus" class="estimate-pdf-status">한 장짜리 견적서 PDF를 생성합니다.</div>
+          <div class="estimate-pdf-actions single-action">
+            <div id="pdfActionStatus" class="estimate-pdf-status">하단의 공유하기 버튼으로 PDF를 생성하고 공유합니다.</div>
           </div>
         </aside>
       </section>
 
       <nav class="bottom-nav">
         <button id="page5Prev" class="nav-btn prev">이전</button>
-        <div class="bottom-status">현재 단계: <strong>견적서</strong> PDF 생성 및 공유</div>
-        <button id="page5Send" class="nav-btn next">발송하기</button>
+        <div class="bottom-status">현재 단계: <strong>견적서</strong> PDF 확인 및 공유</div>
+        <button id="page5Send" class="nav-btn next">공유하기</button>
       </nav>
     </section>
 
@@ -7721,7 +7817,7 @@
       </div>
       <div class="modal-actions">
         <button id="sendCancel" class="modal-btn cancel">취소</button>
-        <button id="sendConfirm" class="modal-btn confirm">발송하기</button>
+        <button id="sendConfirm" class="modal-btn confirm">공유하기</button>
       </div>
     </div>
   </div>
@@ -7809,7 +7905,7 @@
 
         if (!staffList.length) {
           select.innerHTML = `<option value="">등록된 담당자가 없습니다</option>`;
-          setLoginStatus("구글시트 담당자관리 탭에 담당자를 등록해 주세요.", true);
+          setLoginStatus("담당자 목록을 확인할 수 없습니다. 시트 저장 후 새로고침해 주세요.", true);
           return;
         }
 
@@ -8791,15 +8887,17 @@
     }
 
     function setPdfActionState(loading, message) {
-      const shareBtn = document.getElementById("pdfShareBtn");
-      const saveBtn = document.getElementById("pdfSaveBtn");
+      const shareBtn = document.getElementById("page5Send");
       const status = document.getElementById("pdfActionStatus");
 
-      shareBtn.disabled = loading;
-      saveBtn.disabled = loading;
-      shareBtn.textContent = loading ? "PDF 생성 중..." : "PDF 생성 · 공유하기";
-      saveBtn.textContent = loading ? "잠시만 기다려 주세요" : "PDF만 저장";
-      status.textContent = message || "한 장짜리 견적서 PDF를 생성합니다.";
+      if (shareBtn) {
+        shareBtn.disabled = loading;
+        shareBtn.textContent = loading ? "PDF 생성 중..." : "공유하기";
+      }
+
+      if (status) {
+        status.textContent = message || "하단의 공유하기 버튼으로 PDF를 생성하고 공유합니다.";
+      }
     }
 
     async function createEstimatePdfFile() {
@@ -8871,9 +8969,13 @@
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
           setPdfActionState(true, "공유할 앱을 선택해 주세요.");
           await navigator.share(shareData);
+          const sendStatus = document.getElementById("estimateSendStatus");
+          if (sendStatus) sendStatus.textContent = "공유 완료";
           setPdfActionState(false, "공유가 완료되었습니다.");
         } else {
           downloadPdfFile(file);
+          const sendStatus = document.getElementById("estimateSendStatus");
+          if (sendStatus) sendStatus.textContent = "PDF 저장 완료";
           setPdfActionState(false, "공유 기능을 지원하지 않아 PDF 파일을 저장했습니다.");
         }
       } catch (err) {
@@ -9542,46 +9644,42 @@
     });
 
 
-    document.getElementById("pdfShareBtn").addEventListener("click", () => {
-      createAndSharePdf();
-    });
+    const legacyPdfShareBtn = document.getElementById("pdfShareBtn");
+    if (legacyPdfShareBtn) {
+      legacyPdfShareBtn.addEventListener("click", () => {
+        createAndSharePdf();
+      });
+    }
 
-    document.getElementById("pdfSaveBtn").addEventListener("click", () => {
-      createAndSavePdf();
-    });
+    const legacyPdfSaveBtn = document.getElementById("pdfSaveBtn");
+    if (legacyPdfSaveBtn) {
+      legacyPdfSaveBtn.addEventListener("click", () => {
+        createAndSavePdf();
+      });
+    }
 
     document.getElementById("page5Prev").addEventListener("click", () => {
       showPage(4);
     });
 
     document.getElementById("page5Send").addEventListener("click", () => {
-      const modal = document.getElementById("sendModal");
-      const input = document.getElementById("sendPhoneInput");
-      input.value = state.project.phone || "";
-      modal.classList.add("show");
-      setTimeout(() => input.focus(), 60);
+      createAndSharePdf();
     });
 
-    document.getElementById("sendCancel").addEventListener("click", () => {
-      document.getElementById("sendModal").classList.remove("show");
-    });
+    const sendCancelBtn = document.getElementById("sendCancel");
+    if (sendCancelBtn) {
+      sendCancelBtn.addEventListener("click", () => {
+        document.getElementById("sendModal").classList.remove("show");
+      });
+    }
 
-    document.getElementById("sendConfirm").addEventListener("click", () => {
-      const input = document.getElementById("sendPhoneInput");
-      const phone = input.value.trim();
-      if (!phone) {
-        alert("연락처를 입력해 주세요.");
-        input.focus();
-        return;
-      }
-
-      state.project.phone = phone;
-      document.getElementById("sendModal").classList.remove("show");
-      document.getElementById("estimatePhone").textContent = phone;
-      document.getElementById("estimateSendStatus").textContent = "발송 완료";
-      document.getElementById("page5Send").textContent = "재발송";
-      alert("발송 기능은 API 연결 단계에서 문자/카카오로 연동됩니다.\n입력 연락처: " + phone);
-    });
+    const sendConfirmBtn = document.getElementById("sendConfirm");
+    if (sendConfirmBtn) {
+      sendConfirmBtn.addEventListener("click", () => {
+        document.getElementById("sendModal").classList.remove("show");
+        createAndSharePdf();
+      });
+    }
 
 
     document.getElementById("loginForm").addEventListener("submit", handleLoginSubmit);
