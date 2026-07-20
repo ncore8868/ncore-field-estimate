@@ -7143,6 +7143,141 @@
       }
     }
 
+    /* === v19 FINAL: 상단 담당자/진행 박스 균일화 + 단일 공유 버튼 보정 === */
+    .topbar {
+      min-height: 58px !important;
+      align-items: center !important;
+    }
+
+    .logo-mark,
+    .step-pill,
+    .staff-session-pill {
+      height: 46px !important;
+      min-height: 46px !important;
+      box-sizing: border-box !important;
+      border-radius: 999px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      box-shadow: var(--shadow-soft) !important;
+    }
+
+    .logo-mark {
+      border-radius: 12px !important;
+      justify-content: center !important;
+    }
+
+    .step-pill {
+      justify-content: center !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      padding: 0 14px !important;
+      line-height: 1 !important;
+    }
+
+    .staff-session-pill {
+      position: fixed !important;
+      top: 22px !important;
+      right: calc(30px + 305px + var(--outer-gap, 18px)) !important;
+      z-index: 28 !important;
+      width: 252px !important;
+      max-width: 252px !important;
+      padding: 0 8px 0 14px !important;
+      gap: 8px !important;
+      border: 1px solid rgba(17,17,17,.12) !important;
+      background: rgba(255,255,255,.94) !important;
+      color: rgba(17,17,17,.66) !important;
+      overflow: hidden !important;
+      white-space: nowrap !important;
+      font-size: 13px !important;
+      font-weight: 850 !important;
+      line-height: 1 !important;
+    }
+
+    .staff-session-pill span {
+      flex: 0 0 auto !important;
+      font-size: 12px !important;
+      font-weight: 850 !important;
+      color: rgba(17,17,17,.52) !important;
+    }
+
+    .staff-session-pill strong {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      color: var(--dark) !important;
+      font-size: 14px !important;
+      font-weight: 950 !important;
+    }
+
+    .staff-session-pill button {
+      flex: 0 0 auto !important;
+      height: 30px !important;
+      min-height: 30px !important;
+      padding: 0 10px !important;
+      border-radius: 999px !important;
+      border: 0 !important;
+      background: var(--accent) !important;
+      color: #fff !important;
+      font-size: 11px !important;
+      font-weight: 900 !important;
+      line-height: 1 !important;
+    }
+
+    .estimate-pdf-actions.single-action .estimate-pdf-status {
+      min-height: 58px !important;
+      align-items: center !important;
+      word-break: keep-all !important;
+    }
+
+    #page5Send.nav-btn.next {
+      min-width: 188px !important;
+    }
+
+    @media (max-width: 1366px) {
+      .topbar {
+        grid-template-columns: minmax(0, 1fr) 290px !important;
+      }
+
+      #page2 .topbar {
+        grid-template-columns: minmax(0, 1fr) 306px !important;
+      }
+
+      .staff-session-pill {
+        right: calc(30px + 306px + 14px) !important;
+        width: 220px !important;
+        max-width: 220px !important;
+      }
+
+      .staff-session-pill span {
+        font-size: 11px !important;
+      }
+
+      .staff-session-pill strong {
+        font-size: 13px !important;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .staff-session-pill {
+        right: calc(24px + 282px + 12px) !important;
+        width: 184px !important;
+        max-width: 184px !important;
+        padding-left: 10px !important;
+        gap: 6px !important;
+      }
+
+      .staff-session-pill span {
+        display: none !important;
+      }
+
+      .staff-session-pill button {
+        padding: 0 8px !important;
+      }
+    }
+
   </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -7152,7 +7287,8 @@
   <meta name="apple-mobile-web-app-title" content="N-CORE 견적" />
   <link rel="icon" href="./icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icon-192.png" />
-  <!-- v18: 공유하기 단일 버튼 / 담당자 표시 위치 조정 -->
+  <!-- v19: 담당자/상단 박스 균일화 + 전송하기 단일 버튼 이미지 저장/첨부 공유 -->
+  <!-- v20: 버튼명 전송하기 변경 / v19 전송 기능 유지 -->
 </head>
 <body>
 
@@ -7683,24 +7819,24 @@
           </div>
 
           <div class="estimate-status-card">
-            <div class="estimate-status-label">공유 상태</div>
-            <div id="estimateSendStatus" class="estimate-status-value">공유 전</div>
+            <div class="estimate-status-label">전송 상태</div>
+            <div id="estimateSendStatus" class="estimate-status-value">전송 전</div>
           </div>
 
           <div class="estimate-send-note">
-            공유 전 고객 정보와 견적 내용을 확인해 주세요.
+            전송 전 고객 정보와 연락처를 확인해 주세요.
           </div>
 
           <div class="estimate-pdf-actions single-action">
-            <div id="pdfActionStatus" class="estimate-pdf-status">하단의 공유하기 버튼으로 PDF를 생성하고 공유합니다.</div>
+            <div id="pdfActionStatus" class="estimate-pdf-status">전송하기 버튼으로 견적서 이미지를 저장하고 공유합니다.</div>
           </div>
         </aside>
       </section>
 
       <nav class="bottom-nav">
         <button id="page5Prev" class="nav-btn prev">이전</button>
-        <div class="bottom-status">현재 단계: <strong>견적서</strong> PDF 확인 및 공유</div>
-        <button id="page5Send" class="nav-btn next">공유하기</button>
+        <div class="bottom-status">현재 단계: <strong>견적서</strong> 이미지 저장 및 공유</div>
+        <button id="page5Send" class="nav-btn next">전송하기</button>
       </nav>
     </section>
 
@@ -7817,7 +7953,7 @@
       </div>
       <div class="modal-actions">
         <button id="sendCancel" class="modal-btn cancel">취소</button>
-        <button id="sendConfirm" class="modal-btn confirm">공유하기</button>
+        <button id="sendConfirm" class="modal-btn confirm">전송하기</button>
       </div>
     </div>
   </div>
@@ -8892,17 +9028,59 @@
 
       if (shareBtn) {
         shareBtn.disabled = loading;
-        shareBtn.textContent = loading ? "PDF 생성 중..." : "공유하기";
+        shareBtn.textContent = loading ? "이미지 생성 중..." : "전송하기";
       }
 
       if (status) {
-        status.textContent = message || "하단의 공유하기 버튼으로 PDF를 생성하고 공유합니다.";
+        status.textContent = message || "전송하기 버튼으로 견적서 이미지를 저장하고 공유합니다.";
       }
     }
 
-    async function createEstimatePdfFile() {
-      if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
-        throw new Error("PDF 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
+
+    async function copyTextToClipboardSafe(text) {
+      const value = String(text || "").trim();
+      if (!value) return false;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(value);
+          return true;
+        } catch (err) {
+          console.warn("clipboard api failed", err);
+        }
+      }
+
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = value;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        textarea.style.top = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        const ok = document.execCommand("copy");
+        textarea.remove();
+        return ok;
+      } catch (err) {
+        console.warn("clipboard fallback failed", err);
+        return false;
+      }
+    }
+
+    function getShareImageSafeFileName() {
+      const name = (state.project.customerName || state.savedEstimate?.project?.customerName || "고객").replace(/[\\/:*?"<>|]/g, "").trim() || "고객";
+      const date = new Date();
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${name}_현장견적서_${y}${m}${d}.jpg`;
+    }
+
+    async function renderEstimateCanvas() {
+      if (!window.html2canvas) {
+        throw new Error("이미지 생성 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
       }
 
       const host = document.getElementById("pdfRenderHost");
@@ -8925,6 +9103,30 @@
         logging: false
       });
 
+      host.innerHTML = "";
+      return canvas;
+    }
+
+    async function createEstimateImageFile() {
+      const canvas = await renderEstimateCanvas();
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, "image/jpeg", 0.94);
+      });
+
+      if (!blob) {
+        throw new Error("견적서 이미지 생성에 실패했습니다.");
+      }
+
+      return new File([blob], getShareImageSafeFileName(), { type: "image/jpeg" });
+    }
+
+    async function createEstimatePdfFile() {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        throw new Error("PDF 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
+      }
+
+      const canvas = await renderEstimateCanvas();
+
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({
         orientation: "portrait",
@@ -8935,8 +9137,6 @@
 
       const imageData = canvas.toDataURL("image/jpeg", 0.94);
       pdf.addImage(imageData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
-
-      host.innerHTML = "";
 
       const fileName = getPdfSafeFileName();
       const blob = pdf.output("blob");
@@ -8955,33 +9155,53 @@
     }
 
     async function createAndSharePdf() {
-      setPdfActionState(true, "한 장짜리 PDF를 만들고 있습니다...");
+      readProjectInputs();
+
+      const project = state.savedEstimate?.project || state.project || {};
+      const customerName = project.customerName || "고객";
+      const phone = project.phone || state.project.phone || "";
+      const phoneCopied = await copyTextToClipboardSafe(phone);
+
+      setPdfActionState(true, phoneCopied ? "연락처 복사 완료. 견적서 이미지를 만들고 있습니다..." : "견적서 이미지를 만들고 있습니다...");
 
       try {
-        const file = await createEstimatePdfFile();
+        const file = await createEstimateImageFile();
+
+        // 문자/MMS 첨부 안정성을 위해 파일을 먼저 저장한 뒤 전송창을 엽니다.
+        downloadPdfFile(file);
+
+        const shareText = phone
+          ? `${customerName}님 현장 견적서입니다.\n연락처: ${phone}`
+          : `${customerName}님 현장 견적서입니다.`;
 
         const shareData = {
           files: [file],
           title: "N-CORE 현장 견적서",
-          text: `${state.project.customerName || "고객"}님 현장 견적서입니다.`
+          text: shareText
         };
 
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-          setPdfActionState(true, "공유할 앱을 선택해 주세요.");
+          setPdfActionState(true, phoneCopied ? "이미지 저장 완료. 연락처는 복사되어 있습니다. 공유할 앱을 선택해 주세요." : "이미지 저장 완료. 공유할 앱을 선택해 주세요.");
           await navigator.share(shareData);
           const sendStatus = document.getElementById("estimateSendStatus");
           if (sendStatus) sendStatus.textContent = "공유 완료";
-          setPdfActionState(false, "공유가 완료되었습니다.");
+          setPdfActionState(false, phoneCopied ? "공유 완료. 연락처는 클립보드에 복사되어 있습니다." : "전송 준비가 완료되었습니다.");
         } else {
-          downloadPdfFile(file);
           const sendStatus = document.getElementById("estimateSendStatus");
-          if (sendStatus) sendStatus.textContent = "PDF 저장 완료";
-          setPdfActionState(false, "공유 기능을 지원하지 않아 PDF 파일을 저장했습니다.");
+          if (sendStatus) sendStatus.textContent = "이미지 저장 완료";
+
+          if (phone) {
+            const body = encodeURIComponent(shareText + "\n견적서 이미지를 첨부해 주세요.");
+            window.location.href = `sms:${encodeURIComponent(phone)}?body=${body}`;
+            setPdfActionState(false, "이미지를 저장했습니다. 문자 앱에서 저장된 견적서 이미지를 첨부해 주세요.");
+          } else {
+            setPdfActionState(false, "공유 기능을 지원하지 않아 견적서 이미지만 저장했습니다.");
+          }
         }
       } catch (err) {
         console.error(err);
-        setPdfActionState(false, err.message || "PDF 생성 중 오류가 발생했습니다.");
-        alert(err.message || "PDF 생성 중 오류가 발생했습니다.");
+        setPdfActionState(false, err.message || "견적서 이미지 생성 중 오류가 발생했습니다.");
+        alert(err.message || "견적서 이미지 생성 중 오류가 발생했습니다.");
       }
     }
 
