@@ -6950,141 +6950,6 @@
       box-shadow: 0 0 0 4px rgba(215,96,22,.12) !important;
     }
 
-    /* === v22: 담당자 목록형 선택 UI === */
-    .staff-choice-list {
-      width: 100% !important;
-      max-height: 236px !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      border: 1.5px solid rgba(17,17,17,.16) !important;
-      border-radius: 18px !important;
-      background: #FFFFFF !important;
-      box-shadow: 0 5px 14px rgba(17,17,17,.04) !important;
-      scrollbar-width: thin !important;
-    }
-
-    .staff-choice-list::-webkit-scrollbar {
-      width: 7px !important;
-    }
-
-    .staff-choice-list::-webkit-scrollbar-thumb {
-      background: rgba(17,17,17,.16) !important;
-      border-radius: 999px !important;
-    }
-
-    .staff-choice {
-      position: relative !important;
-      width: 100% !important;
-      min-height: 58px !important;
-      display: grid !important;
-      grid-template-columns: 52px minmax(0, 1fr) 24px !important;
-      align-items: center !important;
-      column-gap: 10px !important;
-      padding: 0 16px !important;
-      border: 0 !important;
-      border-bottom: 1px solid rgba(17,17,17,.12) !important;
-      border-radius: 0 !important;
-      background: #FFFFFF !important;
-      color: var(--ink) !important;
-      text-align: left !important;
-      cursor: pointer !important;
-      outline: none !important;
-      box-sizing: border-box !important;
-      transition: background .08s ease, box-shadow .08s ease !important;
-    }
-
-    .staff-choice:last-child {
-      border-bottom: 0 !important;
-    }
-
-    .staff-choice:hover,
-    .staff-choice:focus-visible {
-      background: rgba(215,96,22,.045) !important;
-    }
-
-    .staff-choice:focus-visible {
-      box-shadow: inset 0 0 0 2px rgba(215,96,22,.28) !important;
-    }
-
-    .staff-choice.selected {
-      background: rgba(215,96,22,.09) !important;
-      box-shadow: inset 4px 0 0 var(--accent) !important;
-    }
-
-    .staff-choice-role {
-      color: rgba(17,17,17,.58) !important;
-      font-size: 15px !important;
-      font-weight: 900 !important;
-      letter-spacing: -0.2px !important;
-      white-space: nowrap !important;
-      text-align: left !important;
-    }
-
-    .staff-choice-name {
-      min-width: 0 !important;
-      color: var(--ink) !important;
-      font-size: 20px !important;
-      font-weight: 950 !important;
-      letter-spacing: -0.65px !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-    }
-
-    .staff-choice-check {
-      color: var(--accent) !important;
-      font-size: 18px !important;
-      font-weight: 950 !important;
-      text-align: center !important;
-      opacity: 0 !important;
-      transform: scale(.72) !important;
-      transition: opacity .10s ease, transform .10s ease !important;
-    }
-
-    .staff-choice.selected .staff-choice-check {
-      opacity: 1 !important;
-      transform: scale(1) !important;
-    }
-
-    .staff-choice:disabled {
-      opacity: .58 !important;
-      cursor: not-allowed !important;
-    }
-
-    .staff-choice-message {
-      min-height: 58px !important;
-      padding: 16px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      color: rgba(17,17,17,.58) !important;
-      font-size: 14px !important;
-      font-weight: 800 !important;
-      line-height: 1.45 !important;
-      text-align: center !important;
-      word-break: keep-all !important;
-    }
-
-    @media (max-height: 720px) and (orientation: landscape) {
-      .login-card {
-        padding-top: 28px !important;
-        padding-bottom: 24px !important;
-      }
-
-      .login-form {
-        margin-top: 18px !important;
-        gap: 11px !important;
-      }
-
-      .staff-choice-list {
-        max-height: 185px !important;
-      }
-
-      .staff-choice {
-        min-height: 54px !important;
-      }
-    }
-
     .login-btn {
       width: 100% !important;
       margin-top: 8px !important;
@@ -7107,6 +6972,53 @@
 
     .login-status.error {
       color: #C0392B !important;
+    }
+
+    /* === v23: PIN 전용 로그인 === */
+    .pin-only-form {
+      width: min(390px, 100%) !important;
+      gap: 16px !important;
+    }
+
+    .pin-only-field > span {
+      text-align: center !important;
+      font-size: 15px !important;
+      color: rgba(17,17,17,.68) !important;
+    }
+
+    .pin-login-input {
+      height: 72px !important;
+      padding: 0 22px !important;
+      text-align: center !important;
+      font-size: 34px !important;
+      font-weight: 950 !important;
+      letter-spacing: 14px !important;
+      font-variant-numeric: tabular-nums !important;
+      caret-color: var(--accent) !important;
+    }
+
+    .pin-login-input::placeholder {
+      font-size: 20px !important;
+      font-weight: 800 !important;
+      letter-spacing: -0.4px !important;
+      color: rgba(17,17,17,.32) !important;
+    }
+
+    .pin-login-input.login-shake {
+      animation: pinLoginShake .28s ease-out both !important;
+    }
+
+    @keyframes pinLoginShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-7px); }
+      75% { transform: translateX(7px); }
+    }
+
+    @media (max-height: 720px) and (orientation: landscape) {
+      .pin-login-input {
+        height: 64px !important;
+        font-size: 30px !important;
+      }
     }
 
     .staff-session-pill {
@@ -7425,7 +7337,7 @@
   <!-- v19: 담당자/상단 박스 균일화 + 전송하기 단일 버튼 이미지 저장/첨부 공유 -->
   <!-- v20: 버튼명 전송하기 변경 / v19 전송 기능 유지 -->
   <!-- v21: PNG 자동 저장 후 고객번호가 입력된 문자 앱 바로 실행 -->
-  <!-- v22: 직급_이름 담당자 목록형 선택 / 구분선 / 로그인 후 이름만 저장 -->
+  <!-- v23: 담당자 선택 제거 / PIN 4자리 전용 로그인 -->
 </head>
 <body>
 
@@ -7434,29 +7346,33 @@
       <div class="start-logo">N-CORE</div>
       <h1 class="start-title">현장 견적 시스템</h1>
       <div class="start-subtitle">
-        담당자 확인 후<br />
-        견적 작성을 시작합니다.
+        개인 PIN 번호를 입력하면<br />
+        담당자가 자동으로 확인됩니다.
       </div>
 
-      <form id="loginForm" class="login-form" autocomplete="off">
-        <label class="login-field">
-          <span>담당자</span>
-          <input id="loginStaffSelect" type="hidden" value="" />
-          <div id="loginStaffList" class="staff-choice-list" role="listbox" aria-label="담당자 선택">
-            <div class="staff-choice-message">담당자 목록 불러오는 중...</div>
-          </div>
-        </label>
-
-        <label class="login-field">
+      <form id="loginForm" class="login-form pin-only-form" autocomplete="off">
+        <label class="login-field pin-only-field">
           <span>PIN 번호</span>
-          <input id="loginPin" class="login-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="개인 PIN 입력" autocomplete="off" required />
+          <input
+            id="loginPin"
+            class="login-input pin-login-input"
+            type="password"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            minlength="4"
+            maxlength="4"
+            placeholder="4자리 PIN"
+            autocomplete="off"
+            aria-label="개인 PIN 4자리"
+            required
+          />
         </label>
 
         <button id="loginBtn" class="start-btn login-btn" type="submit">로그인</button>
-        <div id="loginStatus" class="login-status">담당자관리 시트 기준으로 로그인합니다.</div>
+        <div id="loginStatus" class="login-status">개인 PIN 4자리를 입력해 주세요.</div>
       </form>
 
-      <div class="start-foot">N-CORE On-site Check System 1.1</div>
+      <div class="start-foot">N-CORE On-site Check System 1.2</div>
     </div>
   </section>
   <div class="portrait-warning">
@@ -8102,7 +8018,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxBct_RGHwnqkF6ONRxQ0bqk3Q4J8dNZJanvPM84UJQaEleIzFP4Lg1suWOkoRc5qzc/exec"; // Apps Script 웹앱 URL
-    const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
 
     function jsonpRequest(params, timeout = 7000) {
       if (!GOOGLE_SHEET_API_URL) {
@@ -8160,194 +8075,65 @@
       status.classList.toggle("error", !!isError);
     }
 
-    function parseStaffDisplayName(value) {
-      const displayName = String(value || "")
-        .replace(/_/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-      const parts = displayName.split(" ").filter(Boolean);
-
-      if (parts.length >= 2) {
-        return {
-          displayName,
-          role: parts[0],
-          name: parts.slice(1).join(" ")
-        };
-      }
-
-      return {
-        displayName,
-        role: "",
-        name: displayName
-      };
+    function normalizePinInput(value) {
+      return String(value || "")
+        .replace(/\D/g, "")
+        .slice(0, 4);
     }
 
-    function getPlainStaffName(value) {
-      return parseStaffDisplayName(value).name;
-    }
+    function showPinError(message) {
+      const pinInput = document.getElementById("loginPin");
+      setLoginStatus(message, true);
 
-    function selectLoginStaff(staffName, moveFocus = false) {
-      const input = document.getElementById("loginStaffSelect");
-      const list = document.getElementById("loginStaffList");
-      if (!input || !list) return;
-
-      input.value = String(staffName || "").trim();
-
-      list.querySelectorAll(".staff-choice").forEach(button => {
-        const selected = button.dataset.staffName === input.value;
-        button.classList.toggle("selected", selected);
-        button.setAttribute("aria-selected", selected ? "true" : "false");
-      });
-
-      if (input.value) {
-        setLoginStatus("PIN 번호를 입력해 주세요.");
-        if (moveFocus) {
-          document.getElementById("loginPin")?.focus();
-        }
-      }
-    }
-
-    function renderStaffChoices(staffList, lastStaff) {
-      const list = document.getElementById("loginStaffList");
-      if (!list) return;
-
-      list.innerHTML = "";
-
-      staffList.forEach(staffName => {
-        const parsed = parseStaffDisplayName(staffName);
-        const button = document.createElement("button");
-
-        button.type = "button";
-        button.className = "staff-choice";
-        button.dataset.staffName = parsed.displayName;
-        button.setAttribute("role", "option");
-        button.setAttribute("aria-selected", "false");
-        button.setAttribute("aria-label", parsed.displayName);
-
-        const role = document.createElement("span");
-        role.className = "staff-choice-role";
-        role.textContent = parsed.role;
-
-        const name = document.createElement("span");
-        name.className = "staff-choice-name";
-        name.textContent = parsed.name;
-
-        const check = document.createElement("span");
-        check.className = "staff-choice-check";
-        check.textContent = "✓";
-        check.setAttribute("aria-hidden", "true");
-
-        button.append(role, name, check);
-        button.addEventListener("click", () => {
-          selectLoginStaff(parsed.displayName, true);
-        });
-
-        list.appendChild(button);
-      });
-
-      const matchedStaff = staffList.find(name => {
-        return name === lastStaff ||
-          getPlainStaffName(name) === getPlainStaffName(lastStaff);
-      });
-
-      if (matchedStaff) {
-        selectLoginStaff(matchedStaff, false);
-      }
-    }
-
-    async function loadStaffList() {
-      const input = document.getElementById("loginStaffSelect");
-      const list = document.getElementById("loginStaffList");
-      const lastStaff = localStorage.getItem(STAFF_STORAGE_KEY) || "";
-
-      if (!input || !list) return;
-
-      input.value = "";
-      list.innerHTML = `<div class="staff-choice-message">담당자 목록을 불러오는 중입니다.</div>`;
-      setLoginStatus("담당자 목록을 불러오는 중입니다.");
-
-      try {
-        const result = await jsonpRequest({ action: "staffList" });
-        const staffList = Array.isArray(result.staff)
-          ? result.staff.map(name => parseStaffDisplayName(name).displayName).filter(Boolean)
-          : [];
-
-        if (!result.ok) {
-          throw new Error(result.message || "담당자 목록을 불러오지 못했습니다.");
-        }
-
-        if (!staffList.length) {
-          list.innerHTML = `<div class="staff-choice-message">등록된 담당자가 없습니다.</div>`;
-          setLoginStatus("담당자관리 시트를 확인한 후 새로고침해 주세요.", true);
-          return;
-        }
-
-        renderStaffChoices(staffList, lastStaff);
-        setLoginStatus(
-          input.value
-            ? "PIN 번호를 입력해 주세요."
-            : "담당자를 선택해 주세요."
-        );
-
-      } catch (err) {
-        console.error(err);
-        list.innerHTML = `<div class="staff-choice-message">담당자 목록을 불러오지 못했습니다.</div>`;
-        setLoginStatus(err.message || "담당자 목록을 불러오지 못했습니다.", true);
+      if (pinInput) {
+        pinInput.classList.remove("login-shake");
+        void pinInput.offsetWidth;
+        pinInput.classList.add("login-shake");
+        pinInput.value = "";
+        pinInput.focus();
       }
     }
 
     async function handleLoginSubmit(event) {
       event.preventDefault();
 
-      const staffInput = document.getElementById("loginStaffSelect");
       const pinInput = document.getElementById("loginPin");
       const loginBtn = document.getElementById("loginBtn");
+      const pin = normalizePinInput(pinInput?.value);
 
-      const staffName = (staffInput?.value || "").trim();
-      const pin = (pinInput?.value || "").trim();
-
-      if (!staffName) {
-        setLoginStatus("담당자를 선택해 주세요.", true);
-        document.querySelector(".staff-choice")?.focus();
-        return;
-      }
-
-      if (!pin) {
-        setLoginStatus("PIN 번호를 입력해 주세요.", true);
-        pinInput?.focus();
+      if (!/^\d{4}$/.test(pin)) {
+        showPinError("PIN 번호 4자리를 정확히 입력해 주세요.");
         return;
       }
 
       loginBtn.disabled = true;
       loginBtn.textContent = "확인 중...";
-      setLoginStatus("담당자 PIN을 확인하고 있습니다.");
+      setLoginStatus("PIN 번호를 확인하고 있습니다.");
 
       try {
-        const result = await jsonpRequest({ action: "login", staffName, pin });
+        const result = await jsonpRequest({ action: "login", pin });
 
         if (!result.ok) {
           state.auth = { loggedIn: false, staffName: "" };
-          setLoginStatus(result.message || "담당자 또는 PIN이 맞지 않습니다.", true);
-          pinInput.value = "";
-          pinInput.focus();
+          showPinError(result.message || "PIN 번호가 맞지 않습니다.");
           return;
         }
 
         state.auth = {
           loggedIn: true,
-          staffName: result.staffName || getPlainStaffName(staffName),
-          staffDisplayName: result.staffDisplayName || staffName
+          staffName: result.staffName || ""
         };
-        localStorage.setItem(
-          STAFF_STORAGE_KEY,
-          state.auth.staffDisplayName || staffName
-        );
+
+        if (!state.auth.staffName) {
+          throw new Error("담당자 정보를 확인하지 못했습니다.");
+        }
+
         updateStaffSessionUI();
         openAppAfterLogin();
+
       } catch (err) {
         console.error(err);
-        setLoginStatus(err.message || "로그인 확인 중 오류가 발생했습니다.", true);
+        showPinError(err.message || "로그인 확인 중 오류가 발생했습니다.");
       } finally {
         loginBtn.disabled = false;
         loginBtn.textContent = "로그인";
@@ -8377,18 +8163,14 @@
       app.style.display = "none";
       startScreen.style.display = "flex";
       startScreen.classList.remove("hide");
-      document.getElementById("loginPin").value = "";
-      setLoginStatus("담당자 목록을 불러오는 중입니다.");
+      const pinInput = document.getElementById("loginPin");
+      if (pinInput) {
+        pinInput.value = "";
+        pinInput.classList.remove("login-shake");
+      }
+      setLoginStatus("개인 PIN 4자리를 입력해 주세요.");
       updateStaffSessionUI();
-      loadStaffList();
-      setTimeout(() => {
-        const selected = document.querySelector(".staff-choice.selected");
-        if (selected) {
-          document.getElementById("loginPin")?.focus();
-        } else {
-          document.querySelector(".staff-choice")?.focus();
-        }
-      }, 180);
+      setTimeout(() => pinInput?.focus(), 80);
     }
 
     function ensureLoggedIn() {
@@ -10147,13 +9929,25 @@
     document.getElementById("loginForm").addEventListener("submit", handleLoginSubmit);
     document.getElementById("changeStaffBtn").addEventListener("click", showLoginScreen);
 
-    const lastStaffName = localStorage.getItem(STAFF_STORAGE_KEY) || "";
-    if (lastStaffName) {
-      state.auth.staffName = lastStaffName;
-      updateStaffSessionUI();
+    const loginPinInput = document.getElementById("loginPin");
+    if (loginPinInput) {
+      loginPinInput.addEventListener("input", (event) => {
+        const normalized = normalizePinInput(event.target.value);
+        if (event.target.value !== normalized) {
+          event.target.value = normalized;
+        }
+        event.target.classList.remove("login-shake");
+
+        if (normalized.length === 4) {
+          setLoginStatus("로그인 버튼을 눌러 주세요.");
+        } else {
+          setLoginStatus("개인 PIN 4자리를 입력해 주세요.");
+        }
+      });
+
+      setTimeout(() => loginPinInput.focus(), 120);
     }
 
-    loadStaffList();
     setActive("labor");
   </script>
 
