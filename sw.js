@@ -1,12 +1,12 @@
-const CACHE_NAME = "ncore-field-estimate-pwa-v24";
+const CACHE_NAME = "ncore-field-estimate-pwa-v25";
 
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./PretendardVariable.woff2",
-  "./icon-192.png",
-  "./icon-512.png",
+  "./icon-192-v2.png",
+  "./icon-512-v2.png",
   "./ncore-dark-logo-v7.png",
   "./ncore-watermark-v7.png"
 ];
@@ -37,7 +37,6 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // 화면 문서는 항상 인터넷의 최신 index.html을 먼저 확인합니다.
   if (request.mode === "navigate" || url.pathname.endsWith("/index.html")) {
     event.respondWith(
       fetch(request)
@@ -62,7 +61,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 같은 저장소의 이미지·폰트 등은 빠르게 열고, 뒤에서 최신본으로 갱신합니다.
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(request).then((cached) => {

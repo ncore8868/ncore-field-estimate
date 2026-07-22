@@ -1,23 +1,20 @@
 {
-  "name": "N-CORE 현장 견적",
-  "short_name": "N-CORE 견적",
-  "id": "./",
+  "name": "N-CORE 현장견적 시스템",
+  "short_name": "현장견적",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "landscape",
-  "background_color": "#F7F7F7",
-  "theme_color": "#E97132",
-  "description": "N-CORE 현장 견적 입력 및 PDF 공유 프로그램",
+  "background_color": "#111111",
+  "theme_color": "#111111",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "./icon-192-v2.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./icon-512.png",
+      "src": "./icon-512-v2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
