@@ -6950,6 +6950,18 @@
       box-shadow: 0 0 0 4px rgba(215,96,22,.12) !important;
     }
 
+    .pin-only-login {
+      width: min(360px, 100%) !important;
+    }
+
+    #loginPin {
+      text-align: center !important;
+      font-size: 26px !important;
+      letter-spacing: 0.32em !important;
+      padding-left: calc(18px + 0.32em) !important;
+      font-variant-numeric: tabular-nums !important;
+    }
+
     .login-btn {
       width: 100% !important;
       margin-top: 8px !important;
@@ -7278,7 +7290,26 @@
       }
     }
 
-  </style>
+  
+
+    /* === v24 FINAL: PIN 화면 간소화 / 6단계 견적서 헤더 로고 정렬 === */
+    .login-status:empty {
+      display: none !important;
+    }
+
+    #page5 .estimate-head-logo-wrap {
+      position: relative !important;
+      left: 8px !important;
+      top: -4px !important;
+    }
+
+    @media (max-height: 720px) and (orientation: landscape) {
+      #page5 .estimate-head-logo-wrap {
+        left: 6px !important;
+        top: -3px !important;
+      }
+    }
+</style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -7291,6 +7322,8 @@
   <!-- v20: 버튼명 전송하기 변경 / v19 전송 기능 유지 -->
   <!-- v21: PNG 자동 저장 후 고객번호가 입력된 문자 앱 바로 실행 -->
   <!-- v22: 폐기물 종류별 단가 · 장비 · 인건비 기준 단가 업데이트 -->
+  <!-- v23: 담당자 선택 제거 · 개인 PIN 4자리 단독 로그인 복구 -->
+  <!-- v24: 로그인 안내 문구 정리 · 6단계 견적서 로고 정렬 보정 -->
 </head>
 <body>
 
@@ -7298,29 +7331,17 @@
     <div class="start-card login-card">
       <div class="start-logo">N-CORE</div>
       <h1 class="start-title">현장 견적 시스템</h1>
-      <div class="start-subtitle">
-        담당자 확인 후<br />
-        견적 작성을 시작합니다.
-      </div>
-
-      <form id="loginForm" class="login-form" autocomplete="off">
-        <label class="login-field">
-          <span>담당자</span>
-          <select id="loginStaffSelect" class="login-input" required>
-            <option value="">담당자 목록 불러오는 중...</option>
-          </select>
-        </label>
-
+      <form id="loginForm" class="login-form pin-only-login" autocomplete="off">
         <label class="login-field">
           <span>PIN 번호</span>
-          <input id="loginPin" class="login-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="개인 PIN 입력" autocomplete="off" required />
+          <input id="loginPin" class="login-input" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" required />
         </label>
 
         <button id="loginBtn" class="start-btn login-btn" type="submit">로그인</button>
-        <div id="loginStatus" class="login-status">담당자관리 시트 기준으로 로그인합니다.</div>
+        <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div class="start-foot">N-CORE On-site Check System 1.2</div>
+      <div class="start-foot">N-CORE On-site Check System 1.4</div>
     </div>
   </section>
   <div class="portrait-warning">
@@ -8024,85 +8045,36 @@
       status.classList.toggle("error", !!isError);
     }
 
-    async function loadStaffList() {
-      const select = document.getElementById("loginStaffSelect");
-      const lastStaff = localStorage.getItem(STAFF_STORAGE_KEY) || "";
-      if (!select) return;
-
-      select.disabled = true;
-      select.innerHTML = `<option value="">담당자 목록 불러오는 중...</option>`;
-      setLoginStatus("담당자 목록을 불러오는 중입니다.");
-
-      try {
-        const result = await jsonpRequest({ action: "staffList" });
-        const staffList = Array.isArray(result.staff) ? result.staff : [];
-
-        if (!result.ok) {
-          throw new Error(result.message || "담당자 목록을 불러오지 못했습니다.");
-        }
-
-        if (!staffList.length) {
-          select.innerHTML = `<option value="">등록된 담당자가 없습니다</option>`;
-          setLoginStatus("담당자 목록을 확인할 수 없습니다. 시트 저장 후 새로고침해 주세요.", true);
-          return;
-        }
-
-        select.innerHTML = `<option value="">담당자 선택</option>` + staffList
-          .map(name => `<option value="${escapePdfHtml(name)}">${escapePdfHtml(name)}</option>`)
-          .join("");
-
-        if (lastStaff && staffList.includes(lastStaff)) {
-          select.value = lastStaff;
-        }
-
-        select.disabled = false;
-        setLoginStatus("담당자를 선택하고 개인 PIN을 입력해 주세요.");
-
-      } catch (err) {
-        console.error(err);
-        select.innerHTML = `<option value="">담당자 목록 오류</option>`;
-        setLoginStatus(err.message || "담당자 목록을 불러오지 못했습니다.", true);
-      }
-    }
-
     async function handleLoginSubmit(event) {
       event.preventDefault();
 
-      const select = document.getElementById("loginStaffSelect");
       const pinInput = document.getElementById("loginPin");
       const loginBtn = document.getElementById("loginBtn");
-
-      const staffName = (select?.value || "").trim();
       const pin = (pinInput?.value || "").trim();
 
-      if (!staffName) {
-        setLoginStatus("담당자를 선택해 주세요.", true);
-        select?.focus();
-        return;
-      }
-
-      if (!pin) {
-        setLoginStatus("PIN 번호를 입력해 주세요.", true);
+      if (!/^\d{4}$/.test(pin)) {
+        setLoginStatus("PIN 번호 4자리를 정확히 입력해 주세요.", true);
         pinInput?.focus();
+        pinInput?.select();
         return;
       }
 
       loginBtn.disabled = true;
       loginBtn.textContent = "확인 중...";
-      setLoginStatus("담당자 PIN을 확인하고 있습니다.");
+      setLoginStatus("PIN 번호를 확인하고 있습니다.");
 
       try {
-        const result = await jsonpRequest({ action: "login", staffName, pin });
+        const result = await jsonpRequest({ action: "login", pin });
 
-        if (!result.ok) {
+        if (!result.ok || !result.staffName) {
           state.auth = { loggedIn: false, staffName: "" };
-          setLoginStatus(result.message || "담당자 또는 PIN이 맞지 않습니다.", true);
+          setLoginStatus(result.message || "PIN 번호가 맞지 않습니다.", true);
           pinInput.value = "";
           pinInput.focus();
           return;
         }
 
-        state.auth = { loggedIn: true, staffName: result.staffName || staffName };
+        state.auth = { loggedIn: true, staffName: String(result.staffName).trim() };
         localStorage.setItem(STAFF_STORAGE_KEY, state.auth.staffName);
         updateStaffSessionUI();
         openAppAfterLogin();
@@ -8139,7 +8111,7 @@
       startScreen.style.display = "flex";
       startScreen.classList.remove("hide");
       document.getElementById("loginPin").value = "";
-      setLoginStatus("담당자를 선택하고 개인 PIN을 입력해 주세요.");
+      setLoginStatus("");
       updateStaffSessionUI();
       setTimeout(() => document.getElementById("loginPin")?.focus(), 80);
     }
@@ -9956,7 +9928,7 @@
       updateStaffSessionUI();
     }
 
-    loadStaffList();
+    setLoginStatus("");
     setActive("labor");
   </script>
 
