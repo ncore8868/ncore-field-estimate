@@ -6974,53 +6974,6 @@
       color: #C0392B !important;
     }
 
-    /* === v23: PIN 전용 로그인 === */
-    .pin-only-form {
-      width: min(390px, 100%) !important;
-      gap: 16px !important;
-    }
-
-    .pin-only-field > span {
-      text-align: center !important;
-      font-size: 15px !important;
-      color: rgba(17,17,17,.68) !important;
-    }
-
-    .pin-login-input {
-      height: 72px !important;
-      padding: 0 22px !important;
-      text-align: center !important;
-      font-size: 34px !important;
-      font-weight: 950 !important;
-      letter-spacing: 14px !important;
-      font-variant-numeric: tabular-nums !important;
-      caret-color: var(--accent) !important;
-    }
-
-    .pin-login-input::placeholder {
-      font-size: 20px !important;
-      font-weight: 800 !important;
-      letter-spacing: -0.4px !important;
-      color: rgba(17,17,17,.32) !important;
-    }
-
-    .pin-login-input.login-shake {
-      animation: pinLoginShake .28s ease-out both !important;
-    }
-
-    @keyframes pinLoginShake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-7px); }
-      75% { transform: translateX(7px); }
-    }
-
-    @media (max-height: 720px) and (orientation: landscape) {
-      .pin-login-input {
-        height: 64px !important;
-        font-size: 30px !important;
-      }
-    }
-
     .staff-session-pill {
       position: fixed !important;
       top: 10px !important;
@@ -7337,7 +7290,7 @@
   <!-- v19: 담당자/상단 박스 균일화 + 전송하기 단일 버튼 이미지 저장/첨부 공유 -->
   <!-- v20: 버튼명 전송하기 변경 / v19 전송 기능 유지 -->
   <!-- v21: PNG 자동 저장 후 고객번호가 입력된 문자 앱 바로 실행 -->
-  <!-- v23: 담당자 선택 제거 / PIN 4자리 전용 로그인 -->
+  <!-- v22: 폐기물 종류별 단가 · 장비 · 인건비 기준 단가 업데이트 -->
 </head>
 <body>
 
@@ -7346,30 +7299,25 @@
       <div class="start-logo">N-CORE</div>
       <h1 class="start-title">현장 견적 시스템</h1>
       <div class="start-subtitle">
-        개인 PIN 번호를 입력하면<br />
-        담당자가 자동으로 확인됩니다.
+        담당자 확인 후<br />
+        견적 작성을 시작합니다.
       </div>
 
-      <form id="loginForm" class="login-form pin-only-form" autocomplete="off">
-        <label class="login-field pin-only-field">
+      <form id="loginForm" class="login-form" autocomplete="off">
+        <label class="login-field">
+          <span>담당자</span>
+          <select id="loginStaffSelect" class="login-input" required>
+            <option value="">담당자 목록 불러오는 중...</option>
+          </select>
+        </label>
+
+        <label class="login-field">
           <span>PIN 번호</span>
-          <input
-            id="loginPin"
-            class="login-input pin-login-input"
-            type="password"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            minlength="4"
-            maxlength="4"
-            placeholder="4자리 PIN"
-            autocomplete="off"
-            aria-label="개인 PIN 4자리"
-            required
-          />
+          <input id="loginPin" class="login-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="개인 PIN 입력" autocomplete="off" required />
         </label>
 
         <button id="loginBtn" class="start-btn login-btn" type="submit">로그인</button>
-        <div id="loginStatus" class="login-status">개인 PIN 4자리를 입력해 주세요.</div>
+        <div id="loginStatus" class="login-status">담당자관리 시트 기준으로 로그인합니다.</div>
       </form>
 
       <div class="start-foot">N-CORE On-site Check System 1.2</div>
@@ -8018,6 +7966,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxBct_RGHwnqkF6ONRxQ0bqk3Q4J8dNZJanvPM84UJQaEleIzFP4Lg1suWOkoRc5qzc/exec"; // Apps Script 웹앱 URL
+    const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
 
     function jsonpRequest(params, timeout = 7000) {
       if (!GOOGLE_SHEET_API_URL) {
@@ -8075,65 +8024,91 @@
       status.classList.toggle("error", !!isError);
     }
 
-    function normalizePinInput(value) {
-      return String(value || "")
-        .replace(/\D/g, "")
-        .slice(0, 4);
-    }
+    async function loadStaffList() {
+      const select = document.getElementById("loginStaffSelect");
+      const lastStaff = localStorage.getItem(STAFF_STORAGE_KEY) || "";
+      if (!select) return;
 
-    function showPinError(message) {
-      const pinInput = document.getElementById("loginPin");
-      setLoginStatus(message, true);
+      select.disabled = true;
+      select.innerHTML = `<option value="">담당자 목록 불러오는 중...</option>`;
+      setLoginStatus("담당자 목록을 불러오는 중입니다.");
 
-      if (pinInput) {
-        pinInput.classList.remove("login-shake");
-        void pinInput.offsetWidth;
-        pinInput.classList.add("login-shake");
-        pinInput.value = "";
-        pinInput.focus();
+      try {
+        const result = await jsonpRequest({ action: "staffList" });
+        const staffList = Array.isArray(result.staff) ? result.staff : [];
+
+        if (!result.ok) {
+          throw new Error(result.message || "담당자 목록을 불러오지 못했습니다.");
+        }
+
+        if (!staffList.length) {
+          select.innerHTML = `<option value="">등록된 담당자가 없습니다</option>`;
+          setLoginStatus("담당자 목록을 확인할 수 없습니다. 시트 저장 후 새로고침해 주세요.", true);
+          return;
+        }
+
+        select.innerHTML = `<option value="">담당자 선택</option>` + staffList
+          .map(name => `<option value="${escapePdfHtml(name)}">${escapePdfHtml(name)}</option>`)
+          .join("");
+
+        if (lastStaff && staffList.includes(lastStaff)) {
+          select.value = lastStaff;
+        }
+
+        select.disabled = false;
+        setLoginStatus("담당자를 선택하고 개인 PIN을 입력해 주세요.");
+
+      } catch (err) {
+        console.error(err);
+        select.innerHTML = `<option value="">담당자 목록 오류</option>`;
+        setLoginStatus(err.message || "담당자 목록을 불러오지 못했습니다.", true);
       }
     }
 
     async function handleLoginSubmit(event) {
       event.preventDefault();
 
+      const select = document.getElementById("loginStaffSelect");
       const pinInput = document.getElementById("loginPin");
       const loginBtn = document.getElementById("loginBtn");
-      const pin = normalizePinInput(pinInput?.value);
 
-      if (!/^\d{4}$/.test(pin)) {
-        showPinError("PIN 번호 4자리를 정확히 입력해 주세요.");
+      const staffName = (select?.value || "").trim();
+      const pin = (pinInput?.value || "").trim();
+
+      if (!staffName) {
+        setLoginStatus("담당자를 선택해 주세요.", true);
+        select?.focus();
+        return;
+      }
+
+      if (!pin) {
+        setLoginStatus("PIN 번호를 입력해 주세요.", true);
+        pinInput?.focus();
         return;
       }
 
       loginBtn.disabled = true;
       loginBtn.textContent = "확인 중...";
-      setLoginStatus("PIN 번호를 확인하고 있습니다.");
+      setLoginStatus("담당자 PIN을 확인하고 있습니다.");
 
       try {
-        const result = await jsonpRequest({ action: "login", pin });
+        const result = await jsonpRequest({ action: "login", staffName, pin });
 
         if (!result.ok) {
           state.auth = { loggedIn: false, staffName: "" };
-          showPinError(result.message || "PIN 번호가 맞지 않습니다.");
+          setLoginStatus(result.message || "담당자 또는 PIN이 맞지 않습니다.", true);
+          pinInput.value = "";
+          pinInput.focus();
           return;
         }
 
-        state.auth = {
-          loggedIn: true,
-          staffName: result.staffName || ""
-        };
-
-        if (!state.auth.staffName) {
-          throw new Error("담당자 정보를 확인하지 못했습니다.");
-        }
-
+        state.auth = { loggedIn: true, staffName: result.staffName || staffName };
+        localStorage.setItem(STAFF_STORAGE_KEY, state.auth.staffName);
         updateStaffSessionUI();
         openAppAfterLogin();
-
       } catch (err) {
         console.error(err);
-        showPinError(err.message || "로그인 확인 중 오류가 발생했습니다.");
+        setLoginStatus(err.message || "로그인 확인 중 오류가 발생했습니다.", true);
       } finally {
         loginBtn.disabled = false;
         loginBtn.textContent = "로그인";
@@ -8163,14 +8138,10 @@
       app.style.display = "none";
       startScreen.style.display = "flex";
       startScreen.classList.remove("hide");
-      const pinInput = document.getElementById("loginPin");
-      if (pinInput) {
-        pinInput.value = "";
-        pinInput.classList.remove("login-shake");
-      }
-      setLoginStatus("개인 PIN 4자리를 입력해 주세요.");
+      document.getElementById("loginPin").value = "";
+      setLoginStatus("담당자를 선택하고 개인 PIN을 입력해 주세요.");
       updateStaffSessionUI();
-      setTimeout(() => pinInput?.focus(), 80);
+      setTimeout(() => document.getElementById("loginPin")?.focus(), 80);
     }
 
     function ensureLoggedIn() {
@@ -8230,22 +8201,38 @@
     }
 
     const fixedRates = {
-      laborSkilled: 220000,
-      laborHelper: 170000,
+      laborSkilled: 250000,
+      laborHelper: 180000,
       sky: 550000,
-      ladder: 350000,
-      miniFork: 450000,
-      highRental: 300000,
-      btScaffold: 250000,
-      truck1: 180000,
-      truck25: 300000,
-      truck5: 500000
+      ladder: 600000,
+      miniFork: 700000,
+      highRental: 100000,
+      btScaffold: 50000,
+      truck1Wood: 130000,
+      truck1Mixed: 300000,
+      truck1Concrete: 150000,
+      truck25Wood: 230000,
+      truck25Mixed: 750000,
+      truck25Concrete: 250000,
+      truck5Wood: 330000,
+      truck5Mixed: 1400000,
+      truck5Concrete: 350000
     };
 
     const state = {
       labor: { skilled: 0, helper: 0, days: 1 },
       equipment: { sky: 0, ladder: 0, miniFork: 0, highRental: 0, btScaffold: 0 },
-      waste: { truck1: 0, truck25: 0, truck5: 0 },
+      waste: {
+        truck1Wood: 0,
+        truck1Mixed: 0,
+        truck1Concrete: 0,
+        truck25Wood: 0,
+        truck25Mixed: 0,
+        truck25Concrete: 0,
+        truck5Wood: 0,
+        truck5Mixed: 0,
+        truck5Concrete: 0
+      },
       extra: { amount: 0, memo: "" },
       project: { customerName: "", phone: "", address: "" },
       auth: { loggedIn: false, staffName: "" },
@@ -8302,12 +8289,18 @@
       },
       waste: {
         title: "폐기물 운반",
-        sub: "예상 운반 차량과 운반 횟수를 입력합니다.",
-        badge: "운반 횟수 기준",
+        sub: "차량 톤수와 폐기물 종류별 운반 횟수를 입력합니다.",
+        badge: "종류별 운반 횟수",
         rows: [
-          { key: "truck1", label: "1t 차량", desc: "소량 폐기물 또는 보조 운반", unit: "회", group: "waste" },
-          { key: "truck25", label: "2.5t 차량", desc: "중간 규모 폐기물 운반", unit: "회", group: "waste" },
-          { key: "truck5", label: "5t 차량", desc: "대량 폐기물 운반", unit: "회", group: "waste" }
+          { key: "truck1Wood", label: "1톤 목재", desc: "1톤 차량 · 목재류 폐기물", unit: "회", group: "waste" },
+          { key: "truck1Mixed", label: "1톤 혼합폐기물", desc: "1톤 차량 · 혼합폐기물", unit: "회", group: "waste" },
+          { key: "truck1Concrete", label: "1톤 폐콘크리트", desc: "1톤 차량 · 폐콘크리트", unit: "회", group: "waste" },
+          { key: "truck25Wood", label: "2.5톤 목재", desc: "2.5톤 차량 · 목재류 폐기물", unit: "회", group: "waste" },
+          { key: "truck25Mixed", label: "2.5톤 혼합폐기물", desc: "2.5톤 차량 · 혼합폐기물", unit: "회", group: "waste" },
+          { key: "truck25Concrete", label: "2.5톤 폐콘크리트", desc: "2.5톤 차량 · 폐콘크리트", unit: "회", group: "waste" },
+          { key: "truck5Wood", label: "5톤 목재", desc: "5톤 차량 · 목재류 폐기물", unit: "회", group: "waste" },
+          { key: "truck5Mixed", label: "5톤 혼합폐기물", desc: "5톤 차량 · 혼합폐기물", unit: "회", group: "waste" },
+          { key: "truck5Concrete", label: "5톤 폐콘크리트", desc: "5톤 차량 · 폐콘크리트", unit: "회", group: "waste" }
         ]
       },
       extra: {
@@ -8348,9 +8341,15 @@
         (state.equipment.highRental * fixedRates.highRental) +
         (state.equipment.btScaffold * fixedRates.btScaffold);
       const waste =
-        (state.waste.truck1 * fixedRates.truck1) +
-        (state.waste.truck25 * fixedRates.truck25) +
-        (state.waste.truck5 * fixedRates.truck5);
+        (state.waste.truck1Wood * fixedRates.truck1Wood) +
+        (state.waste.truck1Mixed * fixedRates.truck1Mixed) +
+        (state.waste.truck1Concrete * fixedRates.truck1Concrete) +
+        (state.waste.truck25Wood * fixedRates.truck25Wood) +
+        (state.waste.truck25Mixed * fixedRates.truck25Mixed) +
+        (state.waste.truck25Concrete * fixedRates.truck25Concrete) +
+        (state.waste.truck5Wood * fixedRates.truck5Wood) +
+        (state.waste.truck5Mixed * fixedRates.truck5Mixed) +
+        (state.waste.truck5Concrete * fixedRates.truck5Concrete);
       const extra = state.extra.amount;
       const total = labor + equipment + waste + extra;
       state.totals = { labor, equipment, waste, extra, total };
@@ -8463,7 +8462,17 @@
     function resetInternalInputs() {
       state.labor = { skilled: 0, helper: 0, days: 1 };
       state.equipment = { sky: 0, ladder: 0, miniFork: 0, highRental: 0, btScaffold: 0 };
-      state.waste = { truck1: 0, truck25: 0, truck5: 0 };
+      state.waste = {
+        truck1Wood: 0,
+        truck1Mixed: 0,
+        truck1Concrete: 0,
+        truck25Wood: 0,
+        truck25Mixed: 0,
+        truck25Concrete: 0,
+        truck5Wood: 0,
+        truck5Mixed: 0,
+        truck5Concrete: 0
+      };
       state.extra = { amount: 0, memo: "" };
 
       // 저장 전 산정값이 바뀌었으므로 기존 임시 견적 데이터는 무효화합니다.
@@ -8828,9 +8837,15 @@
       };
 
       const wasteMap = {
-        "폐기물 1톤 차량": { quantity: state.waste.truck1 || 0, unitPrice: fixedRates.truck1, unit: "회" },
-        "폐기물 2.5톤 차량": { quantity: state.waste.truck25 || 0, unitPrice: fixedRates.truck25, unit: "회" },
-        "폐기물 5톤 차량": { quantity: state.waste.truck5 || 0, unitPrice: fixedRates.truck5, unit: "회" }
+        "1톤 목재": { quantity: state.waste.truck1Wood || 0, unitPrice: fixedRates.truck1Wood, unit: "회" },
+        "1톤 혼합폐기물": { quantity: state.waste.truck1Mixed || 0, unitPrice: fixedRates.truck1Mixed, unit: "회" },
+        "1톤 폐콘크리트": { quantity: state.waste.truck1Concrete || 0, unitPrice: fixedRates.truck1Concrete, unit: "회" },
+        "2.5톤 목재": { quantity: state.waste.truck25Wood || 0, unitPrice: fixedRates.truck25Wood, unit: "회" },
+        "2.5톤 혼합폐기물": { quantity: state.waste.truck25Mixed || 0, unitPrice: fixedRates.truck25Mixed, unit: "회" },
+        "2.5톤 폐콘크리트": { quantity: state.waste.truck25Concrete || 0, unitPrice: fixedRates.truck25Concrete, unit: "회" },
+        "5톤 목재": { quantity: state.waste.truck5Wood || 0, unitPrice: fixedRates.truck5Wood, unit: "회" },
+        "5톤 혼합폐기물": { quantity: state.waste.truck5Mixed || 0, unitPrice: fixedRates.truck5Mixed, unit: "회" },
+        "5톤 폐콘크리트": { quantity: state.waste.truck5Concrete || 0, unitPrice: fixedRates.truck5Concrete, unit: "회" }
       };
 
       const source = key === "equipment" ? equipmentMap : (key === "waste" ? wasteMap : {});
@@ -8873,9 +8888,15 @@
       if ((state.equipment.btScaffold || 0) > 0) equipment.push("비티아시바 설치");
 
       const waste = [];
-      if ((state.waste.truck1 || 0) > 0) waste.push("폐기물 1톤 차량");
-      if ((state.waste.truck25 || 0) > 0) waste.push("폐기물 2.5톤 차량");
-      if ((state.waste.truck5 || 0) > 0) waste.push("폐기물 5톤 차량");
+      if ((state.waste.truck1Wood || 0) > 0) waste.push("1톤 목재");
+      if ((state.waste.truck1Mixed || 0) > 0) waste.push("1톤 혼합폐기물");
+      if ((state.waste.truck1Concrete || 0) > 0) waste.push("1톤 폐콘크리트");
+      if ((state.waste.truck25Wood || 0) > 0) waste.push("2.5톤 목재");
+      if ((state.waste.truck25Mixed || 0) > 0) waste.push("2.5톤 혼합폐기물");
+      if ((state.waste.truck25Concrete || 0) > 0) waste.push("2.5톤 폐콘크리트");
+      if ((state.waste.truck5Wood || 0) > 0) waste.push("5톤 목재");
+      if ((state.waste.truck5Mixed || 0) > 0) waste.push("5톤 혼합폐기물");
+      if ((state.waste.truck5Concrete || 0) > 0) waste.push("5톤 폐콘크리트");
 
       return { equipment, waste };
     }
@@ -9413,7 +9434,7 @@
         sub: "폐기물 반출과 처리 관련 범위를 선택합니다.",
         badge: "반출 · 처리",
         groups: [
-          { name: "차량", items: ["폐기물 1톤 차량", "폐기물 2.5톤 차량", "폐기물 5톤 차량"] },
+          { name: "차량 · 종류", items: ["1톤 목재", "1톤 혼합폐기물", "1톤 폐콘크리트", "2.5톤 목재", "2.5톤 혼합폐기물", "2.5톤 폐콘크리트", "5톤 목재", "5톤 혼합폐기물", "5톤 폐콘크리트"] },
           { name: "처리", items: ["혼합폐기물 처리", "폐콘크리트 처리", "폐기물처리"] }
         ]
       },
@@ -9929,25 +9950,13 @@
     document.getElementById("loginForm").addEventListener("submit", handleLoginSubmit);
     document.getElementById("changeStaffBtn").addEventListener("click", showLoginScreen);
 
-    const loginPinInput = document.getElementById("loginPin");
-    if (loginPinInput) {
-      loginPinInput.addEventListener("input", (event) => {
-        const normalized = normalizePinInput(event.target.value);
-        if (event.target.value !== normalized) {
-          event.target.value = normalized;
-        }
-        event.target.classList.remove("login-shake");
-
-        if (normalized.length === 4) {
-          setLoginStatus("로그인 버튼을 눌러 주세요.");
-        } else {
-          setLoginStatus("개인 PIN 4자리를 입력해 주세요.");
-        }
-      });
-
-      setTimeout(() => loginPinInput.focus(), 120);
+    const lastStaffName = localStorage.getItem(STAFF_STORAGE_KEY) || "";
+    if (lastStaffName) {
+      state.auth.staffName = lastStaffName;
+      updateStaffSessionUI();
     }
 
+    loadStaffList();
     setActive("labor");
   </script>
 

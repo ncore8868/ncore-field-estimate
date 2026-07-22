@@ -1,4 +1,5 @@
-const CACHE_NAME = "ncore-field-estimate-pwa-v21";
+const CACHE_NAME = "ncore-field-estimate-pwa-v22";
+
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -11,60 +12,72 @@ const CORE_ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)));
-  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(CORE_ASSETS))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
-    )
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      ))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const request = event.request;
+  if (request.method !== "GET") return;
 
-  const requestUrl = new URL(event.request.url);
-  const isAppPage =
-    event.request.mode === "navigate" ||
-    requestUrl.pathname.endsWith("/") ||
-    requestUrl.pathname.endsWith("/index.html");
+  const url = new URL(request.url);
 
-  if (isAppPage) {
+  // 화면 문서는 항상 인터넷의 최신 index.html을 먼저 확인합니다.
+  if (request.mode === "navigate" || url.pathname.endsWith("/index.html")) {
     event.respondWith(
-      fetch(event.request, { cache: "no-store" })
+      fetch(request)
         .then((response) => {
-          if (response && response.ok && requestUrl.origin === self.location.origin) {
+          if (response && response.ok) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", clone));
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
           return response;
         })
         .catch(async () => {
-          return (await caches.match("./index.html")) ||
-            (await caches.match("./")) ||
-            new Response("오프라인 상태입니다. 인터넷 연결 후 다시 시도해 주세요.", {
+          return (
+            await caches.match(request, { ignoreSearch: true }) ||
+            await caches.match("./index.html") ||
+            new Response("오프라인 상태입니다.\n인터넷 연결 후 다시 시도해 주세요.", {
               status: 503,
               headers: { "Content-Type": "text/plain; charset=utf-8" }
-            });
+            })
+          );
         })
     );
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        if (response && response.ok && requestUrl.origin === self.location.origin) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      });
-    })
-  );
+  // 같은 저장소의 이미지·폰트 등은 빠르게 열고, 뒤에서 최신본으로 갱신합니다.
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        const network = fetch(request)
+          .then((response) => {
+            if (response && response.ok) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
+            return response;
+          })
+          .catch(() => cached);
+
+        return cached || network;
+      })
+    );
+  }
 });
