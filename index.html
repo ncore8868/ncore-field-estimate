@@ -7309,6 +7309,286 @@
         top: -3px !important;
       }
     }
+    /* === v25: 1차 고도화 — 현장 필수정보 · GPS 위치 · 공식 견적번호 === */
+    #page0 .project-main {
+      min-height: 0 !important;
+    }
+
+    #page0 .project-form {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      max-width: none !important;
+      padding-top: 16px !important;
+      padding-right: 6px !important;
+      overflow-y: auto !important;
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+      align-content: start !important;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #page0 .project-form::-webkit-scrollbar { width: 8px; }
+    #page0 .project-form::-webkit-scrollbar-thumb { background: rgba(17,17,17,.18); border-radius: 999px; }
+    #page0 .project-form::-webkit-scrollbar-track { background: transparent; }
+
+    #page0 .project-field {
+      grid-template-columns: 106px minmax(0, 1fr) !important;
+      gap: 14px !important;
+      min-height: 74px !important;
+      padding: 13px 16px !important;
+      border-radius: 18px !important;
+      align-items: center !important;
+    }
+
+    #page0 .project-field.wide { grid-column: 1 / -1 !important; }
+    #page0 .project-field-label strong { font-size: 17px !important; }
+    #page0 .project-field-label span { font-size: 11.5px !important; }
+    #page0 .project-input { height: 50px !important; font-size: 18px !important; }
+
+    .industry-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .industry-btn {
+      min-height: 44px;
+      padding: 0 6px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #FFFFFF;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 850;
+      letter-spacing: -0.3px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background .08s ease, color .08s ease, border .08s ease, transform .06s ease;
+    }
+
+    .industry-btn:active { transform: scale(.97); }
+
+    .industry-btn.active {
+      background: var(--accent);
+      border-color: rgba(215,96,22,.2);
+      color: #FFFFFF;
+      box-shadow: 0 6px 14px rgba(215,96,22,.16);
+    }
+
+    .site-counter {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr) 54px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .site-counter button {
+      height: 50px;
+      border: 0;
+      border-radius: 15px;
+      background: var(--accent);
+      color: #FFFFFF;
+      font-size: 26px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(215,96,22,.14);
+      transition: transform .07s ease, opacity .07s ease;
+    }
+
+    .site-counter button:active { transform: scale(.96); opacity: .88; }
+
+    .site-counter .site-value {
+      height: 50px;
+      border-radius: 15px;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-size: 21px;
+      font-weight: 900;
+      letter-spacing: -0.6px;
+    }
+
+    .site-counter .site-value input {
+      width: 62px;
+      min-width: 0;
+      border: 0;
+      outline: none;
+      background: transparent;
+      text-align: right;
+      font: inherit;
+      color: inherit;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .site-counter .site-unit {
+      font-size: 13px;
+      font-weight: 850;
+      color: var(--muted);
+    }
+
+    .toggle-group {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .toggle-btn {
+      min-height: 50px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #FFFFFF;
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background .08s ease, color .08s ease, border .08s ease;
+    }
+
+    .toggle-btn.active {
+      background: var(--accent);
+      border-color: rgba(215,96,22,.2);
+      color: #FFFFFF;
+      box-shadow: 0 6px 14px rgba(215,96,22,.16);
+    }
+
+    #page0 .project-side {
+      display: grid !important;
+      grid-template-rows: auto auto minmax(0, 1fr) !important;
+      gap: 12px !important;
+      align-content: stretch !important;
+    }
+
+    .gps-card {
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: #FFFFFF;
+      padding: 16px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .gps-card.state-ok {
+      border-color: rgba(215,96,22,.3);
+      background: #FFF8F3;
+    }
+
+    .gps-card.state-failed {
+      border-color: rgba(17,17,17,.28);
+    }
+
+    .gps-label {
+      font-size: 12.5px;
+      font-weight: 850;
+      color: var(--muted);
+    }
+
+    .gps-status {
+      font-size: 21px;
+      font-weight: 950;
+      letter-spacing: -0.7px;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+
+    .gps-card.state-ok .gps-status { color: var(--accent-deep); }
+
+    .gps-detail {
+      font-size: 11.5px;
+      font-weight: 750;
+      line-height: 1.45;
+      color: var(--muted);
+      word-break: keep-all;
+    }
+
+    .gps-btn {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 2px;
+      border: 1px solid var(--accent);
+      border-radius: 14px;
+      background: var(--accent);
+      color: #FFFFFF;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform .07s ease, opacity .07s ease;
+    }
+
+    .gps-btn:active { transform: scale(.985); opacity: .9; }
+    .gps-btn:disabled { opacity: .58; cursor: wait; }
+
+    .estimate-doc-code {
+      margin-top: 7px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.2);
+      color: rgba(255,255,255,.72);
+      font-size: 11.5px;
+      font-weight: 850;
+      letter-spacing: -0.1px;
+      white-space: nowrap;
+    }
+
+    .estimate-doc-code strong {
+      color: #FFFFFF;
+      font-size: 13.5px;
+      font-weight: 950;
+      letter-spacing: 0.3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pdf-code-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.22);
+      color: rgba(255,255,255,.72);
+      font-size: 10.5px;
+      font-weight: 850;
+    }
+
+    .pdf-code-badge strong {
+      color: #FFFFFF;
+      font-size: 12.5px;
+      font-weight: 950;
+      letter-spacing: 0.3px;
+    }
+
+    @media (max-width: 1366px) {
+      .industry-btn { font-size: 13px; }
+      #page0 .project-field { grid-template-columns: 96px minmax(0, 1fr) !important; }
+    }
+
+    @media (max-width: 1100px), (orientation: portrait) {
+      #page0 .project-form {
+        grid-template-columns: minmax(0, 1fr) !important;
+        overflow: visible !important;
+        padding-right: 0 !important;
+      }
+
+      #page0 .project-field {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 12px !important;
+        align-items: stretch !important;
+      }
+
+      .industry-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #page0 .project-side { grid-template-rows: auto auto auto !important; }
+    }
 </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -7324,6 +7604,7 @@
   <!-- v22: 폐기물 종류별 단가 · 장비 · 인건비 기준 단가 업데이트 -->
   <!-- v23: 담당자 선택 제거 · 개인 PIN 4자리 단독 로그인 복구 -->
   <!-- v24: 로그인 안내 문구 정리 · 6단계 견적서 로고 정렬 보정 -->
+  <!-- v25: 공식 견적번호 발급 · GPS 현장 위치 기록 · 업종/평수/작업층/엘리베이터 입력 추가 -->
 </head>
 <body>
 
@@ -7397,7 +7678,22 @@
               <input id="projectCustomerName" class="project-input korean-input" type="text" lang="ko" inputmode="text" autocapitalize="off" spellcheck="false" placeholder="예: 홍길동" autocomplete="name" tabindex="1" />
             </label>
 
-            <label class="project-field">
+            <div class="project-field">
+              <span class="project-field-label">
+                <strong>철거평수</strong>
+                <span>철거 대상 면적</span>
+              </span>
+              <div class="site-counter">
+                <button type="button" data-site-key="pyeong" data-site-step="-5">−</button>
+                <div class="site-value">
+                  <input id="sitePyeong" type="text" inputmode="numeric" pattern="[0-9]*" value="0" />
+                  <span class="site-unit">평</span>
+                </div>
+                <button type="button" data-site-key="pyeong" data-site-step="5">+</button>
+              </div>
+            </div>
+
+            <label class="project-field wide">
               <span class="project-field-label">
                 <strong>현장주소</strong>
                 <span>공사 현장 위치</span>
@@ -7405,7 +7701,38 @@
               <input id="projectAddress" class="project-input korean-input" type="text" lang="ko" inputmode="text" autocapitalize="off" spellcheck="false" placeholder="예: 대구 수성구 ..." autocomplete="street-address" tabindex="2" />
             </label>
 
-            <label class="project-field">
+            <div class="project-field wide">
+              <span class="project-field-label">
+                <strong>업종</strong>
+                <span>현장 업종을 선택합니다</span>
+              </span>
+              <div id="industryGrid" class="industry-grid"></div>
+            </div>
+
+            <div class="project-field">
+              <span class="project-field-label">
+                <strong>작업층</strong>
+                <span>실제 작업하는 층</span>
+              </span>
+              <div class="site-counter">
+                <button type="button" data-site-key="floor" data-site-step="-1">−</button>
+                <div class="site-value"><span id="siteFloorLabel">1층</span></div>
+                <button type="button" data-site-key="floor" data-site-step="1">+</button>
+              </div>
+            </div>
+
+            <div class="project-field">
+              <span class="project-field-label">
+                <strong>엘리베이터</strong>
+                <span>현장 엘리베이터 유무</span>
+              </span>
+              <div class="toggle-group">
+                <button type="button" class="toggle-btn" data-elevator="있음">있음</button>
+                <button type="button" class="toggle-btn" data-elevator="없음">없음</button>
+              </div>
+            </div>
+
+            <label class="project-field wide">
               <span class="project-field-label">
                 <strong>연락처</strong>
                 <span>견적서 발송 번호</span>
@@ -7421,10 +7748,17 @@
             <div class="value">현장 기본 정보</div>
           </div>
 
+          <div id="gpsCard" class="gps-card">
+            <div class="gps-label">현장 위치</div>
+            <div id="gpsStatusText" class="gps-status">확인 전</div>
+            <div id="gpsDetailText" class="gps-detail">현장에 도착한 뒤 아래 버튼을 눌러 위치를 확인해 주세요.</div>
+            <button type="button" id="gpsCheckBtn" class="gps-btn">현장 위치 확인</button>
+          </div>
+
           <div class="project-guide-list">
-            <div>고객명과 현장주소를 입력합니다.</div>
-            <div>연락처를 입력합니다.</div>
-            <div>다음 단계에서 작업 기준을 설정합니다.</div>
+            <div>업종·평수·작업층은 과거 현장 비교에 사용됩니다.</div>
+            <div>위치가 확인되지 않아도 저장은 되지만 기록에 남습니다.</div>
+            <div>저장할 때 공식 견적번호가 발급됩니다.</div>
           </div>
         </aside>
       </section>
@@ -7786,6 +8120,10 @@
                   <div class="estimate-doc-sub">
                     작업 내용 확인을 바탕으로 정리한 견적 내역입니다.
                   </div>
+                  <div class="estimate-doc-code">
+                    <span>견적번호</span>
+                    <strong id="estimateCodeNo">-</strong>
+                  </div>
                 </div>
               </div>
               <div class="estimate-doc-meta">
@@ -7947,6 +8285,14 @@
             <strong id="confirmAddress">-</strong>
           </div>
           <div class="confirm-info-row">
+            <span>현장정보</span>
+            <strong id="confirmSiteInfo">-</strong>
+          </div>
+          <div class="confirm-info-row">
+            <span>현장위치</span>
+            <strong id="confirmLocation">-</strong>
+          </div>
+          <div class="confirm-info-row">
             <span>총금액</span>
             <strong id="confirmTotalAmount">0원</strong>
           </div>
@@ -7988,6 +8334,15 @@
   <script>
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxBct_RGHwnqkF6ONRxQ0bqk3Q4J8dNZJanvPM84UJQaEleIzFP4Lg1suWOkoRc5qzc/exec"; // Apps Script 웹앱 URL
     const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
+
+    // v25: 현장 필수정보 기준값
+    const INDUSTRY_OPTIONS = [
+      "주택", "상가", "사무실", "식당", "카페", "학원",
+      "병원", "미용실", "편의점", "공장/창고", "기타"
+    ];
+    const FLOOR_MIN = -5;
+    const FLOOR_MAX = 60;
+    const PYEONG_MAX = 2000;
 
     function jsonpRequest(params, timeout = 7000) {
       if (!GOOGLE_SHEET_API_URL) {
@@ -8206,7 +8561,18 @@
         truck5Concrete: 0
       },
       extra: { amount: 0, memo: "" },
-      project: { customerName: "", phone: "", address: "" },
+      project: {
+        customerName: "",
+        phone: "",
+        address: "",
+        industry: "",
+        pyeong: 0,
+        floor: 1,
+        elevator: ""
+      },
+      location: { status: "none", lat: null, lng: null, accuracy: null, checkedAt: "", message: "" },
+      estimateCode: "",
+      estimateIssuedAt: "",
       auth: { loggedIn: false, staffName: "" },
       excelRows: [],
       section: "labor",
@@ -8528,6 +8894,240 @@
       return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
     }
 
+
+    /* =========================================================
+       v25: 현장 필수정보(업종·평수·작업층·엘리베이터)
+       ========================================================= */
+    function getFloorLabel(floor) {
+      const n = Number(floor) || 0;
+      if (n < 0) return "지하 " + Math.abs(n) + "층";
+      return n + "층";
+    }
+
+    function renderIndustryGrid() {
+      const grid = document.getElementById("industryGrid");
+      if (!grid) return;
+
+      if (!grid.dataset.built) {
+        grid.innerHTML = INDUSTRY_OPTIONS.map(name => `
+          <button type="button" class="industry-btn" data-industry="${name}">${name}</button>
+        `).join("");
+        grid.dataset.built = "1";
+      }
+
+      grid.querySelectorAll("[data-industry]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.industry === state.project.industry);
+      });
+    }
+
+    function renderSiteInputs() {
+      renderIndustryGrid();
+
+      const pyeongInput = document.getElementById("sitePyeong");
+      if (pyeongInput && document.activeElement !== pyeongInput) {
+        pyeongInput.value = String(state.project.pyeong || 0);
+      }
+
+      const floorLabel = document.getElementById("siteFloorLabel");
+      if (floorLabel) floorLabel.textContent = getFloorLabel(state.project.floor);
+
+      document.querySelectorAll("[data-elevator]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.elevator === state.project.elevator);
+      });
+    }
+
+    function stepSiteValue(key, step) {
+      if (key === "pyeong") {
+        const next = (Number(state.project.pyeong) || 0) + step;
+        state.project.pyeong = Math.min(PYEONG_MAX, Math.max(0, next));
+      }
+
+      if (key === "floor") {
+        let next = (Number(state.project.floor) || 1) + step;
+        if (next === 0) next = step > 0 ? 1 : -1; // 0층은 건너뜁니다.
+        state.project.floor = Math.min(FLOOR_MAX, Math.max(FLOOR_MIN, next));
+      }
+
+      renderSiteInputs();
+    }
+
+    function bindSiteInputBehavior() {
+      document.addEventListener("click", (event) => {
+        const stepBtn = event.target.closest("button[data-site-step]");
+        if (stepBtn) {
+          event.preventDefault();
+          stepSiteValue(stepBtn.dataset.siteKey, Number(stepBtn.dataset.siteStep || 0));
+          return;
+        }
+
+        const industryBtn = event.target.closest("button[data-industry]");
+        if (industryBtn) {
+          event.preventDefault();
+          state.project.industry = industryBtn.dataset.industry;
+          renderSiteInputs();
+          return;
+        }
+
+        const elevatorBtn = event.target.closest("button[data-elevator]");
+        if (elevatorBtn) {
+          event.preventDefault();
+          state.project.elevator = elevatorBtn.dataset.elevator;
+          renderSiteInputs();
+        }
+      });
+
+      const pyeongInput = document.getElementById("sitePyeong");
+      if (pyeongInput) {
+        pyeongInput.addEventListener("input", () => {
+          const digits = pyeongInput.value.replace(/[^0-9]/g, "").slice(0, 4);
+          if (pyeongInput.value !== digits) pyeongInput.value = digits;
+          state.project.pyeong = Math.min(PYEONG_MAX, Number(digits) || 0);
+        });
+
+        pyeongInput.addEventListener("blur", () => {
+          pyeongInput.value = String(state.project.pyeong || 0);
+        });
+
+        pyeongInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            pyeongInput.blur();
+          }
+        });
+      }
+    }
+
+    function getSiteSummaryText() {
+      const parts = [];
+      parts.push(state.project.industry || "업종 미선택");
+      parts.push((state.project.pyeong || 0) + "평");
+      parts.push(getFloorLabel(state.project.floor));
+      parts.push("엘리베이터 " + (state.project.elevator || "미선택"));
+      return parts.join(" · ");
+    }
+
+    /* =========================================================
+       v25: 현장 GPS 위치 기록
+       위치를 못 잡아도 저장은 되며 '위치미확인'으로 기록됩니다.
+       ========================================================= */
+    let gpsRequesting = false;
+    let gpsAutoTried = false;
+
+    function getLocationSummaryText() {
+      if (state.location.status === "ok") {
+        const acc = state.location.accuracy != null ? " (오차 약 " + Math.round(state.location.accuracy) + "m)" : "";
+        return "확인됨" + acc;
+      }
+      if (state.location.status === "failed") return "미확인 (확인 실패)";
+      return "미확인";
+    }
+
+    function updateGpsUI() {
+      const card = document.getElementById("gpsCard");
+      const statusEl = document.getElementById("gpsStatusText");
+      const detailEl = document.getElementById("gpsDetailText");
+      const btn = document.getElementById("gpsCheckBtn");
+      if (!card || !statusEl || !detailEl || !btn) return;
+
+      card.classList.remove("state-ok", "state-failed");
+
+      if (gpsRequesting) {
+        statusEl.textContent = "확인 중...";
+        detailEl.textContent = "현장 위치를 확인하고 있습니다. 잠시만 기다려 주세요.";
+        btn.disabled = true;
+        btn.textContent = "확인 중...";
+        return;
+      }
+
+      btn.disabled = false;
+
+      if (state.location.status === "ok") {
+        card.classList.add("state-ok");
+        statusEl.textContent = "위치 확인됨";
+        detailEl.textContent =
+          "확인시각 " + (state.location.checkedAt ? formatDateTime(state.location.checkedAt) : "-") +
+          " · 오차 약 " + (state.location.accuracy != null ? Math.round(state.location.accuracy) : "-") + "m";
+        btn.textContent = "위치 다시 확인";
+        return;
+      }
+
+      if (state.location.status === "failed") {
+        card.classList.add("state-failed");
+        statusEl.textContent = "위치 미확인";
+        detailEl.textContent = (state.location.message || "위치를 확인하지 못했습니다.") +
+          " 저장은 가능하지만 기록에 '위치미확인'으로 남습니다.";
+        btn.textContent = "위치 다시 확인";
+        return;
+      }
+
+      statusEl.textContent = "확인 전";
+      detailEl.textContent = "현장에 도착한 뒤 아래 버튼을 눌러 위치를 확인해 주세요.";
+      btn.textContent = "현장 위치 확인";
+    }
+
+    function requestSiteLocation() {
+      if (gpsRequesting) return;
+
+      if (!navigator.geolocation) {
+        state.location = {
+          status: "failed", lat: null, lng: null, accuracy: null,
+          checkedAt: new Date().toISOString(),
+          message: "이 기기에서는 위치 기능을 사용할 수 없습니다."
+        };
+        updateGpsUI();
+        return;
+      }
+
+      gpsRequesting = true;
+      updateGpsUI();
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          gpsRequesting = false;
+          state.location = {
+            status: "ok",
+            lat: Number(position.coords.latitude.toFixed(6)),
+            lng: Number(position.coords.longitude.toFixed(6)),
+            accuracy: position.coords.accuracy != null ? Number(position.coords.accuracy) : null,
+            checkedAt: new Date().toISOString(),
+            message: ""
+          };
+          updateGpsUI();
+        },
+        (error) => {
+          gpsRequesting = false;
+          let message = "위치를 확인하지 못했습니다.";
+          if (error && error.code === 1) message = "위치 권한이 거부되었습니다.";
+          if (error && error.code === 2) message = "위치 신호를 잡지 못했습니다.";
+          if (error && error.code === 3) message = "위치 확인 시간이 초과되었습니다.";
+
+          state.location = {
+            status: "failed", lat: null, lng: null, accuracy: null,
+            checkedAt: new Date().toISOString(),
+            message: message
+          };
+          updateGpsUI();
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+      );
+    }
+
+    /* =========================================================
+       v25: 공식 견적번호 발급 (Apps Script에서 발급)
+       ========================================================= */
+    async function issueEstimateCode() {
+      const result = await jsonpRequest({
+        action: "issueCode",
+        staffName: getCurrentStaffName()
+      }, 12000);
+
+      if (!result || !result.ok || !result.code) {
+        throw new Error((result && result.message) ? result.message : "견적번호를 발급받지 못했습니다.");
+      }
+
+      return result;
+    }
+
     function bindProjectInputBehavior() {
       const nameInput = document.getElementById("projectCustomerName");
       const addressInput = document.getElementById("projectAddress");
@@ -8568,17 +9168,37 @@
     }
 
     bindProjectInputBehavior();
+    bindSiteInputBehavior();
+
+    const gpsCheckBtn = document.getElementById("gpsCheckBtn");
+    if (gpsCheckBtn) gpsCheckBtn.addEventListener("click", requestSiteLocation);
+
+    renderSiteInputs();
+    updateGpsUI();
 
     function syncProjectInputsFromState() {
       document.getElementById("projectCustomerName").value = state.project.customerName || "";
       document.getElementById("projectPhone").value = state.project.phone || "";
       document.getElementById("projectAddress").value = state.project.address || "";
+      renderSiteInputs();
+      updateGpsUI();
+
+      // 로그인 후 1단계에 처음 들어올 때 위치를 한 번 자동으로 확인합니다.
+      if (!gpsAutoTried && state.location.status === "none") {
+        gpsAutoTried = true;
+        requestSiteLocation();
+      }
     }
 
     function readProjectInputs() {
       state.project.customerName = document.getElementById("projectCustomerName").value.trim();
       state.project.phone = formatPhoneNumber(document.getElementById("projectPhone").value);
       state.project.address = document.getElementById("projectAddress").value.trim();
+
+      const pyeongInput = document.getElementById("sitePyeong");
+      if (pyeongInput) {
+        state.project.pyeong = Math.min(PYEONG_MAX, Number(String(pyeongInput.value).replace(/[^0-9]/g, "")) || 0);
+      }
     }
 
     function validateProjectInputs() {
@@ -8596,6 +9216,20 @@
       if (!state.project.address) {
         alert("현장주소를 입력해 주세요.");
         document.getElementById("projectAddress").focus();
+        return false;
+      }
+      if (!state.project.industry) {
+        alert("업종을 선택해 주세요.");
+        document.getElementById("industryGrid")?.scrollIntoView({ block: "center" });
+        return false;
+      }
+      if (!(Number(state.project.pyeong) > 0)) {
+        alert("철거평수를 입력해 주세요.");
+        document.getElementById("sitePyeong")?.focus();
+        return false;
+      }
+      if (!state.project.elevator) {
+        alert("엘리베이터 유무를 선택해 주세요.");
         return false;
       }
       return true;
@@ -8627,7 +9261,7 @@
           }
 
           rows.push({
-            codeNo: "",
+            codeNo: state.estimateCode || "",
             staffName: getCurrentStaffName(),
             customerName: isFirst ? state.project.customerName : "",
             customerPhone: isFirst ? state.project.phone : "",
@@ -8649,7 +9283,7 @@
 
       if (!rows.length) {
         rows.push({
-          codeNo: "",
+          codeNo: state.estimateCode || "",
           staffName: getCurrentStaffName(),
           customerName: state.project.customerName,
           customerPhone: state.project.phone,
@@ -8670,7 +9304,17 @@
 
     function buildSavePayload() {
       return {
+        code: state.estimateCode || "",
+        issuedAt: state.estimateIssuedAt || "",
         project: { ...state.project },
+        site: {
+          industry: state.project.industry || "",
+          pyeong: Number(state.project.pyeong) || 0,
+          floor: Number(state.project.floor) || 0,
+          floorLabel: getFloorLabel(state.project.floor),
+          elevator: state.project.elevator || ""
+        },
+        location: { ...state.location },
         staff: { name: getCurrentStaffName() },
         savedAt: state.savedEstimate?.savedAt || new Date().toISOString(),
         totalAmount: getDisplayTotalAmount(),
@@ -8718,6 +9362,8 @@
       document.getElementById("confirmCustomerName").textContent = state.project.customerName || "-";
       document.getElementById("confirmPhone").textContent = state.project.phone || "-";
       document.getElementById("confirmAddress").textContent = state.project.address || "-";
+      document.getElementById("confirmSiteInfo").textContent = getSiteSummaryText();
+      document.getElementById("confirmLocation").textContent = getLocationSummaryText();
       document.getElementById("confirmTotalAmount").textContent = formatWon(getDisplayTotalAmount());
       document.getElementById("confirmScopeCount").textContent = getSelectedScopeTotal() + "개";
       document.getElementById("saveConfirmModal").classList.add("show");
@@ -8880,6 +9526,9 @@
       state.excelRows = buildExcelRows();
       state.savedEstimate = {
         savedAt: savedAt.toISOString(),
+        code: state.estimateCode || "",
+        issuedAt: state.estimateIssuedAt || "",
+        location: { ...state.location },
         project: { ...state.project },
         staff: { name: getCurrentStaffName() },
         total: getDisplayTotalAmount(),
@@ -9008,6 +9657,10 @@
 
           <div class="pdf-meta">
             <div class="pdf-meta-row">
+              <div class="pdf-meta-label">견적번호</div>
+              <div class="pdf-meta-value">${escapePdfHtml(saved.code || state.estimateCode || "-")}</div>
+            </div>
+            <div class="pdf-meta-row">
               <div class="pdf-meta-label">작성자</div>
               <div class="pdf-meta-value">${escapePdfHtml(staffName)}</div>
             </div>
@@ -9095,11 +9748,14 @@
 
     function getShareImageSafeFileName() {
       const name = (state.project.customerName || state.savedEstimate?.project?.customerName || "고객").replace(/[\\/:*?"<>|]/g, "").trim() || "고객";
+      const code = (state.savedEstimate?.code || state.estimateCode || "").replace(/[\\/:*?"<>|]/g, "").trim();
       const date = new Date();
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, "0");
       const d = String(date.getDate()).padStart(2, "0");
-      return `${name}_현장견적서_${y}${m}${d}.png`;
+      return code
+        ? `${code}_${name}_현장견적서.png`
+        : `${name}_현장견적서_${y}${m}${d}.png`;
     }
 
     async function renderEstimateCanvas() {
@@ -9250,6 +9906,7 @@
 
       const project = saved.project || state.project;
       const staffName = saved.staff?.name || getCurrentStaffName() || "-";
+      document.getElementById("estimateCodeNo").textContent = saved.code || state.estimateCode || "-";
       document.getElementById("estimateStaffName").textContent = staffName;
       document.getElementById("estimateCustomerName").textContent = project.customerName || "-";
       document.getElementById("estimatePhone").textContent = project.phone || "-";
@@ -9851,11 +10508,30 @@
 
     document.getElementById("saveConfirm").addEventListener("click", async () => {
       document.getElementById("saveConfirmModal").classList.remove("show");
-      saveEstimateDraft();
 
       const saveBtn = document.getElementById("page4Save");
-      saveBtn.textContent = "저장 중...";
       saveBtn.disabled = true;
+      saveBtn.textContent = "번호 발급 중...";
+
+      // 1) 회사 서버(Apps Script)에서 공식 견적번호를 먼저 발급받습니다.
+      //    번호 없이 저장되면 공식 견적으로 인정되지 않으므로 여기서 중단합니다.
+      try {
+        const issued = await issueEstimateCode();
+        state.estimateCode = issued.code;
+        state.estimateIssuedAt = issued.issuedAt || "";
+      } catch (err) {
+        console.error(err);
+        saveBtn.textContent = "저장하기";
+        saveBtn.disabled = false;
+        alert((err && err.message ? err.message : "견적번호를 발급받지 못했습니다.") +
+          "\n\n인터넷 연결을 확인한 뒤 다시 저장해 주세요.\n공식 견적번호가 없으면 저장할 수 없습니다.");
+        return;
+      }
+
+      // 2) 발급받은 번호를 포함해 견적 데이터를 만듭니다.
+      state.savedEstimate = null;
+      saveEstimateDraft();
+      saveBtn.textContent = "저장 중...";
 
       try {
         await submitEstimateToSheet(state.savedEstimate.payload);
