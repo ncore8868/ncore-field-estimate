@@ -7605,6 +7605,7 @@
   <!-- v23: 담당자 선택 제거 · 개인 PIN 4자리 단독 로그인 복구 -->
   <!-- v24: 로그인 안내 문구 정리 · 6단계 견적서 로고 정렬 보정 -->
   <!-- v25: 공식 견적번호 발급 · GPS 현장 위치 기록 · 업종/평수/작업층/엘리베이터 입력 추가 -->
+  <!-- v26: 발송 시점 위치 재확인 · 발송이력 기록 · 위치 미확인 발송 경고 -->
 </head>
 <body>
 
@@ -7622,7 +7623,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div class="start-foot">N-CORE On-site Check System 1.5</div>
+      <div class="start-foot">N-CORE On-site Check System 1.6</div>
     </div>
   </section>
   <div class="portrait-warning">
@@ -8185,18 +8186,19 @@
           </div>
 
           <div class="estimate-send-note">
-            전송 전 고객 정보와 연락처를 확인해 주세요.
+            전송 전 고객 정보와 연락처를 확인해 주세요.<br />
+            전송 시 위치와 발송기록이 회사에 저장됩니다.
           </div>
 
           <div class="estimate-pdf-actions single-action">
-            <div id="pdfActionStatus" class="estimate-pdf-status">전송하기 버튼을 누르면 PNG를 저장하고 고객번호로 문자 앱을 엽니다.</div>
+            <div id="pdfActionStatus" class="estimate-pdf-status">전송하기를 누르면 현장 위치를 확인하고 발송기록을 남긴 뒤 문자 앱을 엽니다.</div>
           </div>
         </aside>
       </section>
 
       <nav class="bottom-nav">
         <button id="page5Prev" class="nav-btn prev">이전</button>
-        <div class="bottom-status">현재 단계: <strong>견적서</strong> PNG 저장 후 문자 발송</div>
+        <div class="bottom-status">현재 단계: <strong>견적서</strong> 위치 확인 · 발송기록 후 문자 발송</div>
         <button id="page5Send" class="nav-btn next">전송하기</button>
       </nav>
     </section>
@@ -9705,11 +9707,11 @@
 
       if (shareBtn) {
         shareBtn.disabled = loading;
-        shareBtn.textContent = loading ? "이미지 생성 중..." : "전송하기";
+        shareBtn.textContent = loading ? "처리 중..." : "전송하기";
       }
 
       if (status) {
-        status.textContent = message || "전송하기 버튼을 누르면 PNG를 저장하고 고객번호로 문자 앱을 엽니다.";
+        status.textContent = message || "전송하기를 누르면 현장 위치를 확인하고 발송기록을 남긴 뒤 문자 앱을 엽니다.";
       }
     }
 
@@ -9834,11 +9836,80 @@
       window.setTimeout(() => URL.revokeObjectURL(url), 1200);
     }
 
+
+    /* =========================================================
+       v26: 발송 시점 위치 재확인 · 발송기록 저장
+       ========================================================= */
+    function checkLocationForSend() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          resolve({
+            status: "failed", lat: null, lng: null, accuracy: null,
+            checkedAt: new Date().toISOString(),
+            message: "이 기기에서는 위치 기능을 사용할 수 없습니다."
+          });
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              status: "ok",
+              lat: Number(position.coords.latitude.toFixed(6)),
+              lng: Number(position.coords.longitude.toFixed(6)),
+              accuracy: position.coords.accuracy != null ? Number(position.coords.accuracy) : null,
+              checkedAt: new Date().toISOString(),
+              message: ""
+            });
+          },
+          (error) => {
+            let message = "위치를 확인하지 못했습니다.";
+            if (error && error.code === 1) message = "위치 권한이 거부되었습니다.";
+            if (error && error.code === 2) message = "위치 신호를 잡지 못했습니다.";
+            if (error && error.code === 3) message = "위치 확인 시간이 초과되었습니다.";
+
+            resolve({
+              status: "failed", lat: null, lng: null, accuracy: null,
+              checkedAt: new Date().toISOString(),
+              message: message
+            });
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      });
+    }
+
+    async function logEstimateSend(sendLocation, phone) {
+      const saved = state.savedEstimate || {};
+      const project = saved.project || state.project || {};
+
+      const params = {
+        action: "logSend",
+        code: saved.code || state.estimateCode || "",
+        staffName: getCurrentStaffName(),
+        customerName: project.customerName || "",
+        phone: phone || "",
+        locStatus: sendLocation.status || "failed",
+        lat: sendLocation.lat != null ? String(sendLocation.lat) : "",
+        lng: sendLocation.lng != null ? String(sendLocation.lng) : "",
+        accuracy: sendLocation.accuracy != null ? String(sendLocation.accuracy) : "",
+        memo: sendLocation.status === "ok" ? "" : (sendLocation.message || "위치 확인 실패")
+      };
+
+      const result = await jsonpRequest(params, 12000);
+      if (!result || !result.ok) {
+        throw new Error((result && result.message) ? result.message : "발송기록을 저장하지 못했습니다.");
+      }
+      return result;
+    }
+
     async function createAndSharePdf() {
       readProjectInputs();
 
       const project = state.savedEstimate?.project || state.project || {};
       const phone = String(project.phone || state.project.phone || "").replace(/\D/g, "");
+      const sendStatus = document.getElementById("estimateSendStatus");
+      const estimateCode = state.savedEstimate?.code || state.estimateCode || "";
 
       if (!phone) {
         setPdfActionState(false, "고객 전화번호를 먼저 입력해 주세요.");
@@ -9846,36 +9917,87 @@
         return;
       }
 
+      // 견적번호가 없으면 공식 견적서가 아니므로 발송하지 않습니다.
+      if (!estimateCode) {
+        setPdfActionState(false, "견적번호가 없어 발송할 수 없습니다.");
+        alert("공식 견적번호가 없습니다.\n이전 단계에서 저장을 먼저 완료해 주세요.");
+        return;
+      }
+
+      // 1) 발송 시점의 현장 위치를 다시 확인합니다.
+      setPdfActionState(true, "발송 위치를 확인하고 있습니다...");
+      if (sendStatus) sendStatus.textContent = "위치 확인 중";
+
+      const sendLocation = await checkLocationForSend();
+
+      if (sendLocation.status !== "ok") {
+        const proceed = window.confirm(
+          "현장 위치를 확인하지 못했습니다.\n(" + (sendLocation.message || "원인 불명") + ")\n\n" +
+          "이대로 발송하면 회사 기록에 '위치미확인 발송'으로 남습니다.\n계속 발송할까요?"
+        );
+
+        if (!proceed) {
+          if (sendStatus) sendStatus.textContent = "전송 전";
+          setPdfActionState(false, "발송을 취소했습니다. 위치 확인 후 다시 시도해 주세요.");
+          return;
+        }
+      }
+
+      // 2) 견적서 PNG를 만들어 태블릿에 저장합니다.
       setPdfActionState(true, "견적서 PNG를 만들고 있습니다...");
 
+      let file;
       try {
-        const file = await createEstimateImageFile();
-
-        // 1) 생성된 견적서를 태블릿 다운로드 폴더에 먼저 저장합니다.
+        file = await createEstimateImageFile();
         downloadPdfFile(file);
-
-        const sendStatus = document.getElementById("estimateSendStatus");
-        if (sendStatus) sendStatus.textContent = "문자 앱 실행 중";
-        setPdfActionState(true, "PNG 저장 완료. 고객번호가 입력된 문자 앱을 여는 중입니다...");
-
-        // 2) 다운로드가 시작될 시간을 조금 준 뒤 고객번호가 입력된 문자 앱을 엽니다.
-        //    순수 웹에서는 이미지를 문자에 자동 첨부할 수 없으므로,
-        //    문자 앱의 사진 버튼에서 방금 저장된 PNG만 선택하면 됩니다.
-        window.setTimeout(() => {
-          window.location.href = `sms:${phone}`;
-
-          window.setTimeout(() => {
-            if (sendStatus) sendStatus.textContent = "이미지 저장 완료";
-            setPdfActionState(false, "PNG가 저장되었습니다. 문자 앱에서 최근 이미지로 첨부해 주세요.");
-          }, 900);
-        }, 450);
       } catch (err) {
         console.error(err);
-        const sendStatus = document.getElementById("estimateSendStatus");
         if (sendStatus) sendStatus.textContent = "전송 준비 실패";
         setPdfActionState(false, err.message || "견적서 이미지 생성 중 오류가 발생했습니다.");
         alert(err.message || "견적서 이미지 생성 중 오류가 발생했습니다.");
+        return;
       }
+
+      // 3) 회사 서버에 발송기록을 남깁니다.
+      setPdfActionState(true, "발송기록을 저장하고 있습니다...");
+      if (sendStatus) sendStatus.textContent = "발송기록 저장 중";
+
+      let sendResult = null;
+      try {
+        sendResult = await logEstimateSend(sendLocation, phone);
+      } catch (err) {
+        console.error(err);
+        const proceed = window.confirm(
+          "발송기록을 저장하지 못했습니다.\n(" + (err.message || "원인 불명") + ")\n\n" +
+          "그래도 문자 앱을 열까요?\n기록이 없으면 회사 공식 발송으로 확인되지 않습니다."
+        );
+
+        if (!proceed) {
+          if (sendStatus) sendStatus.textContent = "발송기록 실패";
+          setPdfActionState(false, "발송기록 저장에 실패했습니다. 통신 상태 확인 후 다시 전송해 주세요.");
+          return;
+        }
+      }
+
+      // 4) 고객번호가 입력된 문자 앱을 엽니다.
+      //    순수 웹에서는 이미지를 문자에 자동 첨부할 수 없으므로,
+      //    문자 앱의 사진 버튼에서 방금 저장된 PNG를 선택하면 됩니다.
+      const seqText = sendResult && sendResult.seq ? " " + sendResult.seq + "회차" : "";
+      const locText = sendLocation.status === "ok" ? "위치 확인" : "위치 미확인";
+
+      if (sendStatus) sendStatus.textContent = "문자 앱 실행 중";
+      setPdfActionState(true, "기록 완료. 고객번호가 입력된 문자 앱을 여는 중입니다...");
+
+      window.setTimeout(() => {
+        window.location.href = `sms:${phone}`;
+
+        window.setTimeout(() => {
+          if (sendStatus) sendStatus.textContent = "발송기록 완료" + seqText;
+          setPdfActionState(false,
+            "PNG 저장과 발송기록이 완료되었습니다 (" + locText + "). 문자 앱에서 최근 이미지로 첨부해 주세요."
+          );
+        }, 900);
+      }, 450);
     }
 
     async function createAndSavePdf() {
