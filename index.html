@@ -8053,6 +8053,7 @@
   <!-- v25: 공식 견적번호 발급 · GPS 현장 위치 기록 · 업종/평수/작업층/엘리베이터 입력 추가 -->
   <!-- v26: 발송 시점 위치 재확인 · 발송이력 기록 · 위치 미확인 발송 경고 -->
   <!-- v27: 메인 메뉴 · 공사완료 실제원가 입력 · 과거 유사현장 조회 -->
+  <!-- v28: 서버 주소를 현장견적 수신시트 NEW 배포로 교체 -->
 </head>
 <body>
 
@@ -8070,7 +8071,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div class="start-foot">N-CORE On-site Check System 1.7</div>
+      <div class="start-foot">N-CORE On-site Check System 1.71</div>
     </div>
   </section>
   <div class="portrait-warning">
@@ -9071,7 +9072,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxBct_RGHwnqkF6ONRxQ0bqk3Q4J8dNZJanvPM84UJQaEleIzFP4Lg1suWOkoRc5qzc/exec"; // Apps Script 웹앱 URL
+    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxah3GxSWRqmco9CXimKaEQtwwz4vWezcR8icExD30Yjsvqm_LzC43e1uJiANeIZSD89g/exec"; // Apps Script 웹앱 URL (현장견적 수신시트 NEW / 2026-08-18 교체)
     const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
 
     // v25: 현장 필수정보 기준값
