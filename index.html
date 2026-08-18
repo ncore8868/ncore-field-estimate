@@ -7589,6 +7589,452 @@
       .industry-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       #page0 .project-side { grid-template-rows: auto auto auto !important; }
     }
+    /* === v27: 메인 메뉴 · 공사완료 입력 · 과거 현장 조회 === */
+    .menu-content {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      align-content: stretch;
+    }
+
+    .menu-card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: #FFFFFF;
+      padding: 30px 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 11px;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform .08s ease, box-shadow .08s ease;
+    }
+
+    .menu-card:active { transform: scale(.99); }
+
+    .menu-card.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #FFFFFF;
+      box-shadow: 0 14px 28px rgba(215,96,22,.18);
+    }
+
+    .menu-card-no {
+      font-size: 12.5px;
+      font-weight: 900;
+      letter-spacing: 0.6px;
+      color: var(--accent);
+    }
+
+    .menu-card.primary .menu-card-no { color: rgba(255,255,255,.78); }
+
+    .menu-card-title {
+      font-size: 30px;
+      font-weight: 950;
+      letter-spacing: -1.2px;
+      line-height: 1.1;
+    }
+
+    .menu-card-desc {
+      font-size: 14px;
+      font-weight: 720;
+      line-height: 1.5;
+      color: var(--muted);
+      word-break: keep-all;
+    }
+
+    .menu-card.primary .menu-card-desc { color: rgba(255,255,255,.82); }
+
+    .work-content {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: var(--outer-gap);
+    }
+
+    .work-main {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .work-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--line);
+      flex-shrink: 0;
+    }
+
+    .work-title {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 950;
+      letter-spacing: -1.2px;
+      line-height: 1.1;
+    }
+
+    .work-sub {
+      margin-top: 7px;
+      font-size: 14.5px;
+      font-weight: 680;
+      line-height: 1.42;
+      color: var(--muted);
+    }
+
+    .work-side {
+      padding: 20px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .list-scroll {
+      flex: 1;
+      min-height: 0;
+      margin-top: 14px;
+      padding-right: 6px;
+      overflow-y: auto;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .list-scroll::-webkit-scrollbar { width: 8px; }
+    .list-scroll::-webkit-scrollbar-thumb { background: rgba(17,17,17,.18); border-radius: 999px; }
+    .list-scroll::-webkit-scrollbar-track { background: transparent; }
+
+    .site-row {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #FFFFFF;
+      padding: 14px 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(17,17,17,.04);
+      transition: transform .07s ease, border .08s ease;
+    }
+
+    .site-row:active { transform: scale(.995); }
+    .site-row.selected { border-color: var(--accent); background: #FFF8F3; }
+
+    .site-row-main { min-width: 0; display: grid; gap: 5px; }
+
+    .site-row-code {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .site-row-title {
+      font-size: 19px;
+      font-weight: 930;
+      letter-spacing: -0.5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .site-row-sub {
+      font-size: 12.5px;
+      font-weight: 750;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .site-row-amount {
+      font-size: 19px;
+      font-weight: 950;
+      letter-spacing: -0.6px;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .list-empty {
+      border: 1px dashed rgba(17,17,17,.2);
+      border-radius: 18px;
+      padding: 28px 22px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.6;
+      word-break: keep-all;
+    }
+
+    .lookup-result-grid {
+      margin-top: 9px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .lookup-cell {
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: #FFFFFF;
+      padding: 8px 10px;
+    }
+
+    .lookup-cell-label {
+      font-size: 10.5px;
+      font-weight: 850;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .lookup-cell-value {
+      font-size: 14px;
+      font-weight: 950;
+      letter-spacing: -0.4px;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lookup-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #FFFFFF;
+      padding: 15px 17px;
+      box-shadow: 0 4px 12px rgba(17,17,17,.04);
+    }
+
+    .lookup-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 9px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .actual-form {
+      flex: 1;
+      min-height: 0;
+      margin-top: 14px;
+      padding-right: 6px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+      align-content: start;
+      overscroll-behavior: contain;
+    }
+
+    .actual-form::-webkit-scrollbar { width: 8px; }
+    .actual-form::-webkit-scrollbar-thumb { background: rgba(17,17,17,.18); border-radius: 999px; }
+
+    .actual-field {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 13px 16px;
+      display: grid;
+      grid-template-columns: 106px minmax(0, 1fr);
+      align-items: center;
+      gap: 14px;
+      min-height: 74px;
+      box-shadow: 0 4px 12px rgba(17,17,17,.04);
+    }
+
+    .actual-field.wide { grid-column: 1 / -1; }
+
+    .actual-field-label { display: grid; gap: 4px; }
+    .actual-field-label strong { font-size: 17px; font-weight: 950; letter-spacing: -0.5px; }
+    .actual-field-label span { font-size: 11.5px; font-weight: 750; color: var(--muted); }
+
+    .actual-money {
+      width: 100%;
+      height: 50px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #FFFFFF;
+      padding: 0 16px;
+      box-sizing: border-box;
+      text-align: right;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--ink);
+      outline: none;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .actual-money:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(215,96,22,.12);
+    }
+
+    .actual-memo {
+      width: 100%;
+      min-height: 74px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #FFFFFF;
+      padding: 13px 15px;
+      box-sizing: border-box;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.45;
+      outline: none;
+      resize: vertical;
+    }
+
+    .compare-table {
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      overflow: hidden;
+      background: #FFFFFF;
+    }
+
+    .compare-head,
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr 1fr 1fr;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      font-size: 12.5px;
+    }
+
+    .compare-head {
+      background: #FAF7F4;
+      border-bottom: 1px solid rgba(17,17,17,.16);
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .compare-row {
+      border-bottom: 1px solid rgba(17,17,17,.07);
+      font-weight: 850;
+      color: var(--ink);
+    }
+
+    .compare-row:last-child { border-bottom: 0; }
+    .compare-row.total { background: #FFF8F3; font-weight: 950; }
+
+    .compare-head span:not(:first-child),
+    .compare-row span:not(:first-child) {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .diff-over { color: #C0392B; }
+    .diff-under { color: var(--accent-deep); }
+
+    .result-card {
+      border-radius: 20px;
+      background: var(--accent);
+      color: #FFFFFF;
+      padding: 20px;
+      box-shadow: 0 12px 24px rgba(215,96,22,.16);
+      border: 1px solid rgba(215,96,22,.18);
+    }
+
+    .result-card .label { font-size: 13px; font-weight: 800; opacity: .78; margin-bottom: 8px; }
+    .result-card .value { font-size: 30px; font-weight: 950; letter-spacing: -1.2px; line-height: 1.05; white-space: nowrap; }
+    .result-card .sub { margin-top: 7px; font-size: 12.5px; font-weight: 800; opacity: .82; }
+
+    .info-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #FFFFFF;
+      padding: 15px;
+      display: grid;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .info-card-row {
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .info-card-row span:first-child { color: var(--muted); font-weight: 820; }
+    .info-card-row strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 950; }
+
+    .filter-row { display: grid; gap: 9px; }
+
+    .filter-label { font-size: 12.5px; font-weight: 850; color: var(--muted); }
+
+    .toggle-group.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .work-status {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border-radius: 14px;
+      background: rgba(215,96,22,.055);
+      border: 1px solid rgba(215,96,22,.14);
+      padding: 9px 12px;
+      color: rgba(17,17,17,.72);
+      font-size: 12.5px;
+      font-weight: 850;
+      line-height: 1.4;
+      word-break: keep-all;
+    }
+
+    @media (max-width: 1366px) {
+      .menu-card-title { font-size: 26px; }
+      .work-content { grid-template-columns: minmax(0, 1fr) 296px; }
+      .actual-field { grid-template-columns: 94px minmax(0, 1fr); }
+    }
+
+    @media (max-width: 1100px), (orientation: portrait) {
+      .menu-content,
+      .work-content {
+        grid-template-columns: minmax(0, 1fr) !important;
+        height: auto !important;
+        min-height: 0 !important;
+      }
+
+      .menu-card { padding: 22px 20px; }
+      .menu-card-title { font-size: 24px; }
+
+      .work-main, .work-side { padding: 16px !important; min-height: 0 !important; }
+      .work-side { grid-template-rows: none !important; }
+
+      .list-scroll,
+      .actual-form {
+        overflow: visible !important;
+        max-height: none !important;
+        padding-right: 0 !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      .actual-field { grid-template-columns: minmax(0, 1fr) !important; }
+      .compare-head, .compare-row { font-size: 11.5px; padding: 8px 10px; }
+      .lookup-result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
 </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -7606,6 +8052,7 @@
   <!-- v24: 로그인 안내 문구 정리 · 6단계 견적서 로고 정렬 보정 -->
   <!-- v25: 공식 견적번호 발급 · GPS 현장 위치 기록 · 업종/평수/작업층/엘리베이터 입력 추가 -->
   <!-- v26: 발송 시점 위치 재확인 · 발송이력 기록 · 위치 미확인 발송 경고 -->
+  <!-- v27: 메인 메뉴 · 공사완료 실제원가 입력 · 과거 유사현장 조회 -->
 </head>
 <body>
 
@@ -7623,7 +8070,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div class="start-foot">N-CORE On-site Check System 1.6</div>
+      <div class="start-foot">N-CORE On-site Check System 1.7</div>
     </div>
   </section>
   <div class="portrait-warning">
@@ -8203,20 +8650,310 @@
       </nav>
     </section>
 
+
+    <section id="pageMenu" class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo-mark">N-CORE</div>
+          <div class="brand-text">
+            <div class="title">현장 견적 시스템</div>
+            <div class="sub">작업을 선택해 주세요.</div>
+          </div>
+        </div>
+        <div class="step-pill">
+          <span>메인 메뉴</span>
+          <span class="step-dot"></span>
+          <strong id="menuStaffName">-</strong>
+        </div>
+      </header>
+
+      <section class="menu-content">
+        <button type="button" class="panel menu-card primary" id="menuNewEstimate">
+          <span class="menu-card-no">01</span>
+          <span class="menu-card-title">새 견적 작성</span>
+          <span class="menu-card-desc">현장 정보를 입력하고 견적서를 작성해 고객에게 발송합니다.</span>
+        </button>
+
+        <button type="button" class="panel menu-card" id="menuActualCost">
+          <span class="menu-card-no">02</span>
+          <span class="menu-card-title">공사완료 입력</span>
+          <span class="menu-card-desc">공사가 끝난 현장의 실제 원가와 최종 계약금액을 입력합니다.</span>
+        </button>
+
+        <button type="button" class="panel menu-card" id="menuLookup">
+          <span class="menu-card-no">03</span>
+          <span class="menu-card-title">과거 현장 조회</span>
+          <span class="menu-card-desc">비슷한 조건의 지난 현장이 실제로 얼마나 들었는지 확인합니다.</span>
+        </button>
+      </section>
+
+      <nav class="bottom-nav">
+        <button id="menuLogout" class="nav-btn prev">담당자 변경</button>
+        <div class="bottom-status">현재 담당자: <strong id="menuStaffName2">-</strong></div>
+        <div></div>
+      </nav>
+    </section>
+
+
+    <section id="pageActualList" class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo-mark">N-CORE</div>
+          <div class="brand-text">
+            <div class="title">공사완료 입력</div>
+            <div class="sub">실제 원가를 입력할 현장을 선택합니다.</div>
+          </div>
+        </div>
+        <div class="step-pill">
+          <span>공사완료</span>
+          <span class="step-dot"></span>
+          <strong>현장 선택</strong>
+        </div>
+      </header>
+
+      <section class="work-content">
+        <section class="panel work-main">
+          <div class="work-header">
+            <div>
+              <h1 class="work-title">실제원가 미입력 현장</h1>
+              <div class="work-sub">공사가 끝난 현장을 눌러 실제 원가를 입력합니다.</div>
+            </div>
+            <div class="amount-badge" id="pendingCountBadge">0건</div>
+          </div>
+
+          <div id="pendingList" class="list-scroll"></div>
+        </section>
+
+        <aside class="panel work-side">
+          <div class="project-guide-card">
+            <div class="label">입력 안내</div>
+            <div class="value">공사완료 데이터</div>
+          </div>
+
+          <div class="project-guide-list">
+            <div>실제 원가 입력은 공사완료 절차의 필수항목입니다.</div>
+            <div>입력된 현장은 이 목록에서 사라집니다.</div>
+            <div>쌓인 데이터는 과거 현장 조회에 사용됩니다.</div>
+          </div>
+
+          <button type="button" id="pendingRefresh" class="nav-btn next" style="height:52px;font-size:17px;border-radius:16px;">목록 새로고침</button>
+        </aside>
+      </section>
+
+      <nav class="bottom-nav">
+        <button id="pendingBack" class="nav-btn prev">메뉴</button>
+        <div class="bottom-status" id="pendingStatus">현장을 불러오는 중입니다.</div>
+        <div></div>
+      </nav>
+    </section>
+
+
+    <section id="pageActualForm" class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo-mark">N-CORE</div>
+          <div class="brand-text">
+            <div class="title">실제 원가 입력</div>
+            <div class="sub">공사에 실제로 들어간 금액을 입력합니다.</div>
+          </div>
+        </div>
+        <div class="step-pill">
+          <span>공사완료</span>
+          <span class="step-dot"></span>
+          <strong id="actualCodeLabel">-</strong>
+        </div>
+      </header>
+
+      <section class="work-content">
+        <section class="panel work-main">
+          <div class="work-header">
+            <div>
+              <h1 class="work-title" id="actualSiteTitle">-</h1>
+              <div class="work-sub" id="actualSiteSub">-</div>
+            </div>
+            <div class="amount-badge" id="actualQuoteBadge">견적 0원</div>
+          </div>
+
+          <div class="actual-form">
+            <div class="actual-field">
+              <span class="actual-field-label">
+                <strong>투입인원</strong>
+                <span>연인원 기준</span>
+              </span>
+              <div class="site-counter">
+                <button type="button" data-actual-step="-1">−</button>
+                <div class="site-value"><span id="actualWorkers">0</span><span class="site-unit">명</span></div>
+                <button type="button" data-actual-step="1">+</button>
+              </div>
+            </div>
+
+            <div class="actual-field">
+              <span class="actual-field-label">
+                <strong>인력비</strong>
+                <span>실제 지급 인건비</span>
+              </span>
+              <input id="actualLabor" class="actual-money" type="text" inputmode="numeric" placeholder="0" />
+            </div>
+
+            <div class="actual-field">
+              <span class="actual-field-label">
+                <strong>장비비</strong>
+                <span>실제 장비 사용료</span>
+              </span>
+              <input id="actualEquip" class="actual-money" type="text" inputmode="numeric" placeholder="0" />
+            </div>
+
+            <div class="actual-field">
+              <span class="actual-field-label">
+                <strong>폐기물비</strong>
+                <span>실제 처리·운반비</span>
+              </span>
+              <input id="actualWaste" class="actual-money" type="text" inputmode="numeric" placeholder="0" />
+            </div>
+
+            <div class="actual-field">
+              <span class="actual-field-label">
+                <strong>기타비</strong>
+                <span>그 밖의 실제 비용</span>
+              </span>
+              <input id="actualEtc" class="actual-money" type="text" inputmode="numeric" placeholder="0" />
+            </div>
+
+            <div class="actual-field">
+              <span class="actual-field-label">
+                <strong>계약금액</strong>
+                <span>최종 계약된 금액</span>
+              </span>
+              <input id="actualContract" class="actual-money" type="text" inputmode="numeric" placeholder="0" />
+            </div>
+
+            <div class="actual-field wide">
+              <span class="actual-field-label">
+                <strong>메모</strong>
+                <span>추가 작업·특이사항</span>
+              </span>
+              <textarea id="actualMemo" class="actual-memo" placeholder="예: 지하 반출 추가, 폐기물 예상보다 2회 증가"></textarea>
+            </div>
+
+            <div class="actual-field wide" style="display:block;">
+              <div class="actual-field-label" style="margin-bottom:10px;">
+                <strong>예상 대비 실제</strong>
+                <span>입력하는 대로 바로 비교됩니다.</span>
+              </div>
+              <div class="compare-table">
+                <div class="compare-head">
+                  <span>항목</span><span>예상</span><span>실제</span><span>차이</span>
+                </div>
+                <div id="compareBody"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel work-side">
+          <div class="result-card">
+            <div class="label">실제 마진</div>
+            <div class="value" id="actualMargin">0원</div>
+            <div class="sub" id="actualMarginRate">마진율 0%</div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-card-row"><span>실제총원가</span><strong id="actualTotalText">0원</strong></div>
+            <div class="info-card-row"><span>예상총원가</span><strong id="actualEstText">0원</strong></div>
+            <div class="info-card-row"><span>원가차이</span><strong id="actualDiffText">0원</strong></div>
+            <div class="info-card-row"><span>견적금액</span><strong id="actualQuoteText">0원</strong></div>
+          </div>
+
+          <div class="work-status" id="actualStatus">모든 금액을 입력한 뒤 저장하기를 눌러 주세요.</div>
+        </aside>
+      </section>
+
+      <nav class="bottom-nav">
+        <button id="actualBack" class="nav-btn prev">이전</button>
+        <div class="bottom-status">현재 단계: <strong>실제 원가</strong> 입력 중</div>
+        <button id="actualSave" class="nav-btn next">저장하기</button>
+      </nav>
+    </section>
+
+
+    <section id="pageLookup" class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo-mark">N-CORE</div>
+          <div class="brand-text">
+            <div class="title">과거 현장 조회</div>
+            <div class="sub">비슷한 조건의 지난 현장 실적을 확인합니다.</div>
+          </div>
+        </div>
+        <div class="step-pill">
+          <span>과거 현장</span>
+          <span class="step-dot"></span>
+          <strong id="lookupCountLabel">0건</strong>
+        </div>
+      </header>
+
+      <section class="work-content">
+        <section class="panel work-main">
+          <div class="work-header">
+            <div>
+              <h1 class="work-title">조회 결과</h1>
+              <div class="work-sub">실제 원가가 입력된 현장만 표시됩니다.</div>
+            </div>
+            <div class="amount-badge" id="lookupCondBadge">조건 미설정</div>
+          </div>
+
+          <div id="lookupList" class="list-scroll">
+            <div class="list-empty">오른쪽에서 조건을 고르고<br />조회하기를 눌러 주세요.</div>
+          </div>
+        </section>
+
+        <aside class="panel work-side">
+          <div class="filter-row">
+            <div class="filter-label">업종</div>
+            <div id="lookupIndustry" class="industry-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));"></div>
+
+            <div class="filter-label" style="margin-top:6px;">철거평수 (± 10평)</div>
+            <div class="site-counter">
+              <button type="button" data-lookup-step="-5">−</button>
+              <div class="site-value"><span id="lookupPyeong">0</span><span class="site-unit">평</span></div>
+              <button type="button" data-lookup-step="5">+</button>
+            </div>
+
+            <div class="filter-label" style="margin-top:6px;">엘리베이터</div>
+            <div class="toggle-group three">
+              <button type="button" class="toggle-btn active" data-lookup-elevator="전체">전체</button>
+              <button type="button" class="toggle-btn" data-lookup-elevator="있음">있음</button>
+              <button type="button" class="toggle-btn" data-lookup-elevator="없음">없음</button>
+            </div>
+          </div>
+
+          <div class="work-status" id="lookupStatus">평수를 0으로 두면 평수 조건 없이 조회합니다.</div>
+
+          <button type="button" id="lookupSearch" class="nav-btn next" style="height:56px;font-size:19px;border-radius:17px;">조회하기</button>
+        </aside>
+      </section>
+
+      <nav class="bottom-nav">
+        <button id="lookupBack" class="nav-btn prev">메뉴</button>
+        <div class="bottom-status">비슷한 현장의 실제 원가를 참고해 견적을 잡습니다.</div>
+        <div></div>
+      </nav>
+    </section>
+
   </main>
 
     <div id="pdfRenderHost" aria-hidden="true"></div>
 
   <div id="exitModal" class="modal-backdrop">
     <div class="modal-card">
-      <div class="modal-title">시작 화면으로 이동합니다.</div>
+      <div class="modal-title">메인 메뉴로 이동합니다.</div>
       <div class="modal-text">
-        현재 입력 중인 내용이 초기화될 수 있습니다.<br />
-        시작 화면으로 이동하시겠습니까?
+        현재 입력 중인 내용은 저장되지 않습니다.<br />
+        메인 메뉴로 이동하시겠습니까?
       </div>
       <div class="modal-actions">
         <button id="exitCancel" class="modal-btn cancel">계속 입력</button>
-        <button id="exitConfirm" class="modal-btn confirm">시작 화면으로 이동</button>
+        <button id="exitConfirm" class="modal-btn confirm">메인 메뉴로 이동</button>
       </div>
     </div>
   </div>
@@ -8453,7 +9190,7 @@
         startScreen.style.display = "none";
         app.style.display = "";
         app.classList.add("show");
-        showPage(0);
+        showMainMenu();
         updateStaffSessionUI();
         window.scrollTo({ top: 0, behavior: "instant" });
       }, 150);
@@ -10331,7 +11068,19 @@
       { key: "protection", label: "보양/청소" }
     ];
 
+    function hideAllScreens() {
+      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+    }
+
+    function showScreen(id) {
+      hideAllScreens();
+      const el = document.getElementById(id);
+      if (el) el.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+
     function showPage(pageNo) {
+      hideAllScreens();
       page0.classList.toggle("active", pageNo === 0);
       page1.classList.toggle("active", pageNo === 1);
       page2.classList.toggle("active", pageNo === 2);
@@ -10467,17 +11216,7 @@
 
     document.getElementById("exitConfirm").addEventListener("click", () => {
       exitModal.classList.remove("show");
-      page0.classList.add("active");
-      page1.classList.remove("active");
-      page2.classList.remove("active");
-      page3.classList.remove("active");
-      page4.classList.remove("active");
-      page5.classList.remove("active");
-      app.classList.remove("show");
-      app.style.display = "none";
-      startScreen.style.display = "flex";
-      startScreen.classList.remove("hide");
-      window.scrollTo({ top: 0, behavior: "instant" });
+      showMainMenu();
     });
 
     exitModal.addEventListener("click", (e) => {
@@ -10716,6 +11455,428 @@
       });
     }
 
+
+
+    /* =========================================================
+       v27: 메인 메뉴 · 공사완료 실제원가 · 과거 현장 조회
+       ========================================================= */
+    const actualState = {
+      site: null,
+      workers: 0,
+      labor: 0,
+      equip: 0,
+      waste: 0,
+      etc: 0,
+      contract: 0,
+      memo: ""
+    };
+
+    const lookupState = { industry: "전체", pyeong: 0, elevator: "전체" };
+
+    function formatMoney(num) {
+      return (Math.round(Number(num) || 0)).toLocaleString("ko-KR") + "원";
+    }
+
+    function parseMoneyInput(value) {
+      return Number(String(value).replace(/[^0-9]/g, "")) || 0;
+    }
+
+    function showMainMenu() {
+      const name = getCurrentStaffName() || "-";
+      const a = document.getElementById("menuStaffName");
+      const b = document.getElementById("menuStaffName2");
+      if (a) a.textContent = name;
+      if (b) b.textContent = name;
+      showScreen("pageMenu");
+    }
+
+    /* ---------- 새 견적 작성 ---------- */
+    function startNewEstimate() {
+      // 이전 현장의 내용이 새 견적에 섞이지 않도록 전부 초기화합니다.
+      state.project = {
+        customerName: "", phone: "", address: "",
+        industry: "", pyeong: 0, floor: 1, elevator: ""
+      };
+      state.location = { status: "none", lat: null, lng: null, accuracy: null, checkedAt: "", message: "" };
+      state.estimateCode = "";
+      state.estimateIssuedAt = "";
+      state.savedEstimate = null;
+      state.excelRows = [];
+      state.ratios = { demolition: 90, restoration: 0, equipment: 0, waste: 0, protection: 10 };
+      state.scopes = { demolition: [], restoration: [], equipment: [], waste: [], protection: [] };
+      state.scopeCategory = "demolition";
+      state.scopeFilters = {
+        demolition: "전체", restoration: "전체", equipment: "전체",
+        waste: "전체", protection: "전체"
+      };
+      gpsAutoTried = false;
+
+      resetInternalInputs();
+      setActive("labor");
+      showPage(0);
+    }
+
+    /* ---------- 공사완료: 미입력 현장 목록 ---------- */
+    async function loadPendingList() {
+      const listEl = document.getElementById("pendingList");
+      const statusEl = document.getElementById("pendingStatus");
+      const badgeEl = document.getElementById("pendingCountBadge");
+
+      listEl.innerHTML = `<div class="list-empty">현장 목록을 불러오는 중입니다...</div>`;
+      statusEl.textContent = "불러오는 중...";
+
+      try {
+        const result = await jsonpRequest({ action: "pendingList" }, 15000);
+        if (!result || !result.ok) throw new Error((result && result.message) || "목록을 불러오지 못했습니다.");
+
+        const rows = result.rows || [];
+        badgeEl.textContent = rows.length + "건";
+        statusEl.textContent = rows.length
+          ? "현장을 눌러 실제 원가를 입력합니다."
+          : "실제 원가를 입력할 현장이 없습니다.";
+
+        if (!rows.length) {
+          listEl.innerHTML = `<div class="list-empty">실제 원가를 입력할 현장이 없습니다.<br />견적을 저장하면 여기에 나타납니다.</div>`;
+          return;
+        }
+
+        listEl.innerHTML = rows.map((row, index) => `
+          <button type="button" class="site-row" data-pending-index="${index}">
+            <span class="site-row-main">
+              <span class="site-row-code">${escapePdfHtml(row.code)}</span>
+              <span class="site-row-title">${escapePdfHtml(row.customerName || "-")} · ${escapePdfHtml(row.address || "-")}</span>
+              <span class="site-row-sub">${escapePdfHtml(row.industry || "-")} · ${escapePdfHtml(String(row.pyeong || 0))}평 · ${escapePdfHtml(row.floorLabel || "-")} · 엘리베이터 ${escapePdfHtml(row.elevator || "-")} · ${escapePdfHtml(row.staff || "-")}</span>
+            </span>
+            <span class="site-row-amount">${escapePdfHtml(formatMoney(row.totalAmount))}</span>
+          </button>
+        `).join("");
+
+        listEl.querySelectorAll("[data-pending-index]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            openActualForm(rows[Number(btn.dataset.pendingIndex)]);
+          });
+        });
+      } catch (err) {
+        console.error(err);
+        badgeEl.textContent = "0건";
+        statusEl.textContent = "목록을 불러오지 못했습니다.";
+        listEl.innerHTML = `<div class="list-empty">목록을 불러오지 못했습니다.<br />${escapePdfHtml(err.message || "")}<br />인터넷 연결 확인 후 새로고침해 주세요.</div>`;
+      }
+    }
+
+    /* ---------- 공사완료: 입력 화면 ---------- */
+    function openActualForm(site) {
+      actualState.site = site;
+      actualState.workers = 0;
+      actualState.labor = 0;
+      actualState.equip = 0;
+      actualState.waste = 0;
+      actualState.etc = 0;
+      actualState.contract = Number(site.totalAmount) || 0;
+      actualState.memo = "";
+
+      document.getElementById("actualCodeLabel").textContent = site.code;
+      document.getElementById("actualSiteTitle").textContent = (site.customerName || "-") + " · " + (site.address || "-");
+      document.getElementById("actualSiteSub").textContent =
+        (site.industry || "-") + " · " + (site.pyeong || 0) + "평 · " + (site.floorLabel || "-") +
+        " · 엘리베이터 " + (site.elevator || "-");
+      document.getElementById("actualQuoteBadge").textContent = "견적 " + formatMoney(site.totalAmount);
+
+      document.getElementById("actualLabor").value = "";
+      document.getElementById("actualEquip").value = "";
+      document.getElementById("actualWaste").value = "";
+      document.getElementById("actualEtc").value = "";
+      document.getElementById("actualContract").value = actualState.contract ? actualState.contract.toLocaleString("ko-KR") : "";
+      document.getElementById("actualMemo").value = "";
+      document.getElementById("actualStatus").textContent = "모든 금액을 입력한 뒤 저장하기를 눌러 주세요.";
+
+      renderActualCompare();
+      showScreen("pageActualForm");
+    }
+
+    function getActualTotal() {
+      return actualState.labor + actualState.equip + actualState.waste + actualState.etc;
+    }
+
+    function diffMarkup(estimated, actual) {
+      const diff = actual - estimated;
+      if (!estimated && !actual) return `<span>-</span>`;
+      if (diff === 0) return `<span>0원</span>`;
+      const cls = diff > 0 ? "diff-over" : "diff-under";
+      const sign = diff > 0 ? "+" : "";
+      return `<span class="${cls}">${sign}${formatMoney(diff)}</span>`;
+    }
+
+    function renderActualCompare() {
+      const site = actualState.site || {};
+      const body = document.getElementById("compareBody");
+
+      const lines = [
+        { label: "인력비", est: Number(site.estLabor) || 0, act: actualState.labor },
+        { label: "장비비", est: Number(site.estEquip) || 0, act: actualState.equip },
+        { label: "폐기물비", est: Number(site.estWaste) || 0, act: actualState.waste },
+        { label: "기타비", est: Number(site.estEtc) || 0, act: actualState.etc }
+      ];
+
+      const estTotal = Number(site.estTotal) || lines.reduce((sum, l) => sum + l.est, 0);
+      const actTotal = getActualTotal();
+
+      body.innerHTML = lines.map(l => `
+        <div class="compare-row">
+          <span>${l.label}</span>
+          <span>${formatMoney(l.est)}</span>
+          <span>${formatMoney(l.act)}</span>
+          ${diffMarkup(l.est, l.act)}
+        </div>
+      `).join("") + `
+        <div class="compare-row total">
+          <span>총원가</span>
+          <span>${formatMoney(estTotal)}</span>
+          <span>${formatMoney(actTotal)}</span>
+          ${diffMarkup(estTotal, actTotal)}
+        </div>
+      `;
+
+      const margin = actualState.contract - actTotal;
+      const marginRate = actualState.contract > 0 ? Math.round((margin / actualState.contract) * 1000) / 10 : 0;
+
+      document.getElementById("actualWorkers").textContent = actualState.workers;
+      document.getElementById("actualMargin").textContent = formatMoney(margin);
+      document.getElementById("actualMarginRate").textContent = "마진율 " + marginRate + "%";
+      document.getElementById("actualTotalText").textContent = formatMoney(actTotal);
+      document.getElementById("actualEstText").textContent = formatMoney(estTotal);
+      document.getElementById("actualDiffText").textContent =
+        (actTotal - estTotal > 0 ? "+" : "") + formatMoney(actTotal - estTotal);
+      document.getElementById("actualQuoteText").textContent = formatMoney(site.totalAmount);
+    }
+
+    function bindActualForm() {
+      const map = {
+        actualLabor: "labor",
+        actualEquip: "equip",
+        actualWaste: "waste",
+        actualEtc: "etc",
+        actualContract: "contract"
+      };
+
+      Object.keys(map).forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", () => {
+          const value = parseMoneyInput(el.value);
+          actualState[map[id]] = value;
+          el.value = value ? value.toLocaleString("ko-KR") : "";
+          renderActualCompare();
+        });
+      });
+
+      const memo = document.getElementById("actualMemo");
+      if (memo) memo.addEventListener("input", () => { actualState.memo = memo.value; });
+
+      document.querySelectorAll("[data-actual-step]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const step = Number(btn.dataset.actualStep || 0);
+          actualState.workers = Math.max(0, Math.min(999, actualState.workers + step));
+          renderActualCompare();
+        });
+      });
+    }
+
+    async function saveActualCost() {
+      const site = actualState.site;
+      if (!site) return;
+
+      if (getActualTotal() <= 0) {
+        alert("실제 원가를 입력해 주세요.\n인력비·장비비·폐기물비·기타비가 모두 0원입니다.");
+        return;
+      }
+
+      if (actualState.contract <= 0) {
+        alert("최종 계약금액을 입력해 주세요.");
+        document.getElementById("actualContract").focus();
+        return;
+      }
+
+      const btn = document.getElementById("actualSave");
+      const statusEl = document.getElementById("actualStatus");
+      btn.disabled = true;
+      btn.textContent = "저장 중...";
+      statusEl.textContent = "실제 원가를 저장하고 있습니다...";
+
+      try {
+        const result = await jsonpRequest({
+          action: "saveActual",
+          code: site.code,
+          staffName: getCurrentStaffName(),
+          workers: String(actualState.workers),
+          laborCost: String(actualState.labor),
+          equipCost: String(actualState.equip),
+          wasteCost: String(actualState.waste),
+          etcCost: String(actualState.etc),
+          contractAmount: String(actualState.contract),
+          memo: actualState.memo || ""
+        }, 15000);
+
+        if (!result || !result.ok) throw new Error((result && result.message) || "저장하지 못했습니다.");
+
+        btn.textContent = "저장 완료";
+        statusEl.textContent = "저장되었습니다. 목록으로 돌아갑니다.";
+
+        setTimeout(() => {
+          btn.textContent = "저장하기";
+          btn.disabled = false;
+          showScreen("pageActualList");
+          loadPendingList();
+        }, 700);
+      } catch (err) {
+        console.error(err);
+        btn.textContent = "저장하기";
+        btn.disabled = false;
+        statusEl.textContent = "저장에 실패했습니다. 다시 시도해 주세요.";
+        alert(err.message || "실제 원가를 저장하지 못했습니다.");
+      }
+    }
+
+    /* ---------- 과거 현장 조회 ---------- */
+    function renderLookupFilters() {
+      const grid = document.getElementById("lookupIndustry");
+      if (!grid) return;
+
+      if (!grid.dataset.built) {
+        grid.innerHTML = ["전체"].concat(INDUSTRY_OPTIONS).map(name => `
+          <button type="button" class="industry-btn" data-lookup-industry="${name}">${name}</button>
+        `).join("");
+        grid.dataset.built = "1";
+      }
+
+      grid.querySelectorAll("[data-lookup-industry]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.lookupIndustry === lookupState.industry);
+      });
+
+      document.querySelectorAll("[data-lookup-elevator]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.lookupElevator === lookupState.elevator);
+      });
+
+      document.getElementById("lookupPyeong").textContent = lookupState.pyeong;
+      document.getElementById("lookupCondBadge").textContent =
+        lookupState.industry + " · " + (lookupState.pyeong > 0 ? lookupState.pyeong + "평" : "평수 무관") +
+        " · 엘베 " + lookupState.elevator;
+    }
+
+    function bindLookup() {
+      document.addEventListener("click", (event) => {
+        const industryBtn = event.target.closest("[data-lookup-industry]");
+        if (industryBtn) {
+          lookupState.industry = industryBtn.dataset.lookupIndustry;
+          renderLookupFilters();
+          return;
+        }
+
+        const elevatorBtn = event.target.closest("[data-lookup-elevator]");
+        if (elevatorBtn) {
+          lookupState.elevator = elevatorBtn.dataset.lookupElevator;
+          renderLookupFilters();
+          return;
+        }
+
+        const stepBtn = event.target.closest("[data-lookup-step]");
+        if (stepBtn) {
+          const next = lookupState.pyeong + Number(stepBtn.dataset.lookupStep || 0);
+          lookupState.pyeong = Math.max(0, Math.min(2000, next));
+          renderLookupFilters();
+        }
+      });
+    }
+
+    async function searchPastSites() {
+      const listEl = document.getElementById("lookupList");
+      const statusEl = document.getElementById("lookupStatus");
+      const countEl = document.getElementById("lookupCountLabel");
+      const btn = document.getElementById("lookupSearch");
+
+      btn.disabled = true;
+      btn.textContent = "조회 중...";
+      listEl.innerHTML = `<div class="list-empty">조회하는 중입니다...</div>`;
+
+      try {
+        const result = await jsonpRequest({
+          action: "lookupSites",
+          industry: lookupState.industry,
+          pyeong: String(lookupState.pyeong),
+          range: "10",
+          elevator: lookupState.elevator
+        }, 15000);
+
+        if (!result || !result.ok) throw new Error((result && result.message) || "조회하지 못했습니다.");
+
+        const rows = result.rows || [];
+        countEl.textContent = rows.length + "건";
+        statusEl.textContent = rows.length
+          ? rows.length + "건을 찾았습니다."
+          : "조건에 맞는 현장이 없습니다. 조건을 넓혀 보세요.";
+
+        if (!rows.length) {
+          listEl.innerHTML = `<div class="list-empty">조건에 맞는 현장이 없습니다.<br />실제 원가가 입력된 현장만 조회됩니다.</div>`;
+          return;
+        }
+
+        listEl.innerHTML = rows.map(row => `
+          <div class="lookup-card">
+            <div class="lookup-card-head">
+              <span class="site-row-main">
+                <span class="site-row-code">${escapePdfHtml(row.code)}</span>
+                <span class="site-row-sub">${escapePdfHtml(row.industry || "-")} · ${escapePdfHtml(String(row.pyeong || 0))}평 · ${escapePdfHtml(row.floorLabel || "-")} · 엘리베이터 ${escapePdfHtml(row.elevator || "-")}</span>
+              </span>
+              <span class="site-row-amount">${escapePdfHtml(formatMoney(row.contractAmount || row.totalAmount))}</span>
+            </div>
+            <div class="lookup-result-grid">
+              <div class="lookup-cell"><div class="lookup-cell-label">당시 견적금액</div><div class="lookup-cell-value">${escapePdfHtml(formatMoney(row.totalAmount))}</div></div>
+              <div class="lookup-cell"><div class="lookup-cell-label">실제 투입인원</div><div class="lookup-cell-value">${escapePdfHtml(String(row.actWorkers || 0))}명</div></div>
+              <div class="lookup-cell"><div class="lookup-cell-label">실제 장비비</div><div class="lookup-cell-value">${escapePdfHtml(formatMoney(row.actEquip))}</div></div>
+              <div class="lookup-cell"><div class="lookup-cell-label">실제 폐기물비</div><div class="lookup-cell-value">${escapePdfHtml(formatMoney(row.actWaste))}</div></div>
+              <div class="lookup-cell"><div class="lookup-cell-label">실제 총원가</div><div class="lookup-cell-value">${escapePdfHtml(formatMoney(row.actTotal))}</div></div>
+              <div class="lookup-cell"><div class="lookup-cell-label">실제 마진</div><div class="lookup-cell-value">${escapePdfHtml(formatMoney(row.margin))} (${escapePdfHtml(String(row.marginRate || 0))}%)</div></div>
+              <div class="lookup-cell"><div class="lookup-cell-label">예상 총원가</div><div class="lookup-cell-value">${escapePdfHtml(formatMoney(row.estTotal))}</div></div>
+              <div class="lookup-cell"><div class="lookup-cell-label">예상·실제 차이</div><div class="lookup-cell-value ${row.costDiff > 0 ? "diff-over" : "diff-under"}">${row.costDiff > 0 ? "+" : ""}${escapePdfHtml(formatMoney(row.costDiff))}</div></div>
+              <div class="lookup-cell"><div class="lookup-cell-label">완료일</div><div class="lookup-cell-value">${escapePdfHtml(String(row.doneAt || "-").slice(0, 10))}</div></div>
+            </div>
+            ${row.memo ? `<div class="site-row-sub" style="margin-top:9px;white-space:normal;">메모: ${escapePdfHtml(row.memo)}</div>` : ""}
+          </div>
+        `).join("");
+      } catch (err) {
+        console.error(err);
+        countEl.textContent = "0건";
+        statusEl.textContent = "조회하지 못했습니다.";
+        listEl.innerHTML = `<div class="list-empty">조회하지 못했습니다.<br />${escapePdfHtml(err.message || "")}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "조회하기";
+      }
+    }
+
+    /* ---------- 메뉴 연결 ---------- */
+    bindActualForm();
+    bindLookup();
+
+    document.getElementById("menuNewEstimate").addEventListener("click", startNewEstimate);
+
+    document.getElementById("menuActualCost").addEventListener("click", () => {
+      showScreen("pageActualList");
+      loadPendingList();
+    });
+
+    document.getElementById("menuLookup").addEventListener("click", () => {
+      renderLookupFilters();
+      showScreen("pageLookup");
+    });
+
+    document.getElementById("menuLogout").addEventListener("click", showLoginScreen);
+    document.getElementById("pendingBack").addEventListener("click", showMainMenu);
+    document.getElementById("pendingRefresh").addEventListener("click", loadPendingList);
+    document.getElementById("actualBack").addEventListener("click", () => showScreen("pageActualList"));
+    document.getElementById("actualSave").addEventListener("click", saveActualCost);
+    document.getElementById("lookupBack").addEventListener("click", showMainMenu);
+    document.getElementById("lookupSearch").addEventListener("click", searchPastSites);
 
     document.getElementById("loginForm").addEventListener("submit", handleLoginSubmit);
     document.getElementById("changeStaffBtn").addEventListener("click", showLoginScreen);
