@@ -8155,7 +8155,7 @@
     body.role-field .office-only { display: none !important; }
 
     body.role-field .menu-content {
-      grid-template-columns: minmax(0, 560px) !important;
+      grid-template-columns: repeat(2, minmax(0, 380px)) !important;
       justify-content: center;
     }
 
@@ -8255,7 +8255,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div class="start-foot">N-CORE On-site Check System 1.91</div>
+      <div class="start-foot">N-CORE On-site Check System 1.92</div>
     </div>
   </section>
 
@@ -8875,6 +8875,12 @@
           <span class="menu-card-no">03</span>
           <span class="menu-card-title">공사완료 입력</span>
           <span class="menu-card-desc">공사가 끝난 현장의 실제 원가와 최종 계약금액을 입력합니다.</span>
+        </button>
+
+        <button type="button" class="panel menu-card" id="menuSafety">
+          <span class="menu-card-no">05</span>
+          <span class="menu-card-title">안전동의서</span>
+          <span class="menu-card-desc">작업자에게 안전수칙을 확인받고 서명을 받습니다.</span>
         </button>
 
         <button type="button" class="panel menu-card office-only" id="menuLookup">
@@ -12651,6 +12657,11 @@
 
     document.getElementById("fieldBack").addEventListener("click", showMainMenu);
     document.getElementById("fieldRefresh").addEventListener("click", loadFieldList);
+    document.getElementById("menuSafety").addEventListener("click", () => {
+      const name = getCurrentStaffName();
+      window.location.href = "./safety.html?staff=" + encodeURIComponent(name || "");
+    });
+
     document.getElementById("menuLogout").addEventListener("click", showLoginScreen);
     document.getElementById("pendingBack").addEventListener("click", showMainMenu);
     document.getElementById("pendingRefresh").addEventListener("click", loadPendingList);

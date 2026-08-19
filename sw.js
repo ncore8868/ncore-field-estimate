@@ -1,14 +1,16 @@
-const CACHE_NAME = "ncore-field-estimate-pwa-v32";
+const CACHE_NAME = "ncore-field-estimate-pwa-v33";
 
 const CORE_ASSETS = [
   "./",
   "./index.html",
+  "./safety.html",
   "./manifest.webmanifest",
   "./PretendardVariable.woff2",
   "./icon-192-v2.png",
   "./icon-512-v2.png",
   "./ncore-dark-logo-v7.png",
-  "./ncore-watermark-v7.png"
+  "./ncore-watermark-v7.png",
+  "./ncore-logo.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -37,7 +39,7 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  if (request.mode === "navigate" || url.pathname.endsWith("/index.html")) {
+  if (request.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/safety.html")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
