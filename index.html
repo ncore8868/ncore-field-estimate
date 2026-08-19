@@ -3193,7 +3193,7 @@
   
     /* v70: 휴대폰 · 태블릿 반응형 레이아웃
        기존 가로 전용 잠금은 유지하지 않고, 세로 화면에서는 한 열 + 페이지 스크롤 구조로 전환합니다. */
-    @media (max-width: 1100px), (orientation: portrait) {
+    @media (max-width: 1100px), (max-height: 819px), (orientation: portrait) {
       html {
         min-height: 100%;
         height: auto !important;
@@ -3854,7 +3854,7 @@
        - Chrome에서 실제 사용 가능한 낮은 세로 뷰포트를 기준으로 보정
        - 중앙 입력/목록만 스크롤, 상단·하단·요약은 안정적으로 유지
        ========================================================= */
-    @media (min-width: 1101px) and (orientation: landscape) {
+    @media (min-width: 1101px) and (min-height: 820px) and (orientation: landscape) {
       :root {
         --outer-gap: 12px;
         --tablet-safe-bottom: max(12px, env(safe-area-inset-bottom));
@@ -7537,7 +7537,7 @@
       #page0 .project-field { grid-template-columns: 96px minmax(0, 1fr) !important; }
     }
 
-    @media (max-width: 1100px), (orientation: portrait) {
+    @media (max-width: 1100px), (max-height: 819px), (orientation: portrait) {
       #page0 .project-form {
         grid-template-columns: minmax(0, 1fr) !important;
         overflow: visible !important;
@@ -7973,7 +7973,7 @@
       .actual-field { grid-template-columns: 94px minmax(0, 1fr); }
     }
 
-    @media (max-width: 1100px), (orientation: portrait) {
+    @media (max-width: 1100px), (max-height: 819px), (orientation: portrait) {
       .menu-content,
       .work-content {
         grid-template-columns: minmax(0, 1fr) !important;
@@ -8000,7 +8000,7 @@
       .lookup-result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     /* === v29: 휴대폰 대응 — 세로모드 사용 · 스크롤 복구 === */
-    @media (max-width: 1100px), (orientation: portrait) {
+    @media (max-width: 1100px), (max-height: 819px), (orientation: portrait) {
       html {
         height: auto !important;
         min-height: 100%;
@@ -8404,7 +8404,7 @@
       gap: 5px;
     }
 
-    @media (max-width: 1100px), (orientation: portrait) {
+    @media (max-width: 1100px), (max-height: 819px), (orientation: portrait) {
       body.role-field .menu-content { grid-template-columns: minmax(0, 1fr) !important; }
     }
     /* === v34: 미계약 현장 === */
@@ -8429,6 +8429,42 @@
       font-weight: 900;
       color: var(--ink);
       font-variant-numeric: tabular-nums;
+    }
+    /* === v36: 스크롤 개선 ===
+       폭은 넓지만 높이가 낮은 기기(갤럭시 폴드 등)에서 화면을 고정하면
+       바깥은 안 움직이고 안쪽 목록만 움직여 스크롤이 씹힙니다.
+       그런 기기는 화면 전체가 흐르도록 위에서 분기를 바꿨고,
+       여기서는 남은 안쪽 스크롤이 경계에서 멈추지 않게 풀어 줍니다. */
+    .detail-body,
+    .ratio-body,
+    .scope-body,
+    .scope-body.scroll-mode,
+    .final-body,
+    .list-scroll,
+    .actual-form,
+    .selected-list,
+    .estimate-detail-grid,
+    .final-chip-grid,
+    .left-panel,
+    .right-panel,
+    .ratio-summary,
+    .scope-right,
+    .final-side,
+    .estimate-side,
+    .work-side,
+    #page0 .project-form {
+      overscroll-behavior: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 1100px), (max-height: 819px), (orientation: portrait) {
+      html, body {
+        scroll-behavior: auto;
+        overscroll-behavior-y: auto !important;
+      }
+
+      /* 화면 전체가 흐르는 상태에서는 안쪽 스크롤을 만들지 않습니다. */
+      .app, .app.show { touch-action: pan-y; }
     }
 </style>
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -8457,6 +8493,7 @@
   <!-- v34: 반장 화면에서 고객 연락처 제거 · 미계약 현장 목록 -->
   <!-- v35: 서버 통신 대기시간 25초 확대 + 자동 재시도 (로그인 실패 문제 해결) -->
   <!-- v36: 개별 타임아웃이 기본값을 덮어쓰던 문제 수정 (견적번호 발급 실패) -->
+  <!-- v37: 폭 넓고 높이 낮은 기기(폴드)에서 화면 고정 해제, 스크롤 씹힘 개선 -->
 </head>
 <body>
 
@@ -8474,7 +8511,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div id="startFoot" class="start-foot">N-CORE On-site Check System 1.98</div>
+      <div id="startFoot" class="start-foot">N-CORE On-site Check System 1.99</div>
     </div>
   </section>
 
