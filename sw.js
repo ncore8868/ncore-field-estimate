@@ -1,4 +1,4 @@
-const CACHE_NAME = "ncore-field-estimate-pwa-v35";
+const CACHE_NAME = "ncore-field-estimate-pwa-v36";
 
 const CORE_ASSETS = [
   "./",

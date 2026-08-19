@@ -8339,6 +8339,74 @@
     @media (max-width: 480px) {
       .photo-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
     }
+    /* === v33: 평수 직접입력 · 반장 메뉴 · 상태배지 === */
+    .pyeong-wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pyeong-input {
+      width: 100%;
+      height: 54px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #FFFFFF;
+      padding: 0 18px;
+      box-sizing: border-box;
+      text-align: right;
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--ink);
+      outline: none;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pyeong-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(215,96,22,.12);
+    }
+
+    .pyeong-input:disabled { background: #F6F6F6; color: rgba(17,17,17,.62); }
+
+    .pyeong-unit {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--muted);
+      padding-right: 2px;
+    }
+
+    body.role-field .menu-content {
+      grid-template-columns: repeat(3, minmax(0, 320px)) !important;
+      justify-content: center;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #FFFFFF;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .status-chip.done { border-color: rgba(215,96,22,.28); background: #FFF8F3; color: var(--accent-deep); }
+    .status-chip.wait { border-color: rgba(17,17,17,.16); }
+
+    .site-row-right {
+      display: grid;
+      justify-items: end;
+      gap: 5px;
+    }
+
+    @media (max-width: 1100px), (orientation: portrait) {
+      body.role-field .menu-content { grid-template-columns: minmax(0, 1fr) !important; }
+    }
 </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -8362,6 +8430,7 @@
   <!-- v30: 저장 시 견적서 PDF를 구글 드라이브에 자동 보관 -->
   <!-- v31: 권한 분리(현장반장 현장견적 / 사무실 견적확정) · 수익금 입력 -->
   <!-- v32: 현장사진 촬영·자동 용량축소·현장별 폴더 저장 -->
+  <!-- v33: 메뉴번호 자동정리 · 평수 직접입력 · 내 현장견적 · 임시저장 · 테스트모드 -->
 </head>
 <body>
 
@@ -8379,7 +8448,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div class="start-foot">N-CORE On-site Check System 1.94</div>
+      <div id="startFoot" class="start-foot">N-CORE On-site Check System 1.95</div>
     </div>
   </section>
 
@@ -8423,8 +8492,8 @@
           <div class="project-form">
             <label class="project-field">
               <span class="project-field-label">
-                <strong>고객명</strong>
-                <span>견적서에 표시될 이름</span>
+                <strong>고객 / 상호명</strong>
+                <span>견적서와 폴더 이름에 사용됩니다</span>
               </span>
               <input id="projectCustomerName" class="project-input korean-input" type="text" lang="ko" inputmode="text" autocapitalize="off" spellcheck="false" placeholder="예: 홍길동" autocomplete="name" tabindex="1" />
             </label>
@@ -8432,15 +8501,11 @@
             <div class="project-field">
               <span class="project-field-label">
                 <strong>철거평수</strong>
-                <span>철거 대상 면적</span>
+                <span>숫자를 직접 입력합니다</span>
               </span>
-              <div class="site-counter">
-                <button type="button" data-site-key="pyeong" data-site-step="-5">−</button>
-                <div class="site-value">
-                  <input id="sitePyeong" type="text" inputmode="numeric" pattern="[0-9]*" value="0" />
-                  <span class="site-unit">평</span>
-                </div>
-                <button type="button" data-site-key="pyeong" data-site-step="5">+</button>
+              <div class="pyeong-wrap">
+                <input id="sitePyeong" class="pyeong-input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
+                <span class="pyeong-unit">평</span>
               </div>
             </div>
 
@@ -9006,6 +9071,12 @@
           <span class="menu-card-desc">현장 정보를 입력하고 견적서를 작성해 고객에게 발송합니다.</span>
         </button>
 
+        <button type="button" class="panel menu-card" id="menuMyReports">
+          <span class="menu-card-no">02</span>
+          <span class="menu-card-title">내 현장견적</span>
+          <span class="menu-card-desc">내가 제출한 현장견적과 계약 진행 상태를 확인합니다.</span>
+        </button>
+
         <button type="button" class="panel menu-card office-only" id="menuFieldReport">
           <span class="menu-card-no">02</span>
           <span class="menu-card-title">현장견적 처리</span>
@@ -9034,6 +9105,60 @@
       <nav class="bottom-nav">
         <button id="menuLogout" class="nav-btn prev">담당자 변경</button>
         <div class="bottom-status">현재 담당자: <strong id="menuStaffName2">-</strong></div>
+        <div></div>
+      </nav>
+    </section>
+
+
+    <section id="pageMyReports" class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo-mark">N-CORE</div>
+          <div class="brand-text">
+            <div class="title">내 현장견적</div>
+            <div class="sub">내가 제출한 현장견적과 진행 상태를 확인합니다.</div>
+          </div>
+        </div>
+        <div class="step-pill">
+          <span>내 현장견적</span>
+          <span class="step-dot"></span>
+          <strong id="myStaffName">-</strong>
+        </div>
+      </header>
+
+      <section class="work-content">
+        <section class="panel work-main">
+          <div class="work-header">
+            <div>
+              <h1 class="work-title">제출 내역</h1>
+              <div class="work-sub">최근에 제출한 것부터 표시됩니다.</div>
+            </div>
+            <div class="amount-badge" id="myCountBadge">0건</div>
+          </div>
+
+          <div id="myList" class="list-scroll"></div>
+        </section>
+
+        <aside class="panel work-side">
+          <div class="result-card">
+            <div class="label">이번 달 제출</div>
+            <div class="value" id="myMonthCount">0건</div>
+            <div class="sub" id="myMonthContract">계약 0건</div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-card-row"><span>전체 제출</span><strong id="myTotalCount">0건</strong></div>
+            <div class="info-card-row"><span>전체 계약</span><strong id="myTotalContract">0건</strong></div>
+            <div class="info-card-row"><span>견적 대기</span><strong id="myWaitCount">0건</strong></div>
+          </div>
+
+          <button type="button" id="myRefresh" class="nav-btn next" style="height:52px;font-size:17px;border-radius:16px;">새로고침</button>
+        </aside>
+      </section>
+
+      <nav class="bottom-nav">
+        <button id="myBack" class="nav-btn prev">메뉴</button>
+        <div class="bottom-status" id="myStatus">불러오는 중입니다.</div>
         <div></div>
       </nav>
     </section>
@@ -9571,6 +9696,8 @@
           role: String(result.role || "사무실").trim() || "사무실"
         };
         localStorage.setItem(STAFF_STORAGE_KEY, state.auth.staffName);
+        testMode = testArmed;
+        testArmed = false;
         applyRoleToUI();
         updateStaffSessionUI();
         openAppAfterLogin();
@@ -9602,6 +9729,8 @@
       const startScreen = document.getElementById("startScreen");
       const app = document.querySelector(".app");
       state.auth = { loggedIn: false, staffName: "", role: "사무실" };
+      testMode = false;
+      testArmed = false;
       applyRoleToUI();
       app.classList.remove("show");
       app.style.display = "none";
@@ -9921,6 +10050,8 @@
       state.totals = { labor, equipment, waste, extra, total };
 
       const profit = getProfitAmount();
+
+      saveDraftSoon();
 
       document.getElementById("sumLabor").textContent = formatWon(labor);
       document.getElementById("sumEquipment").textContent = formatWon(equipment);
@@ -10315,7 +10446,7 @@
 
       const pyeongInput = document.getElementById("sitePyeong");
       if (pyeongInput && document.activeElement !== pyeongInput) {
-        pyeongInput.value = String(state.project.pyeong || 0);
+        pyeongInput.value = state.project.pyeong ? String(state.project.pyeong) : "";
       }
 
       const floorLabel = document.getElementById("siteFloorLabel");
@@ -10375,7 +10506,7 @@
         });
 
         pyeongInput.addEventListener("blur", () => {
-          pyeongInput.value = String(state.project.pyeong || 0);
+          pyeongInput.value = state.project.pyeong ? String(state.project.pyeong) : "";
         });
 
         pyeongInput.addEventListener("keydown", (event) => {
@@ -10835,10 +10966,13 @@
       if (pyeongInput) {
         state.project.pyeong = Math.min(PYEONG_MAX, Number(String(pyeongInput.value).replace(/[^0-9]/g, "")) || 0);
       }
+
+      saveDraftSoon();
     }
 
     function validateProjectInputs() {
       readProjectInputs();
+      if (testMode) return true;
       if (!state.project.customerName) {
         alert("고객명을 입력해 주세요.");
         document.getElementById("projectCustomerName").focus();
@@ -10943,7 +11077,7 @@
         stage: "final",
         code: state.estimateCode || "",
         issuedAt: state.estimateIssuedAt || "",
-        project: { ...state.project },
+        project: { ...state.project, customerName: getSaveCustomerName() },
         site: {
           industry: state.project.industry || "",
           pyeong: Number(state.project.pyeong) || 0,
@@ -12137,7 +12271,7 @@
     });
 
     document.getElementById("page2Next").addEventListener("click", () => {
-      if (getRatioTotal() !== 100) {
+      if (!testMode && getRatioTotal() !== 100) {
         alert("비율 합계를 100%로 맞춰주세요.");
         return;
       }
@@ -12332,6 +12466,7 @@
           (err.message || "") + "\n\n견적서 화면에서 전송은 정상적으로 진행할 수 있습니다.");
       }
 
+      clearDraft();
       saveBtn.textContent = "저장 완료";
       setTimeout(() => {
         saveBtn.textContent = "저장하기";
@@ -12413,6 +12548,7 @@
     function showMainMenu() {
       applyRoleToUI();
       updateRoleLabels();
+      renumberMenu();
       const name = getCurrentStaffName() || "-";
       const a = document.getElementById("menuStaffName");
       const b = document.getElementById("menuStaffName2");
@@ -12421,8 +12557,167 @@
       showScreen("pageMenu");
     }
 
+
+    /* =========================================================
+       v33: 테스트 모드 · 임시저장 · 메뉴번호 자동정리
+       ========================================================= */
+    let testMode = false;
+    let testArmed = false;
+    let testTapCount = 0;
+    let testTapTimer = null;
+
+    function armTestMode() {
+      testTapCount += 1;
+      window.clearTimeout(testTapTimer);
+      testTapTimer = window.setTimeout(() => { testTapCount = 0; }, 3000);
+
+      if (testTapCount >= 5) {
+        testTapCount = 0;
+        testArmed = true;
+        if (navigator.vibrate) navigator.vibrate(30);
+      }
+    }
+
+    function getSaveCustomerName() {
+      const name = state.project.customerName || "";
+      if (!testMode) return name;
+      return name.indexOf("[테스트]") === 0 ? name : ("[테스트] " + name).trim();
+    }
+
+    function fillTestSample() {
+      state.project = {
+        customerName: "[테스트] 미태리파스타",
+        phone: "010-0000-0000",
+        address: "대구 수성구 달구벌대로 3188",
+        industry: "식당",
+        pyeong: 25,
+        floor: 1,
+        elevator: "있음"
+      };
+      state.labor = { skilled: 2, helper: 1, days: 1 };
+      state.waste.truck1Mixed = 1;
+      calc();
+    }
+
+    /* ---------- 메뉴 번호 자동정리 ---------- */
+    function renumberMenu() {
+      let no = 1;
+      document.querySelectorAll("#menuContent .menu-card").forEach(card => {
+        if (window.getComputedStyle(card).display === "none") return;
+        const el = card.querySelector(".menu-card-no");
+        if (el) el.textContent = String(no).padStart(2, "0");
+        no += 1;
+      });
+    }
+
+    /* ---------- 작성 중 임시저장 ----------
+       폰 안에만 글자로 저장합니다. 서버로 보내지 않고 통신도 쓰지 않습니다.
+       사진은 용량이 커서 담지 않으므로 복구 후 다시 골라야 합니다. */
+    const DRAFT_KEY = "ncore_estimate_draft_v1";
+    let draftTimer = null;
+
+    function saveDraftNow() {
+      if (state.baseLocked || testMode) return;
+      if (!state.auth.loggedIn) return;
+
+      try {
+        const hasAny =
+          (state.project.customerName || state.project.address || state.project.phone ||
+           state.project.industry || Number(state.project.pyeong) > 0 ||
+           getCostTotal() > 0);
+        if (!hasAny) return;
+
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({
+          savedAt: new Date().toISOString(),
+          staffName: getCurrentStaffName(),
+          project: state.project,
+          location: state.location,
+          labor: state.labor,
+          equipment: state.equipment,
+          waste: state.waste,
+          extra: state.extra,
+          photoCount: state.photos.length
+        }));
+      } catch (err) {
+        // 저장 공간이 부족하면 조용히 넘어갑니다. 임시저장은 보조 기능입니다.
+      }
+    }
+
+    function saveDraftSoon() {
+      window.clearTimeout(draftTimer);
+      draftTimer = window.setTimeout(saveDraftNow, 600);
+    }
+
+    function readDraft() {
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!data || !data.project) return null;
+        return data;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function clearDraft() {
+      try { localStorage.removeItem(DRAFT_KEY); } catch (err) { /* 무시 */ }
+    }
+
+    function restoreDraft(data) {
+      state.project = { ...state.project, ...(data.project || {}) };
+      state.location = { ...(data.location || state.location) };
+      state.labor = { ...state.labor, ...(data.labor || {}) };
+      state.equipment = { ...state.equipment, ...(data.equipment || {}) };
+      state.waste = { ...state.waste, ...(data.waste || {}) };
+      state.extra = { ...state.extra, ...(data.extra || {}) };
+      state.photos = [];
+      gpsAutoTried = true;
+      calc();
+    }
+
+    function describeDraft(data) {
+      const p = data.project || {};
+      const when = data.savedAt ? formatDateTime(data.savedAt) : "-";
+      return (p.customerName || "고객 미입력") + " · " + (p.address || "주소 미입력") + "\n작성시각 " + when;
+    }
+
     /* ---------- 새 견적 작성 ---------- */
-    function startNewEstimate() {
+    function startNewEstimate(options) {
+      const opt = options || {};
+
+      // 작성하다 만 내용이 있으면 이어서 할지 먼저 묻습니다.
+      if (!opt.skipDraft && !testMode) {
+        const draft = readDraft();
+        if (draft) {
+          const go = window.confirm(
+            "작성하다 만 현장이 있습니다.\n\n" + describeDraft(draft) +
+            (draft.photoCount ? "\n사진 " + draft.photoCount + "장은 다시 골라야 합니다." : "") +
+            "\n\n이어서 하시겠습니까?\n(취소를 누르면 새로 시작합니다)"
+          );
+
+          if (go) {
+            resetEstimateState();
+            restoreDraft(draft);
+            syncProjectInputsFromState();
+            setActive("labor");
+            showPage(0);
+            return;
+          }
+          clearDraft();
+        }
+      }
+
+      resetEstimateState();
+
+      if (testMode) fillTestSample();
+
+      syncProjectInputsFromState();
+      setActive("labor");
+      showPage(0);
+    }
+
+    function resetEstimateState() {
       // 이전 현장의 내용이 새 견적에 섞이지 않도록 전부 초기화합니다.
       state.project = {
         customerName: "", phone: "", address: "",
@@ -12447,8 +12742,6 @@
       gpsAutoTried = false;
 
       resetInternalInputs();
-      setActive("labor");
-      showPage(0);
     }
 
     /* ---------- 공사완료: 미입력 현장 목록 ---------- */
@@ -12845,7 +13138,7 @@
         stage: "field",
         code: state.estimateCode || "",
         issuedAt: state.estimateIssuedAt || "",
-        project: { ...state.project },
+        project: { ...state.project, customerName: getSaveCustomerName() },
         site: {
           industry: state.project.industry || "",
           pyeong: Number(state.project.pyeong) || 0,
@@ -12881,7 +13174,7 @@
       }
 
       calc();
-      if (getCostTotal() <= 0) {
+      if (!testMode && getCostTotal() <= 0) {
         alert("기본 공사비가 0원입니다.\n인원·장비·폐기물 중 하나 이상을 입력해 주세요.");
         return;
       }
@@ -12942,7 +13235,8 @@
             (state.photos.length ? "\n현장사진 " + state.photos.length + "장" : ""));
           btn.disabled = false;
           btn.textContent = "현장견적 제출";
-          startNewEstimate();
+          clearDraft();
+          startNewEstimate({ skipDraft: true });
           showMainMenu();
         }, 400);
       } catch (err) {
@@ -12950,6 +13244,72 @@
         btn.disabled = false;
         btn.textContent = "현장견적 제출";
         alert("현장견적 저장 중 오류가 발생했습니다. 통신 상태를 확인해 주세요.");
+      }
+    }
+
+
+    /* ---------- 내 현장견적 ---------- */
+    function progressChip(row) {
+      const contract = String(row.contractStatus || "").trim();
+      const progress = String(row.progress || "").trim();
+
+      if (contract) return '<span class="status-chip done">' + escapePdfHtml(contract) + '</span>';
+      if (progress === "견적작성 완료") return '<span class="status-chip done">견적작성 완료</span>';
+      return '<span class="status-chip wait">' + escapePdfHtml(progress || "접수") + '</span>';
+    }
+
+    async function loadMyReports() {
+      const listEl = document.getElementById("myList");
+      const statusEl = document.getElementById("myStatus");
+      const badgeEl = document.getElementById("myCountBadge");
+
+      document.getElementById("myStaffName").textContent = getCurrentStaffName() || "-";
+      listEl.innerHTML = `<div class="list-empty">불러오는 중입니다...</div>`;
+      statusEl.textContent = "불러오는 중...";
+
+      try {
+        const result = await jsonpRequest({ action: "myReports", staffName: getCurrentStaffName() }, 15000);
+        if (!result || !result.ok) throw new Error((result && result.message) || "불러오지 못했습니다.");
+
+        const rows = result.rows || [];
+        const nowMonth = new Date().toISOString().slice(0, 7).replace("-", "-");
+        const monthRows = rows.filter(r => String(r.savedAt || "").slice(0, 7) === nowMonth);
+        const contractRows = rows.filter(r => String(r.contractStatus || "").trim());
+        const monthContract = monthRows.filter(r => String(r.contractStatus || "").trim());
+        const waitRows = rows.filter(r => String(r.progress || "").trim() === "현장견적 접수");
+
+        badgeEl.textContent = rows.length + "건";
+        document.getElementById("myMonthCount").textContent = monthRows.length + "건";
+        document.getElementById("myMonthContract").textContent = "계약 " + monthContract.length + "건";
+        document.getElementById("myTotalCount").textContent = rows.length + "건";
+        document.getElementById("myTotalContract").textContent = contractRows.length + "건";
+        document.getElementById("myWaitCount").textContent = waitRows.length + "건";
+
+        statusEl.textContent = rows.length ? "내가 제출한 현장견적입니다." : "아직 제출한 현장견적이 없습니다.";
+
+        if (!rows.length) {
+          listEl.innerHTML = `<div class="list-empty">아직 제출한 현장견적이 없습니다.</div>`;
+          return;
+        }
+
+        listEl.innerHTML = rows.map(row => `
+          <div class="site-row" style="cursor:default;">
+            <span class="site-row-main">
+              <span class="site-row-code">${escapePdfHtml(row.code)} · ${escapePdfHtml(String(row.savedAt || "").slice(0, 10))}</span>
+              <span class="site-row-title">${escapePdfHtml(row.customerName || "-")} · ${escapePdfHtml(row.address || "-")}</span>
+              <span class="site-row-sub">${escapePdfHtml(row.industry || "-")} · ${escapePdfHtml(String(row.pyeong || 0))}평 · ${escapePdfHtml(row.floorLabel || "-")} · 사진 ${escapePdfHtml(String(row.photoCount || 0))}장</span>
+            </span>
+            <span class="site-row-right">
+              <span class="site-row-amount">${escapePdfHtml(formatWon(row.costTotal))}</span>
+              ${progressChip(row)}
+            </span>
+          </div>
+        `).join("");
+      } catch (err) {
+        console.error(err);
+        badgeEl.textContent = "0건";
+        statusEl.textContent = "불러오지 못했습니다.";
+        listEl.innerHTML = `<div class="list-empty">불러오지 못했습니다.<br />${escapePdfHtml(err.message || "")}</div>`;
       }
     }
 
@@ -13057,6 +13417,14 @@
       showScreen("pageLookup");
     });
 
+    document.getElementById("menuMyReports").addEventListener("click", () => {
+      showScreen("pageMyReports");
+      loadMyReports();
+    });
+
+    document.getElementById("myBack").addEventListener("click", showMainMenu);
+    document.getElementById("myRefresh").addEventListener("click", loadMyReports);
+
     document.getElementById("menuFieldReport").addEventListener("click", () => {
       showScreen("pageFieldList");
       loadFieldList();
@@ -13076,6 +13444,9 @@
     document.getElementById("actualSave").addEventListener("click", saveActualCost);
     document.getElementById("lookupBack").addEventListener("click", showMainMenu);
     document.getElementById("lookupSearch").addEventListener("click", searchPastSites);
+
+    const startFootEl = document.getElementById("startFoot");
+    if (startFootEl) startFootEl.addEventListener("click", armTestMode);
 
     document.getElementById("loginForm").addEventListener("submit", handleLoginSubmit);
     document.getElementById("changeStaffBtn").addEventListener("click", showLoginScreen);
