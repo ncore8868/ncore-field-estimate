@@ -8151,6 +8151,71 @@
       .menu-card-title { font-size: 22px; }
       .work-title { font-size: 24px; }
     }
+    /* === v31: 권한별 화면 === */
+    body.role-field .office-only { display: none !important; }
+
+    body.role-field .menu-content {
+      grid-template-columns: minmax(0, 560px) !important;
+      justify-content: center;
+    }
+
+    .profit-summary {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .profit-summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 15px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #FFFFFF;
+      font-size: 15px;
+      font-weight: 850;
+    }
+
+    .profit-summary-row.accent {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .profit-summary-row span:last-child {
+      font-size: 19px;
+      font-weight: 950;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .locked-note {
+      margin-bottom: 12px;
+      padding: 11px 14px;
+      border-radius: 14px;
+      background: rgba(215,96,22,.06);
+      border: 1px solid rgba(215,96,22,.16);
+      color: rgba(17,17,17,.74);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.45;
+      word-break: keep-all;
+    }
+
+    .counter button:disabled,
+    .quick-money-btn:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .money-input:disabled,
+    .memo:disabled {
+      background: #F6F6F6;
+      color: rgba(17,17,17,.62);
+    }
 </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -8172,6 +8237,7 @@
   <!-- v28: 서버 주소를 현장견적 수신시트 NEW 배포로 교체 -->
   <!-- v29: 휴대폰 세로모드 사용 가능 · 스크롤 복구 -->
   <!-- v30: 저장 시 견적서 PDF를 구글 드라이브에 자동 보관 -->
+  <!-- v31: 권한 분리(현장반장 현장보고 / 사무실 견적확정) · 수익금 입력 -->
 </head>
 <body>
 
@@ -8189,7 +8255,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div class="start-foot">N-CORE On-site Check System 1.8</div>
+      <div class="start-foot">N-CORE On-site Check System 1.9</div>
     </div>
   </section>
 
@@ -8387,6 +8453,14 @@
           </span>
           <span class="cat-arrow">›</span>
         </button>
+
+        <button class="category-card office-only" data-section="profit">
+          <span class="cat-main">
+            <span class="cat-title">수익금</span>
+            <span class="cat-desc">공사비에 더할 회사 수익</span>
+          </span>
+          <span class="cat-arrow">›</span>
+        </button>
       </aside>
 
       <section class="panel main-panel">
@@ -8395,7 +8469,7 @@
 
       <aside class="panel right-panel">
         <div class="summary-card">
-          <div class="label">현재 기준 합계</div>
+          <div class="label" id="totalAmountLabel">현재 기준 합계</div>
           <div id="totalAmount" class="amount">0원</div>
         </div>
 
@@ -8415,6 +8489,10 @@
           <div class="summary-item">
             <span>기타 부대비용</span>
             <span id="sumExtra">0원</span>
+          </div>
+          <div class="summary-item office-only">
+            <span>수익금</span>
+            <span id="sumProfit">0원</span>
           </div>
         </div>
 
@@ -8780,21 +8858,27 @@
         </div>
       </header>
 
-      <section class="menu-content">
+      <section class="menu-content" id="menuContent">
         <button type="button" class="panel menu-card primary" id="menuNewEstimate">
           <span class="menu-card-no">01</span>
           <span class="menu-card-title">새 견적 작성</span>
           <span class="menu-card-desc">현장 정보를 입력하고 견적서를 작성해 고객에게 발송합니다.</span>
         </button>
 
-        <button type="button" class="panel menu-card" id="menuActualCost">
+        <button type="button" class="panel menu-card office-only" id="menuFieldReport">
           <span class="menu-card-no">02</span>
+          <span class="menu-card-title">현장보고 처리</span>
+          <span class="menu-card-desc">현장반장이 올린 보고에 수익금과 작업범위를 더해 견적서를 만듭니다.</span>
+        </button>
+
+        <button type="button" class="panel menu-card office-only" id="menuActualCost">
+          <span class="menu-card-no">03</span>
           <span class="menu-card-title">공사완료 입력</span>
           <span class="menu-card-desc">공사가 끝난 현장의 실제 원가와 최종 계약금액을 입력합니다.</span>
         </button>
 
-        <button type="button" class="panel menu-card" id="menuLookup">
-          <span class="menu-card-no">03</span>
+        <button type="button" class="panel menu-card office-only" id="menuLookup">
+          <span class="menu-card-no">04</span>
           <span class="menu-card-title">과거 현장 조회</span>
           <span class="menu-card-desc">비슷한 조건의 지난 현장이 실제로 얼마나 들었는지 확인합니다.</span>
         </button>
@@ -8803,6 +8887,59 @@
       <nav class="bottom-nav">
         <button id="menuLogout" class="nav-btn prev">담당자 변경</button>
         <div class="bottom-status">현재 담당자: <strong id="menuStaffName2">-</strong></div>
+        <div></div>
+      </nav>
+    </section>
+
+
+    <section id="pageFieldList" class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo-mark">N-CORE</div>
+          <div class="brand-text">
+            <div class="title">현장보고 처리</div>
+            <div class="sub">현장반장이 올린 보고를 견적으로 확정합니다.</div>
+          </div>
+        </div>
+        <div class="step-pill">
+          <span>현장보고</span>
+          <span class="step-dot"></span>
+          <strong>대기 목록</strong>
+        </div>
+      </header>
+
+      <section class="work-content">
+        <section class="panel work-main">
+          <div class="work-header">
+            <div>
+              <h1 class="work-title">견적 대기 현장</h1>
+              <div class="work-sub">현장을 누르면 반장이 입력한 내용을 그대로 불러옵니다.</div>
+            </div>
+            <div class="amount-badge" id="fieldCountBadge">0건</div>
+          </div>
+
+          <div id="fieldList" class="list-scroll"></div>
+        </section>
+
+        <aside class="panel work-side">
+          <div class="project-guide-card">
+            <div class="label">처리 안내</div>
+            <div class="value">현장보고 → 견적</div>
+          </div>
+
+          <div class="project-guide-list">
+            <div>반장이 입력한 수량과 현장정보는 수정할 수 없습니다.</div>
+            <div>수익금을 더한 뒤 작업범위를 선택합니다.</div>
+            <div>견적서를 만들어 고객에게 발송하면 완료됩니다.</div>
+          </div>
+
+          <button type="button" id="fieldRefresh" class="nav-btn next" style="height:52px;font-size:17px;border-radius:16px;">목록 새로고침</button>
+        </aside>
+      </section>
+
+      <nav class="bottom-nav">
+        <button id="fieldBack" class="nav-btn prev">메뉴</button>
+        <div class="bottom-status" id="fieldStatus">현장보고를 불러오는 중입니다.</div>
         <div></div>
       </nav>
     </section>
@@ -9274,15 +9411,20 @@
         const result = await jsonpRequest({ action: "login", pin });
 
         if (!result.ok || !result.staffName) {
-          state.auth = { loggedIn: false, staffName: "" };
+          state.auth = { loggedIn: false, staffName: "", role: "사무실" };
           setLoginStatus(result.message || "PIN 번호가 맞지 않습니다.", true);
           pinInput.value = "";
           pinInput.focus();
           return;
         }
 
-        state.auth = { loggedIn: true, staffName: String(result.staffName).trim() };
+        state.auth = {
+          loggedIn: true,
+          staffName: String(result.staffName).trim(),
+          role: String(result.role || "사무실").trim() || "사무실"
+        };
         localStorage.setItem(STAFF_STORAGE_KEY, state.auth.staffName);
+        applyRoleToUI();
         updateStaffSessionUI();
         openAppAfterLogin();
       } catch (err) {
@@ -9312,7 +9454,8 @@
     function showLoginScreen() {
       const startScreen = document.getElementById("startScreen");
       const app = document.querySelector(".app");
-      state.auth = { loggedIn: false, staffName: "" };
+      state.auth = { loggedIn: false, staffName: "", role: "사무실" };
+      applyRoleToUI();
       app.classList.remove("show");
       app.style.display = "none";
       startScreen.style.display = "flex";
@@ -9490,6 +9633,8 @@
         truck5Concrete: 0
       },
       extra: { amount: 0, memo: "" },
+      profit: { amount: 0 },
+      baseLocked: false,
       project: {
         customerName: "",
         phone: "",
@@ -9502,7 +9647,7 @@
       location: { status: "none", lat: null, lng: null, accuracy: null, checkedAt: "", message: "" },
       estimateCode: "",
       estimateIssuedAt: "",
-      auth: { loggedIn: false, staffName: "" },
+      auth: { loggedIn: false, staffName: "", role: "사무실" },
       excelRows: [],
       section: "labor",
       totals: { labor: 0, equipment: 0, waste: 0, extra: 0, total: 0 },
@@ -9570,6 +9715,11 @@
           { key: "truck5Concrete", label: "5톤 폐콘크리트", desc: "5톤 차량 · 폐콘크리트", unit: "회", group: "waste" }
         ]
       },
+      profit: {
+        title: "수익금",
+        sub: "기본 공사비에 더할 회사 수익을 입력합니다. 금액과 비율 중 편한 쪽으로 넣으면 나머지가 자동으로 맞춰집니다.",
+        badge: "사무실 입력"
+      },
       extra: {
         title: "기타 부대비용",
         sub: "현장별 추가 비용이 필요한 경우 금액을 직접 입력합니다.",
@@ -9621,11 +9771,47 @@
       const total = labor + equipment + waste + extra;
       state.totals = { labor, equipment, waste, extra, total };
 
+      const profit = getProfitAmount();
+
       document.getElementById("sumLabor").textContent = formatWon(labor);
       document.getElementById("sumEquipment").textContent = formatWon(equipment);
       document.getElementById("sumWaste").textContent = formatWon(waste);
       document.getElementById("sumExtra").textContent = formatWon(extra);
-      document.getElementById("totalAmount").textContent = formatWon(total);
+
+      const profitEl = document.getElementById("sumProfit");
+      if (profitEl) profitEl.textContent = formatWon(profit);
+
+      const labelEl = document.getElementById("totalAmountLabel");
+      if (labelEl) labelEl.textContent = isFieldStaff() ? "기본 공사비" : "현재 기준 합계";
+
+      document.getElementById("totalAmount").textContent =
+        formatWon(isFieldStaff() ? total : total + profit);
+    }
+
+    /* =========================================================
+       v31: 권한 · 수익금
+       ========================================================= */
+    function isFieldStaff() {
+      return (state.auth && state.auth.role) === "현장";
+    }
+
+    function applyRoleToUI() {
+      document.body.classList.toggle("role-field", isFieldStaff());
+    }
+
+    function getCostTotal() {
+      return Number(state.totals.total) || 0;
+    }
+
+    function getProfitAmount() {
+      if (isFieldStaff()) return 0;
+      return Math.max(0, Number(state.profit.amount) || 0);
+    }
+
+    function getProfitRate() {
+      const cost = getCostTotal();
+      if (cost <= 0) return 0;
+      return Math.round((getProfitAmount() / cost) * 1000) / 10;
     }
 
     function counterRow(row) {
@@ -9650,6 +9836,98 @@
       detail.classList.remove("fade");
       void detail.offsetWidth;
       detail.classList.add("fade");
+
+      if (sectionKey === "profit") {
+        const cost = getCostTotal();
+        detail.innerHTML = `
+          <div class="detail-header">
+            <div>
+              <h1 class="detail-title">${section.title}</h1>
+              <div class="detail-sub">${section.sub}</div>
+            </div>
+            <div class="amount-badge">${section.badge}</div>
+          </div>
+          <div class="detail-body">
+            <div class="grid-rows">
+              <div class="input-row">
+                <div class="row-label">
+                  <strong>수익금</strong>
+                  <span>기본 공사비에 더할 금액입니다.</span>
+                </div>
+                <div class="money-quick-wrap">
+                  <input id="profitAmount" class="money-input" inputmode="numeric" value="${getProfitAmount() ? getProfitAmount().toLocaleString("ko-KR") : ""}" placeholder="0" />
+                  <div class="quick-money-grid">
+                    <button class="quick-money-btn" data-profit-add="-500000">&lt;&lt; -50</button>
+                    <button class="quick-money-btn" data-profit-add="-100000">&lt; -10</button>
+                    <button class="quick-money-btn" data-profit-add="100000">+10 &gt;</button>
+                    <button class="quick-money-btn" data-profit-add="500000">+50 &gt;&gt;</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="input-row">
+                <div class="row-label compact">
+                  <strong>수익률</strong>
+                  <span>기본 공사비 대비 비율입니다.</span>
+                </div>
+                <div class="counter">
+                  <button data-profit-rate="-5">−</button>
+                  <div class="value"><span id="profitRateValue">${getProfitRate()}</span><span class="unit">%</span></div>
+                  <button data-profit-rate="5">+</button>
+                </div>
+              </div>
+
+              <div class="input-row" style="grid-template-columns: 1fr;">
+                <div class="profit-summary">
+                  <div class="profit-summary-row">
+                    <span>기본 공사비</span>
+                    <span>${formatWon(cost)}</span>
+                  </div>
+                  <div class="profit-summary-row">
+                    <span>수익금</span>
+                    <span>${formatWon(getProfitAmount())}</span>
+                  </div>
+                  <div class="profit-summary-row accent">
+                    <span>견적 기준금액</span>
+                    <span>${formatWon(cost + getProfitAmount())}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const profitInput = document.getElementById("profitAmount");
+
+        profitInput.addEventListener("input", (e) => {
+          state.profit.amount = parseMoney(e.target.value);
+          e.target.value = state.profit.amount ? state.profit.amount.toLocaleString("ko-KR") : "";
+          document.getElementById("profitRateValue").textContent = getProfitRate();
+          calc();
+          refreshProfitSummary();
+        });
+
+        document.querySelectorAll("[data-profit-add]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const delta = Number(btn.dataset.profitAdd || 0);
+            state.profit.amount = Math.max(0, getProfitAmount() + delta);
+            renderDetail("profit");
+            calc();
+          });
+        });
+
+        document.querySelectorAll("[data-profit-rate]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const step = Number(btn.dataset.profitRate || 0);
+            const nextRate = Math.max(0, Math.min(300, getProfitRate() + step));
+            state.profit.amount = roundToManwon(getCostTotal() * nextRate / 100);
+            renderDetail("profit");
+            calc();
+          });
+        });
+
+        return;
+      }
 
       if (sectionKey === "extra") {
         detail.innerHTML = `
@@ -9726,6 +10004,15 @@
       }
     }
 
+    function refreshProfitSummary() {
+      const rows = document.querySelectorAll(".profit-summary-row span:last-child");
+      if (rows.length < 3) return;
+      const cost = getCostTotal();
+      rows[0].textContent = formatWon(cost);
+      rows[1].textContent = formatWon(getProfitAmount());
+      rows[2].textContent = formatWon(cost + getProfitAmount());
+    }
+
     function resetInternalInputs() {
       state.labor = { skilled: 0, helper: 0, days: 1 };
       state.equipment = { sky: 0, ladder: 0, miniFork: 0, highRental: 0, btScaffold: 0 };
@@ -9741,6 +10028,7 @@
         truck5Concrete: 0
       };
       state.extra = { amount: 0, memo: "" };
+      state.profit = { amount: 0 };
 
       // 저장 전 산정값이 바뀌었으므로 기존 임시 견적 데이터는 무효화합니다.
       state.excelRows = [];
@@ -9750,12 +10038,32 @@
       calc();
     }
 
+    function applyBaseLock() {
+      if (!state.baseLocked) return;
+
+      const detail = document.getElementById("detail");
+      if (!detail) return;
+      if (state.section === "profit") return;
+
+      detail.querySelectorAll("button[data-action], [data-extra-add]").forEach(btn => { btn.disabled = true; });
+      detail.querySelectorAll("#extraAmount, #extraMemo").forEach(el => { el.disabled = true; });
+
+      const body = detail.querySelector(".detail-body");
+      if (body && !body.querySelector(".locked-note")) {
+        const note = document.createElement("div");
+        note.className = "locked-note";
+        note.textContent = "현장반장이 제출한 내용입니다. 수정할 수 없으며 수익금만 입력할 수 있습니다.";
+        body.insertBefore(note, body.firstChild);
+      }
+    }
+
     function setActive(sectionKey) {
       state.section = sectionKey;
       document.querySelectorAll(".category-card").forEach(card => {
         card.classList.toggle("active", card.dataset.section === sectionKey);
       });
       renderDetail(sectionKey);
+      applyBaseLock();
       calc();
     }
 
@@ -9800,6 +10108,7 @@
       }
 
       renderDetail(state.section);
+      applyBaseLock();
       calc();
     });
 
@@ -9924,6 +10233,22 @@
           }
         });
       }
+    }
+
+    function applyProjectLock() {
+      const lock = !!state.baseLocked;
+
+      ["projectCustomerName", "projectAddress", "projectPhone", "sitePyeong"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = lock;
+      });
+
+      document.querySelectorAll("[data-industry], [data-elevator], [data-site-step]").forEach(btn => {
+        btn.disabled = lock;
+      });
+
+      const gpsBtn = document.getElementById("gpsCheckBtn");
+      if (gpsBtn && lock) gpsBtn.disabled = true;
     }
 
     function getSiteSummaryText() {
@@ -10111,6 +10436,7 @@
       document.getElementById("projectAddress").value = state.project.address || "";
       renderSiteInputs();
       updateGpsUI();
+      applyProjectLock();
 
       // 로그인 후 1단계에 처음 들어올 때 위치를 한 번 자동으로 확인합니다.
       if (!gpsAutoTried && state.location.status === "none") {
@@ -10233,6 +10559,7 @@
 
     function buildSavePayload() {
       return {
+        stage: "final",
         code: state.estimateCode || "",
         issuedAt: state.estimateIssuedAt || "",
         project: { ...state.project },
@@ -10244,6 +10571,7 @@
           elevator: state.project.elevator || ""
         },
         location: { ...state.location },
+        profit: { amount: getProfitAmount(), rate: getProfitRate() },
         staff: { name: getCurrentStaffName() },
         savedAt: state.savedEstimate?.savedAt || new Date().toISOString(),
         totalAmount: getDisplayTotalAmount(),
@@ -10314,7 +10642,9 @@
     }
 
     function getDistributionBaseAmount() {
-      return roundToManwon((state.totals.labor || 0) + (state.totals.extra || 0));
+      // 인건비 + 기타 부대비용 + 회사 수익금을 대분류로 배분합니다.
+      // 수익금을 여기에 녹여야 고객 견적서에 수익 항목이 따로 보이지 않습니다.
+      return roundToManwon((state.totals.labor || 0) + (state.totals.extra || 0) + getProfitAmount());
     }
 
     function getAllocationRatioItems() {
@@ -11414,6 +11744,10 @@
     });
 
     document.getElementById("page1Next").addEventListener("click", () => {
+      if (isFieldStaff()) {
+        submitFieldReport();
+        return;
+      }
       showPage(2);
     });
 
@@ -11564,12 +11898,14 @@
       saveBtn.disabled = true;
       saveBtn.textContent = "번호 발급 중...";
 
-      // 1) 회사 서버(Apps Script)에서 공식 견적번호를 먼저 발급받습니다.
-      //    번호 없이 저장되면 공식 견적으로 인정되지 않으므로 여기서 중단합니다.
+      // 1) 공식 견적번호를 확보합니다.
+      //    현장보고에서 이어받은 건은 이미 번호가 있으므로 그 번호를 그대로 씁니다.
       try {
-        const issued = await issueEstimateCode();
-        state.estimateCode = issued.code;
-        state.estimateIssuedAt = issued.issuedAt || "";
+        if (!state.estimateCode) {
+          const issued = await issueEstimateCode();
+          state.estimateCode = issued.code;
+          state.estimateIssuedAt = issued.issuedAt || "";
+        }
       } catch (err) {
         console.error(err);
         saveBtn.textContent = "저장하기";
@@ -11684,6 +12020,8 @@
     }
 
     function showMainMenu() {
+      applyRoleToUI();
+      updateRoleLabels();
       const name = getCurrentStaffName() || "-";
       const a = document.getElementById("menuStaffName");
       const b = document.getElementById("menuStaffName2");
@@ -11711,6 +12049,8 @@
         demolition: "전체", restoration: "전체", equipment: "전체",
         waste: "전체", protection: "전체"
       };
+      state.profit = { amount: 0 };
+      state.baseLocked = false;
       gpsAutoTried = false;
 
       resetInternalInputs();
@@ -12056,6 +12396,239 @@
       }
     }
 
+
+    /* =========================================================
+       v31: 현장반장 현장보고 제출 · 사무실 현장보고 처리
+       ========================================================= */
+    function updateRoleLabels() {
+      const field = isFieldStaff();
+
+      const p0 = document.querySelectorAll("#page0 .step-pill strong");
+      if (p0.length) p0[0].textContent = field ? "01 / 02" : "01 / 06";
+
+      const p1 = document.querySelectorAll("#page1 .step-pill strong");
+      if (p1.length) p1[0].textContent = field ? "02 / 02" : "02 / 06";
+
+      const nextBtn = document.getElementById("page1Next");
+      if (nextBtn) nextBtn.textContent = field ? "현장보고 제출" : "다음";
+
+      const menuCard = document.getElementById("menuNewEstimate");
+      if (menuCard) {
+        const title = menuCard.querySelector(".menu-card-title");
+        const desc = menuCard.querySelector(".menu-card-desc");
+        if (title) title.textContent = field ? "현장보고 작성" : "새 견적 작성";
+        if (desc) {
+          desc.textContent = field
+            ? "현장을 확인하고 기본 공사비를 산정해 회사로 보고합니다."
+            : "현장 정보를 입력하고 견적서를 작성해 고객에게 발송합니다.";
+        }
+      }
+
+      const p1title = document.querySelector("#page1 .brand-text .title");
+      const p1sub = document.querySelector("#page1 .brand-text .sub");
+      if (p1title) p1title.textContent = field ? "현장 산정 화면" : "내부 정보 화면";
+      if (p1sub) {
+        p1sub.textContent = field
+          ? "현장에서 확인한 인원·장비·폐기물을 입력합니다."
+          : "현장 기준값을 입력하고 다음 단계로 이동합니다.";
+      }
+    }
+
+    function buildFieldReportData() {
+      return JSON.stringify({
+        project: { ...state.project },
+        location: { ...state.location },
+        labor: { ...state.labor },
+        equipment: { ...state.equipment },
+        waste: { ...state.waste },
+        extra: { ...state.extra },
+        totals: { ...state.totals },
+        issuedAt: state.estimateIssuedAt || ""
+      });
+    }
+
+    function buildFieldPayload() {
+      return {
+        stage: "field",
+        code: state.estimateCode || "",
+        issuedAt: state.estimateIssuedAt || "",
+        project: { ...state.project },
+        site: {
+          industry: state.project.industry || "",
+          pyeong: Number(state.project.pyeong) || 0,
+          floor: Number(state.project.floor) || 0,
+          floorLabel: getFloorLabel(state.project.floor),
+          elevator: state.project.elevator || ""
+        },
+        location: { ...state.location },
+        staff: { name: getCurrentStaffName() },
+        savedAt: new Date().toISOString(),
+        totalAmount: 0,
+        amounts: {},
+        selectedCount: 0,
+        internal: {
+          labor: { ...state.labor },
+          equipment: { ...state.equipment },
+          waste: { ...state.waste },
+          extra: { ...state.extra },
+          totals: { ...state.totals }
+        },
+        reportData: buildFieldReportData(),
+        excelRows: []
+      };
+    }
+
+    async function submitFieldReport() {
+      if (!ensureLoggedIn()) return;
+
+      readProjectInputs();
+      if (!validateProjectInputs()) {
+        showPage(0);
+        return;
+      }
+
+      calc();
+      if (getCostTotal() <= 0) {
+        alert("기본 공사비가 0원입니다.\n인원·장비·폐기물 중 하나 이상을 입력해 주세요.");
+        return;
+      }
+
+      const ok = window.confirm(
+        "아래 내용으로 회사에 현장보고를 제출합니다.\n\n" +
+        "고객: " + (state.project.customerName || "-") + "\n" +
+        "현장: " + (state.project.address || "-") + "\n" +
+        getSiteSummaryText() + "\n" +
+        "기본 공사비: " + formatWon(getCostTotal()) + "\n" +
+        "현장위치: " + getLocationSummaryText() + "\n\n" +
+        "제출하시겠습니까?"
+      );
+      if (!ok) return;
+
+      const btn = document.getElementById("page1Next");
+      btn.disabled = true;
+      btn.textContent = "번호 발급 중...";
+
+      try {
+        const issued = await issueEstimateCode();
+        state.estimateCode = issued.code;
+        state.estimateIssuedAt = issued.issuedAt || "";
+      } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+        btn.textContent = "현장보고 제출";
+        alert((err && err.message ? err.message : "견적번호를 발급받지 못했습니다.") +
+          "\n\n인터넷 연결을 확인한 뒤 다시 제출해 주세요.");
+        return;
+      }
+
+      btn.textContent = "제출 중...";
+
+      try {
+        await submitEstimateToSheet(buildFieldPayload());
+        btn.textContent = "제출 완료";
+
+        setTimeout(() => {
+          alert("현장보고가 제출되었습니다.\n\n견적번호 " + state.estimateCode +
+            "\n\n사무실에서 견적서를 작성해 고객에게 발송합니다.");
+          btn.disabled = false;
+          btn.textContent = "현장보고 제출";
+          startNewEstimate();
+          showMainMenu();
+        }, 400);
+      } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+        btn.textContent = "현장보고 제출";
+        alert("현장보고 저장 중 오류가 발생했습니다. 통신 상태를 확인해 주세요.");
+      }
+    }
+
+    /* ---------- 사무실: 현장보고 목록 ---------- */
+    async function loadFieldList() {
+      const listEl = document.getElementById("fieldList");
+      const statusEl = document.getElementById("fieldStatus");
+      const badgeEl = document.getElementById("fieldCountBadge");
+
+      listEl.innerHTML = `<div class="list-empty">현장보고를 불러오는 중입니다...</div>`;
+      statusEl.textContent = "불러오는 중...";
+
+      try {
+        const result = await jsonpRequest({ action: "fieldReportList" }, 15000);
+        if (!result || !result.ok) throw new Error((result && result.message) || "목록을 불러오지 못했습니다.");
+
+        const rows = result.rows || [];
+        badgeEl.textContent = rows.length + "건";
+        statusEl.textContent = rows.length
+          ? "현장을 눌러 견적 작성을 시작합니다."
+          : "처리할 현장보고가 없습니다.";
+
+        if (!rows.length) {
+          listEl.innerHTML = `<div class="list-empty">처리할 현장보고가 없습니다.<br />현장반장이 제출하면 여기에 나타납니다.</div>`;
+          return;
+        }
+
+        listEl.innerHTML = rows.map((row, index) => `
+          <button type="button" class="site-row" data-field-index="${index}">
+            <span class="site-row-main">
+              <span class="site-row-code">${escapePdfHtml(row.code)} · ${escapePdfHtml(row.staff || "-")}</span>
+              <span class="site-row-title">${escapePdfHtml(row.customerName || "-")} · ${escapePdfHtml(row.address || "-")}</span>
+              <span class="site-row-sub">${escapePdfHtml(row.industry || "-")} · ${escapePdfHtml(String(row.pyeong || 0))}평 · ${escapePdfHtml(row.floorLabel || "-")} · 엘리베이터 ${escapePdfHtml(row.elevator || "-")} · 위치 ${escapePdfHtml(row.locationStatus || "-")}</span>
+            </span>
+            <span class="site-row-amount">${escapePdfHtml(formatWon(row.costTotal))}</span>
+          </button>
+        `).join("");
+
+        listEl.querySelectorAll("[data-field-index]").forEach(btn => {
+          btn.addEventListener("click", () => openFieldReport(rows[Number(btn.dataset.fieldIndex)]));
+        });
+      } catch (err) {
+        console.error(err);
+        badgeEl.textContent = "0건";
+        statusEl.textContent = "목록을 불러오지 못했습니다.";
+        listEl.innerHTML = `<div class="list-empty">목록을 불러오지 못했습니다.<br />${escapePdfHtml(err.message || "")}</div>`;
+      }
+    }
+
+    async function openFieldReport(row) {
+      const statusEl = document.getElementById("fieldStatus");
+      statusEl.textContent = row.code + " 를 불러오는 중입니다...";
+
+      try {
+        const result = await jsonpRequest({ action: "fieldReport", code: row.code }, 15000);
+        if (!result || !result.ok) throw new Error((result && result.message) || "현장보고를 불러오지 못했습니다.");
+
+        const r = result.report || {};
+
+        state.project = { ...state.project, ...(r.project || {}) };
+        state.location = { ...(r.location || state.location) };
+        state.labor = { ...state.labor, ...(r.labor || {}) };
+        state.equipment = { ...state.equipment, ...(r.equipment || {}) };
+        state.waste = { ...state.waste, ...(r.waste || {}) };
+        state.extra = { ...state.extra, ...(r.extra || {}) };
+
+        state.profit = { amount: 0 };
+        state.estimateCode = row.code;
+        state.estimateIssuedAt = r.issuedAt || "";
+        state.savedEstimate = null;
+        state.excelRows = [];
+        state.ratios = { demolition: 90, restoration: 0, equipment: 0, waste: 0, protection: 10 };
+        state.scopes = { demolition: [], restoration: [], equipment: [], waste: [], protection: [] };
+        state.scopeCategory = "demolition";
+        state.baseLocked = true;
+        gpsAutoTried = true;
+
+        calc();
+        syncProjectInputsFromState();
+        setActive("profit");
+        showPage(1);
+        statusEl.textContent = "현장을 눌러 견적 작성을 시작합니다.";
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "불러오지 못했습니다.";
+        alert(err.message || "현장보고를 불러오지 못했습니다.");
+      }
+    }
+
     /* ---------- 메뉴 연결 ---------- */
     bindActualForm();
     bindLookup();
@@ -12072,6 +12645,13 @@
       showScreen("pageLookup");
     });
 
+    document.getElementById("menuFieldReport").addEventListener("click", () => {
+      showScreen("pageFieldList");
+      loadFieldList();
+    });
+
+    document.getElementById("fieldBack").addEventListener("click", showMainMenu);
+    document.getElementById("fieldRefresh").addEventListener("click", loadFieldList);
     document.getElementById("menuLogout").addEventListener("click", showLoginScreen);
     document.getElementById("pendingBack").addEventListener("click", showMainMenu);
     document.getElementById("pendingRefresh").addEventListener("click", loadPendingList);
