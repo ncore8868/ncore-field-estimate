@@ -8237,7 +8237,7 @@
   <!-- v28: 서버 주소를 현장견적 수신시트 NEW 배포로 교체 -->
   <!-- v29: 휴대폰 세로모드 사용 가능 · 스크롤 복구 -->
   <!-- v30: 저장 시 견적서 PDF를 구글 드라이브에 자동 보관 -->
-  <!-- v31: 권한 분리(현장반장 현장보고 / 사무실 견적확정) · 수익금 입력 -->
+  <!-- v31: 권한 분리(현장반장 현장견적 / 사무실 견적확정) · 수익금 입력 -->
 </head>
 <body>
 
@@ -8255,7 +8255,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div class="start-foot">N-CORE On-site Check System 1.9</div>
+      <div class="start-foot">N-CORE On-site Check System 1.91</div>
     </div>
   </section>
 
@@ -8867,7 +8867,7 @@
 
         <button type="button" class="panel menu-card office-only" id="menuFieldReport">
           <span class="menu-card-no">02</span>
-          <span class="menu-card-title">현장보고 처리</span>
+          <span class="menu-card-title">현장견적 처리</span>
           <span class="menu-card-desc">현장반장이 올린 보고에 수익금과 작업범위를 더해 견적서를 만듭니다.</span>
         </button>
 
@@ -8897,12 +8897,12 @@
         <div class="brand">
           <div class="logo-mark">N-CORE</div>
           <div class="brand-text">
-            <div class="title">현장보고 처리</div>
+            <div class="title">현장견적 처리</div>
             <div class="sub">현장반장이 올린 보고를 견적으로 확정합니다.</div>
           </div>
         </div>
         <div class="step-pill">
-          <span>현장보고</span>
+          <span>현장견적</span>
           <span class="step-dot"></span>
           <strong>대기 목록</strong>
         </div>
@@ -8924,7 +8924,7 @@
         <aside class="panel work-side">
           <div class="project-guide-card">
             <div class="label">처리 안내</div>
-            <div class="value">현장보고 → 견적</div>
+            <div class="value">현장견적 → 견적</div>
           </div>
 
           <div class="project-guide-list">
@@ -8939,7 +8939,7 @@
 
       <nav class="bottom-nav">
         <button id="fieldBack" class="nav-btn prev">메뉴</button>
-        <div class="bottom-status" id="fieldStatus">현장보고를 불러오는 중입니다.</div>
+        <div class="bottom-status" id="fieldStatus">현장견적을 불러오는 중입니다.</div>
         <div></div>
       </nav>
     </section>
@@ -11899,7 +11899,7 @@
       saveBtn.textContent = "번호 발급 중...";
 
       // 1) 공식 견적번호를 확보합니다.
-      //    현장보고에서 이어받은 건은 이미 번호가 있으므로 그 번호를 그대로 씁니다.
+      //    현장견적에서 이어받은 건은 이미 번호가 있으므로 그 번호를 그대로 씁니다.
       try {
         if (!state.estimateCode) {
           const issued = await issueEstimateCode();
@@ -12398,7 +12398,7 @@
 
 
     /* =========================================================
-       v31: 현장반장 현장보고 제출 · 사무실 현장보고 처리
+       v31: 현장반장 현장견적 제출 · 사무실 현장견적 처리
        ========================================================= */
     function updateRoleLabels() {
       const field = isFieldStaff();
@@ -12410,13 +12410,13 @@
       if (p1.length) p1[0].textContent = field ? "02 / 02" : "02 / 06";
 
       const nextBtn = document.getElementById("page1Next");
-      if (nextBtn) nextBtn.textContent = field ? "현장보고 제출" : "다음";
+      if (nextBtn) nextBtn.textContent = field ? "현장견적 제출" : "다음";
 
       const menuCard = document.getElementById("menuNewEstimate");
       if (menuCard) {
         const title = menuCard.querySelector(".menu-card-title");
         const desc = menuCard.querySelector(".menu-card-desc");
-        if (title) title.textContent = field ? "현장보고 작성" : "새 견적 작성";
+        if (title) title.textContent = field ? "현장견적 작성" : "새 견적 작성";
         if (desc) {
           desc.textContent = field
             ? "현장을 확인하고 기본 공사비를 산정해 회사로 보고합니다."
@@ -12494,7 +12494,7 @@
       }
 
       const ok = window.confirm(
-        "아래 내용으로 회사에 현장보고를 제출합니다.\n\n" +
+        "아래 내용으로 회사에 현장견적을 제출합니다.\n\n" +
         "고객: " + (state.project.customerName || "-") + "\n" +
         "현장: " + (state.project.address || "-") + "\n" +
         getSiteSummaryText() + "\n" +
@@ -12515,7 +12515,7 @@
       } catch (err) {
         console.error(err);
         btn.disabled = false;
-        btn.textContent = "현장보고 제출";
+        btn.textContent = "현장견적 제출";
         alert((err && err.message ? err.message : "견적번호를 발급받지 못했습니다.") +
           "\n\n인터넷 연결을 확인한 뒤 다시 제출해 주세요.");
         return;
@@ -12528,28 +12528,27 @@
         btn.textContent = "제출 완료";
 
         setTimeout(() => {
-          alert("현장보고가 제출되었습니다.\n\n견적번호 " + state.estimateCode +
-            "\n\n사무실에서 견적서를 작성해 고객에게 발송합니다.");
+          alert("현장견적이 제출되었습니다.\n\n견적번호 " + state.estimateCode);
           btn.disabled = false;
-          btn.textContent = "현장보고 제출";
+          btn.textContent = "현장견적 제출";
           startNewEstimate();
           showMainMenu();
         }, 400);
       } catch (err) {
         console.error(err);
         btn.disabled = false;
-        btn.textContent = "현장보고 제출";
-        alert("현장보고 저장 중 오류가 발생했습니다. 통신 상태를 확인해 주세요.");
+        btn.textContent = "현장견적 제출";
+        alert("현장견적 저장 중 오류가 발생했습니다. 통신 상태를 확인해 주세요.");
       }
     }
 
-    /* ---------- 사무실: 현장보고 목록 ---------- */
+    /* ---------- 사무실: 현장견적 목록 ---------- */
     async function loadFieldList() {
       const listEl = document.getElementById("fieldList");
       const statusEl = document.getElementById("fieldStatus");
       const badgeEl = document.getElementById("fieldCountBadge");
 
-      listEl.innerHTML = `<div class="list-empty">현장보고를 불러오는 중입니다...</div>`;
+      listEl.innerHTML = `<div class="list-empty">현장견적을 불러오는 중입니다...</div>`;
       statusEl.textContent = "불러오는 중...";
 
       try {
@@ -12560,10 +12559,10 @@
         badgeEl.textContent = rows.length + "건";
         statusEl.textContent = rows.length
           ? "현장을 눌러 견적 작성을 시작합니다."
-          : "처리할 현장보고가 없습니다.";
+          : "처리할 현장견적이 없습니다.";
 
         if (!rows.length) {
-          listEl.innerHTML = `<div class="list-empty">처리할 현장보고가 없습니다.<br />현장반장이 제출하면 여기에 나타납니다.</div>`;
+          listEl.innerHTML = `<div class="list-empty">처리할 현장견적이 없습니다.<br />현장반장이 제출하면 여기에 나타납니다.</div>`;
           return;
         }
 
@@ -12595,7 +12594,7 @@
 
       try {
         const result = await jsonpRequest({ action: "fieldReport", code: row.code }, 15000);
-        if (!result || !result.ok) throw new Error((result && result.message) || "현장보고를 불러오지 못했습니다.");
+        if (!result || !result.ok) throw new Error((result && result.message) || "현장견적을 불러오지 못했습니다.");
 
         const r = result.report || {};
 
@@ -12625,7 +12624,7 @@
       } catch (err) {
         console.error(err);
         statusEl.textContent = "불러오지 못했습니다.";
-        alert(err.message || "현장보고를 불러오지 못했습니다.");
+        alert(err.message || "현장견적을 불러오지 못했습니다.");
       }
     }
 
