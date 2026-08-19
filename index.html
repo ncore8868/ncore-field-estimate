@@ -8407,6 +8407,29 @@
     @media (max-width: 1100px), (orientation: portrait) {
       body.role-field .menu-content { grid-template-columns: minmax(0, 1fr) !important; }
     }
+    /* === v34: 미계약 현장 === */
+    .days-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #FFFFFF;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .days-chip.warn { border-color: rgba(215,96,22,.3); background: #FFF8F3; color: var(--accent-deep); }
+    .days-chip.alert { border-color: rgba(192,57,43,.28); background: #FDF1EF; color: #C0392B; }
+
+    .site-row-phone {
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
 </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -8431,6 +8454,7 @@
   <!-- v31: 권한 분리(현장반장 현장견적 / 사무실 견적확정) · 수익금 입력 -->
   <!-- v32: 현장사진 촬영·자동 용량축소·현장별 폴더 저장 -->
   <!-- v33: 메뉴번호 자동정리 · 평수 직접입력 · 내 현장견적 · 임시저장 · 테스트모드 -->
+  <!-- v34: 반장 화면에서 고객 연락처 제거 · 미계약 현장 목록 -->
 </head>
 <body>
 
@@ -8448,7 +8472,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div id="startFoot" class="start-foot">N-CORE On-site Check System 1.95</div>
+      <div id="startFoot" class="start-foot">N-CORE On-site Check System 1.96</div>
     </div>
   </section>
 
@@ -8565,10 +8589,10 @@
               </div>
             </div>
 
-            <label class="project-field wide">
+            <label class="project-field wide office-only">
               <span class="project-field-label">
                 <strong>연락처</strong>
-                <span>견적서 발송 번호</span>
+                <span>견적서 발송 번호 · 사무실 입력</span>
               </span>
               <input id="projectPhone" class="project-input phone-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="13" autocapitalize="off" spellcheck="false" placeholder="010-0000-0000" autocomplete="tel-national" tabindex="3" />
             </label>
@@ -9095,6 +9119,12 @@
           <span class="menu-card-desc">비슷한 조건의 지난 현장이 실제로 얼마나 들었는지 확인합니다.</span>
         </button>
 
+        <button type="button" class="panel menu-card office-only" id="menuUnclaimed">
+          <span class="menu-card-no">06</span>
+          <span class="menu-card-title">미계약 현장</span>
+          <span class="menu-card-desc">견적은 나갔는데 계약이 안 된 현장을 확인합니다.</span>
+        </button>
+
         <button type="button" class="panel menu-card" id="menuSafety">
           <span class="menu-card-no">05</span>
           <span class="menu-card-title">안전동의서</span>
@@ -9105,6 +9135,63 @@
       <nav class="bottom-nav">
         <button id="menuLogout" class="nav-btn prev">담당자 변경</button>
         <div class="bottom-status">현재 담당자: <strong id="menuStaffName2">-</strong></div>
+        <div></div>
+      </nav>
+    </section>
+
+
+    <section id="pageUnclaimed" class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo-mark">N-CORE</div>
+          <div class="brand-text">
+            <div class="title">미계약 현장</div>
+            <div class="sub">견적서는 나갔지만 아직 계약이 안 된 현장입니다.</div>
+          </div>
+        </div>
+        <div class="step-pill">
+          <span>미계약</span>
+          <span class="step-dot"></span>
+          <strong id="unclaimedCountLabel">0건</strong>
+        </div>
+      </header>
+
+      <section class="work-content">
+        <section class="panel work-main">
+          <div class="work-header">
+            <div>
+              <h1 class="work-title">확인이 필요한 현장</h1>
+              <div class="work-sub">오래된 순으로 표시됩니다. 고객에게 직접 확인해 주세요.</div>
+            </div>
+            <div class="amount-badge" id="unclaimedBadge">0건</div>
+          </div>
+
+          <div id="unclaimedList" class="list-scroll"></div>
+        </section>
+
+        <aside class="panel work-side">
+          <div class="filter-row">
+            <div class="filter-label">경과일 기준</div>
+            <div class="toggle-group three">
+              <button type="button" class="toggle-btn active" data-unclaimed-days="0">전체</button>
+              <button type="button" class="toggle-btn" data-unclaimed-days="7">7일↑</button>
+              <button type="button" class="toggle-btn" data-unclaimed-days="30">30일↑</button>
+            </div>
+          </div>
+
+          <div class="project-guide-list">
+            <div>고객에게 견적 진행 여부를 직접 확인합니다.</div>
+            <div>계약이 되었으면 공사완료 입력으로 처리합니다.</div>
+            <div>확인 결과는 견적대장 비고에 남겨 두세요.</div>
+          </div>
+
+          <button type="button" id="unclaimedRefresh" class="nav-btn next" style="height:52px;font-size:17px;border-radius:16px;">새로고침</button>
+        </aside>
+      </section>
+
+      <nav class="bottom-nav">
+        <button id="unclaimedBack" class="nav-btn prev">메뉴</button>
+        <div class="bottom-status" id="unclaimedStatus">불러오는 중입니다.</div>
         <div></div>
       </nav>
     </section>
@@ -10521,10 +10608,14 @@
     function applyProjectLock() {
       const lock = !!state.baseLocked;
 
-      ["projectCustomerName", "projectAddress", "projectPhone", "sitePyeong"].forEach(id => {
+      // 연락처는 현장반장이 입력하지 않으므로 사무실이 채울 수 있게 열어 둡니다.
+      ["projectCustomerName", "projectAddress", "sitePyeong"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.disabled = lock;
       });
+
+      const phoneEl = document.getElementById("projectPhone");
+      if (phoneEl) phoneEl.disabled = false;
 
       document.querySelectorAll("[data-industry], [data-elevator], [data-site-step]").forEach(btn => {
         btn.disabled = lock;
@@ -10978,7 +11069,8 @@
         document.getElementById("projectCustomerName").focus();
         return false;
       }
-      if (!state.project.phone) {
+      // 연락처는 사무실만 입력합니다. 현장반장 화면에는 칸 자체가 없습니다.
+      if (!isFieldStaff() && !state.project.phone) {
         alert("연락처를 입력해 주세요.");
         document.getElementById("projectPhone").focus();
         return false;
@@ -13248,6 +13340,71 @@
     }
 
 
+
+    /* ---------- 미계약 현장 ---------- */
+    const unclaimedState = { minDays: 0 };
+
+    function daysChip(days) {
+      const n = Number(days) || 0;
+      const cls = n >= 30 ? "alert" : (n >= 7 ? "warn" : "");
+      return '<span class="days-chip ' + cls + '">' + n + '일 경과</span>';
+    }
+
+    async function loadUnclaimed() {
+      const listEl = document.getElementById("unclaimedList");
+      const statusEl = document.getElementById("unclaimedStatus");
+      const badgeEl = document.getElementById("unclaimedBadge");
+      const countEl = document.getElementById("unclaimedCountLabel");
+
+      listEl.innerHTML = `<div class="list-empty">불러오는 중입니다...</div>`;
+      statusEl.textContent = "불러오는 중...";
+
+      document.querySelectorAll("[data-unclaimed-days]").forEach(btn => {
+        btn.classList.toggle("active", Number(btn.dataset.unclaimedDays) === unclaimedState.minDays);
+      });
+
+      try {
+        const result = await jsonpRequest({
+          action: "unclaimedList",
+          minDays: String(unclaimedState.minDays)
+        }, 15000);
+
+        if (!result || !result.ok) throw new Error((result && result.message) || "불러오지 못했습니다.");
+
+        const rows = result.rows || [];
+        badgeEl.textContent = rows.length + "건";
+        countEl.textContent = rows.length + "건";
+        statusEl.textContent = rows.length
+          ? "오래된 순입니다. 고객에게 직접 확인해 주세요."
+          : "확인이 필요한 현장이 없습니다.";
+
+        if (!rows.length) {
+          listEl.innerHTML = `<div class="list-empty">확인이 필요한 현장이 없습니다.<br />견적서가 나간 뒤 계약이 안 된 건이 여기에 모입니다.</div>`;
+          return;
+        }
+
+        listEl.innerHTML = rows.map(row => `
+          <div class="site-row" style="cursor:default;">
+            <span class="site-row-main">
+              <span class="site-row-code">${escapePdfHtml(row.code)} · ${escapePdfHtml(row.staff || "-")}</span>
+              <span class="site-row-title">${escapePdfHtml(row.customerName || "-")} · ${escapePdfHtml(row.address || "-")}</span>
+              <span class="site-row-sub">${escapePdfHtml(row.industry || "-")} · ${escapePdfHtml(String(row.pyeong || 0))}평 · ${escapePdfHtml(row.sendStatus || "발송 전")}</span>
+              <span class="site-row-phone">${escapePdfHtml(row.phone || "연락처 없음")}</span>
+            </span>
+            <span class="site-row-right">
+              <span class="site-row-amount">${escapePdfHtml(formatWon(row.totalAmount))}</span>
+              ${daysChip(row.days)}
+            </span>
+          </div>
+        `).join("");
+      } catch (err) {
+        console.error(err);
+        badgeEl.textContent = "0건";
+        statusEl.textContent = "불러오지 못했습니다.";
+        listEl.innerHTML = `<div class="list-empty">불러오지 못했습니다.<br />${escapePdfHtml(err.message || "")}</div>`;
+      }
+    }
+
     /* ---------- 내 현장견적 ---------- */
     function progressChip(row) {
       const contract = String(row.contractStatus || "").trim();
@@ -13415,6 +13572,21 @@
     document.getElementById("menuLookup").addEventListener("click", () => {
       renderLookupFilters();
       showScreen("pageLookup");
+    });
+
+    document.getElementById("menuUnclaimed").addEventListener("click", () => {
+      showScreen("pageUnclaimed");
+      loadUnclaimed();
+    });
+
+    document.getElementById("unclaimedBack").addEventListener("click", showMainMenu);
+    document.getElementById("unclaimedRefresh").addEventListener("click", loadUnclaimed);
+
+    document.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-unclaimed-days]");
+      if (!btn) return;
+      unclaimedState.minDays = Number(btn.dataset.unclaimedDays) || 0;
+      loadUnclaimed();
     });
 
     document.getElementById("menuMyReports").addEventListener("click", () => {
