@@ -8456,6 +8456,7 @@
   <!-- v33: 메뉴번호 자동정리 · 평수 직접입력 · 내 현장견적 · 임시저장 · 테스트모드 -->
   <!-- v34: 반장 화면에서 고객 연락처 제거 · 미계약 현장 목록 -->
   <!-- v35: 서버 통신 대기시간 25초 확대 + 자동 재시도 (로그인 실패 문제 해결) -->
+  <!-- v36: 개별 타임아웃이 기본값을 덮어쓰던 문제 수정 (견적번호 발급 실패) -->
 </head>
 <body>
 
@@ -8473,7 +8474,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div id="startFoot" class="start-foot">N-CORE On-site Check System 1.97</div>
+      <div id="startFoot" class="start-foot">N-CORE On-site Check System 1.98</div>
     </div>
   </section>
 
@@ -9699,7 +9700,7 @@
        오는 데 시간이 더 걸립니다. 기다리는 시간이 짧으면 응답을 받을
        함수가 먼저 지워져 "서버 응답이 지연" 오류가 납니다.
        ========================================================= */
-    const JSONP_TIMEOUT = 25000;
+    const JSONP_TIMEOUT = 30000;
     const JSONP_RETRY = 2;
 
     function jsonpOnce(params, timeout) {
@@ -9752,11 +9753,13 @@
     }
 
     async function jsonpRequest(params, timeout = JSONP_TIMEOUT) {
+      // 호출하는 곳에서 더 짧은 시간을 넘겨도 기본 대기시간보다 짧아지지 않게 합니다.
+      const wait = Math.max(Number(timeout) || 0, JSONP_TIMEOUT);
       let lastError = null;
 
       for (let attempt = 1; attempt <= JSONP_RETRY; attempt++) {
         try {
-          return await jsonpOnce(params, timeout);
+          return await jsonpOnce(params, wait);
         } catch (err) {
           lastError = err;
           if (attempt < JSONP_RETRY) {
