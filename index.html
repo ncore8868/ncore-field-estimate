@@ -8455,6 +8455,7 @@
   <!-- v32: 현장사진 촬영·자동 용량축소·현장별 폴더 저장 -->
   <!-- v33: 메뉴번호 자동정리 · 평수 직접입력 · 내 현장견적 · 임시저장 · 테스트모드 -->
   <!-- v34: 반장 화면에서 고객 연락처 제거 · 미계약 현장 목록 -->
+  <!-- v35: 서버 통신 대기시간 25초 확대 + 자동 재시도 (로그인 실패 문제 해결) -->
 </head>
 <body>
 
@@ -8472,7 +8473,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div id="startFoot" class="start-foot">N-CORE On-site Check System 1.96</div>
+      <div id="startFoot" class="start-foot">N-CORE On-site Check System 1.97</div>
     </div>
   </section>
 
@@ -9692,7 +9693,16 @@
     const FLOOR_MAX = 60;
     const PYEONG_MAX = 2000;
 
-    function jsonpRequest(params, timeout = 7000) {
+    /* =========================================================
+       v35: 서버 통신 대기시간 확대 + 자동 재시도
+       Apps Script는 코드 실행은 1~2초에 끝나도 응답이 브라우저까지
+       오는 데 시간이 더 걸립니다. 기다리는 시간이 짧으면 응답을 받을
+       함수가 먼저 지워져 "서버 응답이 지연" 오류가 납니다.
+       ========================================================= */
+    const JSONP_TIMEOUT = 25000;
+    const JSONP_RETRY = 2;
+
+    function jsonpOnce(params, timeout) {
       if (!GOOGLE_SHEET_API_URL) {
         return Promise.reject(new Error("Apps Script URL이 설정되지 않았습니다."));
       }
@@ -9700,18 +9710,27 @@
       return new Promise((resolve, reject) => {
         const callbackName = "ncoreJsonp_" + Date.now() + "_" + Math.random().toString(36).slice(2);
         const script = document.createElement("script");
+        let done = false;
+
         const timer = window.setTimeout(() => {
+          if (done) return;
           cleanup();
-          reject(new Error("서버 응답이 지연되고 있습니다. 인터넷 연결을 확인해 주세요."));
+          reject(new Error("서버 응답이 늦습니다."));
         }, timeout);
 
         function cleanup() {
+          done = true;
           window.clearTimeout(timer);
-          try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+          // 응답이 늦게 도착해도 오류가 나지 않도록 빈 함수로 남겨 둡니다.
+          window[callbackName] = function () {};
+          window.setTimeout(() => {
+            try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+          }, 60000);
           if (script.parentNode) script.parentNode.removeChild(script);
         }
 
         window[callbackName] = (data) => {
+          if (done) return;
           cleanup();
           resolve(data || {});
         };
@@ -9724,11 +9743,30 @@
 
         script.src = GOOGLE_SHEET_API_URL + "?" + query.toString();
         script.onerror = () => {
+          if (done) return;
           cleanup();
-          reject(new Error("로그인 서버에 연결하지 못했습니다."));
+          reject(new Error("서버에 연결하지 못했습니다."));
         };
         document.body.appendChild(script);
       });
+    }
+
+    async function jsonpRequest(params, timeout = JSONP_TIMEOUT) {
+      let lastError = null;
+
+      for (let attempt = 1; attempt <= JSONP_RETRY; attempt++) {
+        try {
+          return await jsonpOnce(params, timeout);
+        } catch (err) {
+          lastError = err;
+          if (attempt < JSONP_RETRY) {
+            await new Promise(r => setTimeout(r, 700));
+          }
+        }
+      }
+
+      throw new Error((lastError && lastError.message ? lastError.message : "서버 응답이 없습니다.") +
+        " 잠시 후 다시 시도해 주세요.");
     }
 
     function getCurrentStaffName() {
@@ -9764,7 +9802,7 @@
 
       loginBtn.disabled = true;
       loginBtn.textContent = "확인 중...";
-      setLoginStatus("PIN 번호를 확인하고 있습니다.");
+      setLoginStatus("서버에 연결하고 있습니다. 최대 30초까지 걸릴 수 있습니다.");
 
       try {
         const result = await jsonpRequest({ action: "login", pin });
