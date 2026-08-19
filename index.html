@@ -8216,6 +8216,129 @@
       background: #F6F6F6;
       color: rgba(17,17,17,.62);
     }
+    /* === v32: 현장사진 === */
+    .photo-field { align-items: start !important; }
+
+    .photo-box { display: grid; gap: 10px; width: 100%; }
+
+    .photo-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .photo-btn {
+      min-height: 50px;
+      border-radius: 15px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #FFFFFF;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform .07s ease, opacity .07s ease;
+    }
+
+    .photo-btn.ghost {
+      background: #FFFFFF;
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .photo-btn:active { transform: scale(.985); }
+    .photo-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    .photo-status {
+      font-size: 12.5px;
+      font-weight: 850;
+      color: var(--muted);
+      line-height: 1.45;
+      word-break: keep-all;
+    }
+
+    .photo-status.busy { color: var(--accent-deep); }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+      gap: 7px;
+    }
+
+    .photo-thumb {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #F3F3F3;
+    }
+
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-thumb-no {
+      position: absolute;
+      left: 5px;
+      top: 5px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: rgba(17,17,17,.7);
+      color: #FFFFFF;
+      font-size: 10.5px;
+      font-weight: 950;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .photo-thumb-del {
+      position: absolute;
+      right: 4px;
+      top: 4px;
+      width: 22px;
+      height: 22px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(17,17,17,.72);
+      color: #FFFFFF;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .photo-thumb-del:disabled { display: none; }
+
+    .photo-progress {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(17,17,17,.08);
+      overflow: hidden;
+      display: none;
+    }
+
+    .photo-progress.show { display: block; }
+
+    .photo-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: var(--accent);
+      transition: width .2s ease;
+    }
+
+    @media (max-width: 480px) {
+      .photo-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+    }
 </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -8238,6 +8361,7 @@
   <!-- v29: 휴대폰 세로모드 사용 가능 · 스크롤 복구 -->
   <!-- v30: 저장 시 견적서 PDF를 구글 드라이브에 자동 보관 -->
   <!-- v31: 권한 분리(현장반장 현장견적 / 사무실 견적확정) · 수익금 입력 -->
+  <!-- v32: 현장사진 촬영·자동 용량축소·현장별 폴더 저장 -->
 </head>
 <body>
 
@@ -8255,7 +8379,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div class="start-foot">N-CORE On-site Check System 1.92</div>
+      <div class="start-foot">N-CORE On-site Check System 1.94</div>
     </div>
   </section>
 
@@ -8356,6 +8480,23 @@
               <div class="toggle-group">
                 <button type="button" class="toggle-btn" data-elevator="있음">있음</button>
                 <button type="button" class="toggle-btn" data-elevator="없음">없음</button>
+              </div>
+            </div>
+
+            <div class="project-field wide photo-field">
+              <span class="project-field-label">
+                <strong>현장사진</strong>
+                <span>최대 30장 · 자동으로 용량을 줄여 올립니다</span>
+              </span>
+              <div class="photo-box">
+                <input id="photoInput" type="file" accept="image/*" multiple style="display:none" />
+                <div class="photo-actions">
+                  <button type="button" class="photo-btn" id="photoAddBtn">사진 추가</button>
+                  <button type="button" class="photo-btn ghost" id="photoClearBtn">전체 삭제</button>
+                </div>
+                <div class="photo-progress" id="photoProgress"><div class="photo-progress-fill" id="photoProgressFill"></div></div>
+                <div class="photo-status" id="photoStatus">현장 사진을 추가해 주세요.</div>
+                <div class="photo-grid" id="photoGrid"></div>
               </div>
             </div>
 
@@ -8868,7 +9009,7 @@
         <button type="button" class="panel menu-card office-only" id="menuFieldReport">
           <span class="menu-card-no">02</span>
           <span class="menu-card-title">현장견적 처리</span>
-          <span class="menu-card-desc">현장반장이 올린 보고에 수익금과 작업범위를 더해 견적서를 만듭니다.</span>
+          <span class="menu-card-desc">현장반장이 올린 현장견적에 수익금과 작업범위를 더해 견적서를 만듭니다.</span>
         </button>
 
         <button type="button" class="panel menu-card office-only" id="menuActualCost">
@@ -8877,16 +9018,16 @@
           <span class="menu-card-desc">공사가 끝난 현장의 실제 원가와 최종 계약금액을 입력합니다.</span>
         </button>
 
-        <button type="button" class="panel menu-card" id="menuSafety">
-          <span class="menu-card-no">05</span>
-          <span class="menu-card-title">안전동의서</span>
-          <span class="menu-card-desc">작업자에게 안전수칙을 확인받고 서명을 받습니다.</span>
-        </button>
-
         <button type="button" class="panel menu-card office-only" id="menuLookup">
           <span class="menu-card-no">04</span>
           <span class="menu-card-title">과거 현장 조회</span>
           <span class="menu-card-desc">비슷한 조건의 지난 현장이 실제로 얼마나 들었는지 확인합니다.</span>
+        </button>
+
+        <button type="button" class="panel menu-card" id="menuSafety">
+          <span class="menu-card-no">05</span>
+          <span class="menu-card-title">안전동의서</span>
+          <span class="menu-card-desc">작업자에게 안전수칙을 확인받고 서명을 받습니다.</span>
         </button>
       </section>
 
@@ -9640,6 +9781,8 @@
       },
       extra: { amount: 0, memo: "" },
       profit: { amount: 0 },
+      photos: [],
+      siteFolderUrl: "",
       baseLocked: false,
       project: {
         customerName: "",
@@ -10058,7 +10201,10 @@
       if (body && !body.querySelector(".locked-note")) {
         const note = document.createElement("div");
         note.className = "locked-note";
-        note.textContent = "현장반장이 제출한 내용입니다. 수정할 수 없으며 수익금만 입력할 수 있습니다.";
+        note.innerHTML = "현장반장이 제출한 현장견적입니다. 수정할 수 없으며 수익금만 입력할 수 있습니다." +
+          (state.siteFolderUrl
+            ? ' <a href="' + state.siteFolderUrl + '" target="_blank" rel="noopener" style="color:var(--accent-deep);font-weight:950;">현장사진 보기 &rsaquo;</a>'
+            : "");
         body.insertBefore(note, body.firstChild);
       }
     }
@@ -10255,6 +10401,233 @@
 
       const gpsBtn = document.getElementById("gpsCheckBtn");
       if (gpsBtn && lock) gpsBtn.disabled = true;
+
+      ["photoAddBtn", "photoClearBtn"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && lock) el.disabled = true;
+      });
+    }
+
+
+    /* =========================================================
+       v32: 현장사진
+       고른 사진을 폰 안에서 긴 변 1600px · JPEG 85%로 줄여 보관합니다.
+       원본은 폰에 그대로 남고, 줄인 것만 드라이브에 올라갑니다.
+       ========================================================= */
+    const PHOTO_MAX_COUNT = 30;
+    const PHOTO_MAX_SIDE = 1600;
+    const PHOTO_QUALITY = 0.85;
+
+    function formatBytes(bytes) {
+      const n = Number(bytes) || 0;
+      if (n < 1024 * 1024) return Math.max(1, Math.round(n / 1024)) + "KB";
+      return (Math.round(n / 1024 / 1024 * 10) / 10) + "MB";
+    }
+
+    function compressImageFile(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+
+        img.onload = () => {
+          try {
+            let w = img.naturalWidth || img.width;
+            let h = img.naturalHeight || img.height;
+            const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(w, h));
+            w = Math.max(1, Math.round(w * scale));
+            h = Math.max(1, Math.round(h * scale));
+
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+
+            canvas.toBlob((blob) => {
+              URL.revokeObjectURL(url);
+              if (!blob) { reject(new Error("사진을 변환하지 못했습니다.")); return; }
+              resolve({ blob: blob, thumb: canvas.toDataURL("image/jpeg", 0.5) });
+            }, "image/jpeg", PHOTO_QUALITY);
+          } catch (err) {
+            URL.revokeObjectURL(url);
+            reject(err);
+          }
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error("사진을 읽지 못했습니다."));
+        };
+
+        img.src = url;
+      });
+    }
+
+    function getPhotoTotalSize() {
+      return state.photos.reduce((sum, p) => sum + (p.blob ? p.blob.size : 0), 0);
+    }
+
+    function renderPhotos() {
+      const grid = document.getElementById("photoGrid");
+      const status = document.getElementById("photoStatus");
+      const clearBtn = document.getElementById("photoClearBtn");
+      const addBtn = document.getElementById("photoAddBtn");
+      if (!grid || !status) return;
+
+      grid.innerHTML = state.photos.map((photo, index) => `
+        <div class="photo-thumb">
+          <img src="${photo.thumb}" alt="" />
+          <span class="photo-thumb-no">${index + 1}</span>
+          <button type="button" class="photo-thumb-del" data-photo-del="${index}">×</button>
+        </div>
+      `).join("");
+
+      grid.querySelectorAll("[data-photo-del]").forEach(btn => {
+        btn.disabled = !!state.baseLocked;
+        btn.addEventListener("click", () => {
+          state.photos.splice(Number(btn.dataset.photoDel), 1);
+          renderPhotos();
+        });
+      });
+
+      if (!state.photos.length) {
+        status.textContent = "현장 사진을 추가해 주세요.";
+      } else {
+        status.textContent = "사진 " + state.photos.length + "장 · 약 " + formatBytes(getPhotoTotalSize()) +
+          " (최대 " + PHOTO_MAX_COUNT + "장)";
+      }
+
+      status.classList.remove("busy");
+      if (clearBtn) clearBtn.disabled = !state.photos.length || !!state.baseLocked;
+      if (addBtn) addBtn.disabled = !!state.baseLocked || state.photos.length >= PHOTO_MAX_COUNT;
+    }
+
+    function setPhotoProgress(done, total) {
+      const wrap = document.getElementById("photoProgress");
+      const fill = document.getElementById("photoProgressFill");
+      if (!wrap || !fill) return;
+
+      if (!total) { wrap.classList.remove("show"); fill.style.width = "0%"; return; }
+      wrap.classList.add("show");
+      fill.style.width = Math.round((done / total) * 100) + "%";
+    }
+
+    async function addPhotoFiles(files) {
+      const list = Array.from(files || []);
+      if (!list.length) return;
+
+      const status = document.getElementById("photoStatus");
+      const room = PHOTO_MAX_COUNT - state.photos.length;
+
+      if (room <= 0) {
+        alert("사진은 최대 " + PHOTO_MAX_COUNT + "장까지 올릴 수 있습니다.");
+        return;
+      }
+
+      const target = list.slice(0, room);
+      if (list.length > room) {
+        alert("사진은 최대 " + PHOTO_MAX_COUNT + "장까지입니다.\n앞의 " + room + "장만 추가합니다.");
+      }
+
+      status.classList.add("busy");
+
+      for (let i = 0; i < target.length; i++) {
+        const file = target[i];
+        status.textContent = "사진 준비 중... " + (i + 1) + " / " + target.length;
+        setPhotoProgress(i, target.length);
+
+        try {
+          const result = await compressImageFile(file);
+          state.photos.push({ name: file.name || ("photo" + (i + 1)), blob: result.blob, thumb: result.thumb });
+        } catch (err) {
+          console.error(err);
+        }
+
+        await new Promise(r => setTimeout(r, 10));
+      }
+
+      setPhotoProgress(0, 0);
+      renderPhotos();
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = String(reader.result || "");
+          const comma = result.indexOf(",");
+          resolve(comma >= 0 ? result.slice(comma + 1) : result);
+        };
+        reader.onerror = () => reject(new Error("사진을 읽지 못했습니다."));
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function uploadPhotos(code, customerName) {
+      if (!state.photos.length) return { ok: true, uploaded: 0 };
+
+      const status = document.getElementById("photoStatus");
+      const total = state.photos.length;
+      let uploaded = 0;
+
+      for (let i = 0; i < total; i++) {
+        const photo = state.photos[i];
+        if (status) {
+          status.classList.add("busy");
+          status.textContent = "사진 올리는 중... " + (i + 1) + " / " + total;
+        }
+        setPhotoProgress(i, total);
+
+        const base64 = await blobToBase64(photo.blob);
+
+        const response = await fetch(GOOGLE_SHEET_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "savePhoto",
+            code: code,
+            customerName: customerName || "",
+            fileName: photo.name || ("photo" + (i + 1)),
+            index: i + 1,
+            total: total,
+            base64: base64
+          })
+        });
+
+        const data = await response.json();
+        if (!data || !data.ok) {
+          throw new Error((data && data.message) || "사진을 올리지 못했습니다. (" + (i + 1) + "번째)");
+        }
+
+        uploaded++;
+      }
+
+      setPhotoProgress(total, total);
+      if (status) {
+        status.classList.remove("busy");
+        status.textContent = "사진 " + uploaded + "장 저장 완료";
+      }
+
+      return { ok: true, uploaded: uploaded };
+    }
+
+    function bindPhotoInputs() {
+      const input = document.getElementById("photoInput");
+      const addBtn = document.getElementById("photoAddBtn");
+      const clearBtn = document.getElementById("photoClearBtn");
+      if (!input || !addBtn || !clearBtn) return;
+
+      addBtn.addEventListener("click", () => { input.value = ""; input.click(); });
+      input.addEventListener("change", () => { addPhotoFiles(input.files); });
+
+      clearBtn.addEventListener("click", () => {
+        if (!state.photos.length) return;
+        if (!window.confirm("추가한 사진을 모두 지울까요?")) return;
+        state.photos = [];
+        renderPhotos();
+      });
     }
 
     function getSiteSummaryText() {
@@ -10429,6 +10802,7 @@
 
     bindProjectInputBehavior();
     bindSiteInputBehavior();
+    bindPhotoInputs();
 
     const gpsCheckBtn = document.getElementById("gpsCheckBtn");
     if (gpsCheckBtn) gpsCheckBtn.addEventListener("click", requestSiteLocation);
@@ -10441,6 +10815,7 @@
       document.getElementById("projectPhone").value = state.project.phone || "";
       document.getElementById("projectAddress").value = state.project.address || "";
       renderSiteInputs();
+      renderPhotos();
       updateGpsUI();
       applyProjectLock();
 
@@ -11938,6 +12313,16 @@
 
       // 견적서 PDF를 드라이브에 보관합니다.
       // 여기서 실패해도 견적 자체는 이미 저장되었으므로 진행을 막지 않습니다.
+      if (state.photos.length) {
+        saveBtn.textContent = "사진 올리는 중...";
+        try {
+          await uploadPhotos(state.estimateCode, state.project.customerName);
+        } catch (err) {
+          console.error(err);
+          alert("견적은 저장되었지만 사진 일부가 올라가지 않았습니다.\n\n" + (err.message || ""));
+        }
+      }
+
       saveBtn.textContent = "견적서 보관 중...";
       try {
         await archiveEstimatePdf();
@@ -12056,6 +12441,8 @@
         waste: "전체", protection: "전체"
       };
       state.profit = { amount: 0 };
+      state.photos = [];
+      state.siteFolderUrl = "";
       state.baseLocked = false;
       gpsAutoTried = false;
 
@@ -12505,7 +12892,9 @@
         "현장: " + (state.project.address || "-") + "\n" +
         getSiteSummaryText() + "\n" +
         "기본 공사비: " + formatWon(getCostTotal()) + "\n" +
-        "현장위치: " + getLocationSummaryText() + "\n\n" +
+        "현장위치: " + getLocationSummaryText() + "\n" +
+        "현장사진: " + (state.photos.length ? state.photos.length + "장" : "없음") + "\n\n" +
+        (state.photos.length ? "" : "※ 사진이 없으면 사무실에서 작업범위를 판단하기 어렵습니다.\n\n") +
         "제출하시겠습니까?"
       );
       if (!ok) return;
@@ -12531,10 +12920,26 @@
 
       try {
         await submitEstimateToSheet(buildFieldPayload());
+
+        // 현장 폴더가 만들어질 시간을 잠깐 준 뒤 사진을 올립니다.
+        if (state.photos.length) {
+          btn.textContent = "사진 올리는 중...";
+          await new Promise(r => setTimeout(r, 1200));
+
+          try {
+            await uploadPhotos(state.estimateCode, state.project.customerName);
+          } catch (err) {
+            console.error(err);
+            alert("현장견적은 저장되었지만 사진 일부가 올라가지 않았습니다.\n\n" +
+              (err.message || "") + "\n\n통신 상태를 확인해 주세요.");
+          }
+        }
+
         btn.textContent = "제출 완료";
 
         setTimeout(() => {
-          alert("현장견적이 제출되었습니다.\n\n견적번호 " + state.estimateCode);
+          alert("현장견적이 제출되었습니다.\n\n견적번호 " + state.estimateCode +
+            (state.photos.length ? "\n현장사진 " + state.photos.length + "장" : ""));
           btn.disabled = false;
           btn.textContent = "현장견적 제출";
           startNewEstimate();
@@ -12577,7 +12982,7 @@
             <span class="site-row-main">
               <span class="site-row-code">${escapePdfHtml(row.code)} · ${escapePdfHtml(row.staff || "-")}</span>
               <span class="site-row-title">${escapePdfHtml(row.customerName || "-")} · ${escapePdfHtml(row.address || "-")}</span>
-              <span class="site-row-sub">${escapePdfHtml(row.industry || "-")} · ${escapePdfHtml(String(row.pyeong || 0))}평 · ${escapePdfHtml(row.floorLabel || "-")} · 엘리베이터 ${escapePdfHtml(row.elevator || "-")} · 위치 ${escapePdfHtml(row.locationStatus || "-")}</span>
+              <span class="site-row-sub">${escapePdfHtml(row.industry || "-")} · ${escapePdfHtml(String(row.pyeong || 0))}평 · ${escapePdfHtml(row.floorLabel || "-")} · 엘리베이터 ${escapePdfHtml(row.elevator || "-")} · 위치 ${escapePdfHtml(row.locationStatus || "-")} · 사진 ${escapePdfHtml(String(row.photoCount || 0))}장</span>
             </span>
             <span class="site-row-amount">${escapePdfHtml(formatWon(row.costTotal))}</span>
           </button>
@@ -12620,6 +13025,8 @@
         state.scopes = { demolition: [], restoration: [], equipment: [], waste: [], protection: [] };
         state.scopeCategory = "demolition";
         state.baseLocked = true;
+        state.siteFolderUrl = row.siteFolderUrl || "";
+        state.photos = [];
         gpsAutoTried = true;
 
         calc();
