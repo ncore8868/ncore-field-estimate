@@ -8466,6 +8466,21 @@
       /* 화면 전체가 흐르는 상태에서는 안쪽 스크롤을 만들지 않습니다. */
       .app, .app.show { touch-action: pan-y; }
     }
+    /* === v37: 메뉴 화면 정리 === */
+    /* 메뉴에는 담당자 표시가 이미 있어 우상단 알약과 겹칩니다. */
+    body.on-menu .staff-session-pill { display: none !important; }
+
+    .menu-content {
+      align-content: center !important;
+    }
+
+    .menu-card {
+      max-height: 360px;
+    }
+
+    @media (max-width: 1100px), (max-height: 819px), (orientation: portrait) {
+      .menu-card { max-height: none; }
+    }
 </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -8494,6 +8509,7 @@
   <!-- v35: 서버 통신 대기시간 25초 확대 + 자동 재시도 (로그인 실패 문제 해결) -->
   <!-- v36: 개별 타임아웃이 기본값을 덮어쓰던 문제 수정 (견적번호 발급 실패) -->
   <!-- v37: 폭 넓고 높이 낮은 기기(폴드)에서 화면 고정 해제, 스크롤 씹힘 개선 -->
+  <!-- v38: 작업범위 버튼이 산정항목으로 잘못 연결되어 화면이 멈추던 문제 수정 -->
 </head>
 <body>
 
@@ -8511,7 +8527,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div id="startFoot" class="start-foot">N-CORE On-site Check System 1.99</div>
+      <div id="startFoot" class="start-foot">N-CORE On-site Check System 2.00</div>
     </div>
   </section>
 
@@ -10276,7 +10292,8 @@
     }
 
     function renderDetail(sectionKey) {
-      const section = sections[sectionKey];
+      const section = sections[sectionKey] || sections.labor;
+      if (!sections[sectionKey]) sectionKey = "labor";
       const detail = document.getElementById("detail");
       detail.classList.remove("fade");
       void detail.offsetWidth;
@@ -10506,18 +10523,22 @@
     }
 
     function setActive(sectionKey) {
-      state.section = sectionKey;
-      document.querySelectorAll(".category-card").forEach(card => {
-        card.classList.toggle("active", card.dataset.section === sectionKey);
+      // 알 수 없는 항목이 들어오면 인건비로 되돌립니다. 화면이 멈추지 않게 하는 안전장치입니다.
+      const key = sections[sectionKey] ? sectionKey : "labor";
+      state.section = key;
+
+      document.querySelectorAll(".category-card[data-section]").forEach(card => {
+        card.classList.toggle("active", card.dataset.section === key);
       });
-      renderDetail(sectionKey);
+      renderDetail(key);
       applyBaseLock();
       calc();
     }
 
     const internalResetModal = document.getElementById("internalResetModal");
 
-    document.querySelectorAll(".category-card").forEach(card => {
+    // 작업범위 화면의 버튼도 같은 class를 쓰므로 data-section 이 있는 것만 연결합니다.
+    document.querySelectorAll(".category-card[data-section]").forEach(card => {
       card.addEventListener("click", () => setActive(card.dataset.section));
     });
 
@@ -12278,6 +12299,7 @@
     }
 
     function showScreen(id) {
+      document.body.classList.toggle("on-menu", id === "pageMenu");
       hideAllScreens();
       const el = document.getElementById(id);
       if (el) el.classList.add("active");
@@ -12285,6 +12307,7 @@
     }
 
     function showPage(pageNo) {
+      document.body.classList.remove("on-menu");
       hideAllScreens();
       page0.classList.toggle("active", pageNo === 0);
       page1.classList.toggle("active", pageNo === 1);
@@ -12716,6 +12739,7 @@
     }
 
     function showMainMenu() {
+      document.body.classList.add("on-menu");
       applyRoleToUI();
       updateRoleLabels();
       renumberMenu();
@@ -12909,6 +12933,7 @@
       state.photos = [];
       state.siteFolderUrl = "";
       state.baseLocked = false;
+      state.section = "labor";
       gpsAutoTried = false;
 
       resetInternalInputs();
