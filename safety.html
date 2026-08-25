@@ -1,116 +1,635 @@
-const CACHE_NAME = "ncore-field-estimate-pwa-v42";
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#D76016" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="N-CORE 견적" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon-192-v2.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="./icon-192-v2.png" />
+  <title>N-CORE 안전동의서</title>
+  <!-- v2: 견적 프로그램과 통합 (PIN 이어받기 · NEW 시트 · 드라이브 PDF 보관) -->
+  <style>
+    :root{
+      --accent:#E97132;
+      --accent-deep:#C85620;
+      --ink:#181818;
+      --muted:#7B7B7B;
+      --line:#DADAD8;
+      --surface:#F4F4F2;
+      --paper:#FFFFFF;
+      --soft:#FBF7F3;
+      --ok:#1F7A4D;
+      --radius:18px;
+      --shadow:0 18px 48px rgba(0,0,0,.10);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;color:var(--ink);background:var(--surface)}
+    body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .app{min-height:100vh;display:flex;flex-direction:column}
+    .topbar{display:none}
+    .brand{display:flex;align-items:center;gap:12px;min-width:0}
+    .brand-mark{display:grid;place-items:center;width:102px;height:42px;border-radius:13px;background:linear-gradient(135deg,#181818,#2B2B2B);color:#fff;font-size:17px;font-weight:900;letter-spacing:-.4px}
+    .brand-copy{min-width:0}
+    .brand-title{font-size:18px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .brand-role{margin-top:2px;font-size:12px;font-weight:700;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pin-badge{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid rgba(0,0,0,.10);border-radius:999px;background:#fff;font-size:12px;font-weight:850;box-shadow:0 5px 14px rgba(0,0,0,.05);white-space:nowrap}
+    .pin-dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+    .wrap{width:min(860px,100%);margin:0 auto;padding:16px;display:grid;gap:14px}
+    .paper-shell{padding:10px;border:1px solid rgba(0,0,0,.08);border-radius:22px;background:#E7E7E4;box-shadow:var(--shadow)}
+    .a4-paper{position:relative;width:min(100%,794px);aspect-ratio:210 / 297;margin:0 auto;background:var(--paper);border:1px solid #D9D9D9;box-shadow:0 8px 26px rgba(0,0,0,.12);overflow:hidden;color:#111}
+    .paper-inner{height:100%;padding:4.6%;display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto auto auto;gap:11px}
+    .paper-head{display:flex;align-items:stretch;justify-content:space-between;gap:16px;padding-bottom:12px;border-bottom:4px solid var(--accent)}
+    .paper-brand{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:14px;min-width:0}
+    .paper-logo{display:block;width:162px;height:auto;object-fit:contain;align-self:center;transform:translateY(2px)}
+    .paper-title{margin:0;font-size:29px;line-height:1.08;letter-spacing:-1.1px;font-weight:950}
+    .paper-meta{flex:0 0 224px;border:1px solid #D8D8D8;border-radius:10px;overflow:hidden;background:#fff;font-size:10.8px}
+    .meta-row{display:grid;grid-template-columns:62px 1fr;min-height:28px;border-bottom:1px solid #E6E6E6}
+    .meta-row:last-child{border-bottom:0}
+    .meta-row span{display:flex;align-items:center;padding:0 8px;background:#F4F4F2;color:#555;font-weight:850}
+    .meta-row strong{display:flex;align-items:center;padding:0 8px;font-weight:900;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .date-edit-btn{width:100%;height:100%;border:0;background:#fff;padding:0;text-align:left;font-size:inherit;font-weight:900;color:#111;cursor:pointer}
+    .date-edit-btn:disabled{cursor:default;color:#111}
+    .lead{padding:14px 16px;border-left:4px solid var(--accent);background:#F8F7F5;border-radius:10px;font-size:12.4px;line-height:1.62;font-weight:720;color:#333;word-break:keep-all;overflow-wrap:break-word;line-break:strict}
+    .section-title{display:flex;align-items:center;gap:8px;margin:0;font-size:14px;font-weight:950;letter-spacing:-.35px}
+    .section-title::before{content:"";width:6px;height:18px;border-radius:4px;background:var(--accent)}
+    .rules{border:1px solid #DADADA;border-radius:10px;overflow:hidden;display:grid;grid-template-rows:repeat(8,minmax(0,1fr));min-height:0}
+    .rule{display:grid;grid-template-columns:40px 1fr;min-height:0;border-bottom:1px solid #E6E6E6;font-size:14.2px;line-height:1.42}
+    .rule:last-child{border-bottom:0}
+    .rule-no{display:grid;place-items:center;background:#F5F5F3;font-weight:950;color:#555}
+    .rule-text{display:flex;align-items:center;padding:7px 13px;font-weight:700;word-break:keep-all;overflow-wrap:break-word;line-break:strict}
+    .confirm-box{padding:13px 15px;border:1px solid #DADADA;border-radius:10px;background:#fff;font-size:12px;line-height:1.62;font-weight:760;word-break:keep-all;overflow-wrap:break-word;line-break:strict}.confirm-line{display:block}.confirm-line+.confirm-line{margin-top:2px}
+    .identity-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field-touch{appearance:none;width:100%;display:grid;grid-template-columns:70px 1fr;min-height:42px;border:1px solid #D5D5D5;border-radius:8px;overflow:hidden;background:#fff;text-align:left;padding:0}
+    .field-touch span{display:flex;align-items:center;padding:0 11px;background:#F4F4F2;color:#555;font-size:11.4px;font-weight:850}
+    .field-touch strong{display:flex;align-items:center;padding:0 11px;font-size:11.4px;font-weight:900;color:#111;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .signature-preview{height:92px;border:1.5px dashed #BCBCBC;border-radius:10px;position:relative;display:flex;align-items:center;justify-content:center;background:#FCFCFB;overflow:hidden}
+    .signature-preview.empty::before{content:"서명란을 터치해 서명해주세요";color:#888;font-size:11.5px;font-weight:800}
+    .signature-label{display:none}
+    .signature-preview img{display:none;max-width:92%;max-height:86%;object-fit:contain}.signature-preview.has-signature img{display:block}
+    .paper-foot{padding-top:2px;display:flex;justify-content:space-between;gap:8px;color:#666;font-size:9.5px;font-weight:750}
+    .action-box{display:grid;gap:12px;padding:16px;border:1px solid rgba(0,0,0,.08);border-radius:20px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+    .row-title{font-size:16px;font-weight:950;letter-spacing:-.4px}
+    .touch-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .mini-btn,.btn{border:0;border-radius:14px;min-height:48px;padding:0 14px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:900;letter-spacing:-.2px}
+    .mini-btn{background:#F4F4F2;color:#222;border:1px solid #DDDCD8}
+    .agree{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:14px;background:var(--soft);border:1px solid rgba(233,113,50,.18)}
+    .agree input{width:19px;height:19px;margin-top:2px;accent-color:var(--accent);flex:0 0 auto}
+    .agree label{font-size:13px;line-height:1.5;font-weight:800}
+    .btn{width:100%}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-deep));color:#fff;box-shadow:0 10px 22px rgba(233,113,50,.22)}
+    .btn-dark{background:#1C1C1C;color:#fff}
+    .btn-light{background:#F4F4F2;color:#222;border:1px solid #DDDCD8}
+    .btn-success{background:var(--ok);color:#fff}
+    .btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
+    .action-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .action-buttons.secondary{grid-template-columns:1fr 1fr 1fr}
 
-const CORE_ASSETS = [
-  "./",
-  "./index.html",
-  "./safety.html",
-  "./manifest.webmanifest",
-  "./PretendardVariable.woff2",
-  "./icon-192-v2.png",
-  "./icon-512-v2.png",
-  "./ncore-dark-logo-v7.png",
-  "./ncore-watermark-v7.png",
-  "./ncore-logo.png"
-];
+    .compact-action-box{gap:10px;padding:14px 16px}
+    .compact-action-box .action-buttons{grid-template-columns:1fr 1fr}
+    .save-state{display:none;padding:12px 14px;border-radius:14px;background:#EEF8F2;color:#1D6D46;font-size:12px;font-weight:850;line-height:1.45}
+    .save-state.show{display:block}
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) =>
-        Promise.all(
-          CORE_ASSETS.map((url) =>
-            cache.add(url).catch(() => null)
-          )
-        )
-      )
-      .then(() => self.skipWaiting())
-  );
-});
+    .pin-start-card{max-width:470px!important;padding:28px 26px 24px!important;text-align:center}
+    .pin-start-logo{display:block;width:180px;height:auto;margin:0 auto 18px;object-fit:contain}
+    .pin-start-title{margin:0;font-size:24px;font-weight:950;letter-spacing:-.7px}
+    .pin-start-copy{margin:8px 0 20px;color:#666;font-size:13px;line-height:1.55;font-weight:700;word-break:keep-all}
+    .manager-preview{display:grid;grid-template-columns:84px 1fr;min-height:46px;margin-bottom:12px;border:1px solid #DDD;border-radius:12px;overflow:hidden;text-align:left}
+    .manager-preview span{display:flex;align-items:center;padding:0 13px;background:#F4F4F2;color:#555;font-size:13px;font-weight:850}
+    .manager-preview strong{display:flex;align-items:center;padding:0 13px;font-size:14px;font-weight:900}
+    .modal{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.58);backdrop-filter:blur(4px)}
+    .modal.open{display:flex}
+    .modal-card{width:min(920px,100%);background:#fff;border-radius:22px;box-shadow:0 24px 70px rgba(0,0,0,.28);padding:20px}
+    .modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+    .modal-title{margin:0;font-size:20px;font-weight:950;letter-spacing:-.6px}
+    .modal-close{border:0;background:#F0F0EE;color:#444;border-radius:10px;width:38px;height:38px;font-size:20px;font-weight:900}
+    .input-grid{display:grid;gap:12px}
+    .input-field{display:grid;gap:7px}
+    .input-field label{font-size:13px;font-weight:900}
+    .input-field input{height:48px;border:1px solid #D2D2CE;border-radius:12px;padding:0 14px;font-size:15px;font-weight:750;outline:0}
+    .input-field input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(233,113,50,.12)}
+    .signature-pad-wrap{position:relative;height:340px;border:2px solid #222;border-radius:15px;background:#fff;overflow:hidden;touch-action:none}
+    #signatureCanvas{display:block;width:100%;height:100%;touch-action:none}
+    .sign-guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;color:#C3C3C3;font-size:19px;font-weight:850}
+    .modal-actions{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;margin-top:12px}
+    .toast{position:fixed;left:50%;bottom:24px;z-index:200;transform:translate(-50%,18px);opacity:0;pointer-events:none;max-width:min(92vw,520px);padding:13px 16px;border-radius:13px;background:#202020;color:#fff;font-size:12px;font-weight:800;box-shadow:0 12px 34px rgba(0,0,0,.28);transition:.2s}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .capture-clone{position:fixed!important;left:-10000px!important;top:0!important;width:794px!important;height:1123px!important;box-shadow:none!important;border:0!important}
+    @media (max-width:760px){
+      .topbar{padding:12px 14px}
+      .brand-mark{width:94px;height:40px;font-size:15px}
+      .pin-badge{font-size:11px;padding:8px 10px}
+      .wrap{padding:10px}
+      .paper-shell{padding:6px;border-radius:14px}
+      .action-box{padding:14px;border-radius:16px}
+      .paper-inner{padding:4.6%;gap:6px}
+      .paper-head{gap:8px;padding-bottom:8px;border-bottom-width:3px}
+      .paper-logo{width:112px;height:auto;transform:translateY(1px)}
+      .paper-title{font-size:18px;letter-spacing:-.7px}
+      .paper-meta{flex-basis:135px;font-size:6.8px;border-radius:7px}
+      .meta-row{grid-template-columns:40px 1fr;min-height:17px}
+      .meta-row span,.meta-row strong{padding:0 5px}
+      .lead{padding:8px 9px;border-left-width:3px;font-size:8px;line-height:1.55;border-radius:7px}
+      .section-title{margin:0;font-size:8.9px;gap:5px}
+      .section-title::before{width:4px;height:12px}
+      .rules{border-radius:7px}
+      .rule{grid-template-columns:25px 1fr;min-height:0;font-size:9.2px;line-height:1.38}
+      .rule-text{padding:3px 7px}
+      .confirm-box{padding:8px 9px;font-size:7.6px;line-height:1.5;border-radius:7px}
+      .identity-grid{gap:6px}
+      .field-touch{grid-template-columns:43px 1fr;min-height:22px;border-radius:6px}
+      .field-touch span,.field-touch strong{padding:0 6px;font-size:6.7px}
+      .signature-preview{height:52px;border-radius:7px}
+      .signature-preview.empty::before{font-size:6.9px}
+      .signature-label{left:6px;top:5px;font-size:5.8px}
+      .paper-foot{font-size:5.7px;padding-top:5px}
+      .touch-row,.action-buttons.secondary{grid-template-columns:1fr}
+      .compact-action-box .action-buttons{grid-template-columns:1fr 1fr}
+      .modal{padding:10px}
+      .modal-card{padding:14px;border-radius:16px}
+      .signature-pad-wrap{height:260px}
+      .modal-actions{grid-template-columns:1fr 1fr}
+      .modal-actions .btn-primary{grid-column:1/-1}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">N-CORE</div>
+      <div class="brand-copy">
+        <div class="brand-title">위험성평가 및<br>안전작업 서약서</div>
+        <div class="brand-role" id="managerBadgeText">담당자 미확인</div>
+      </div>
+    </div>
+    <div class="pin-badge"><span class="pin-dot"></span><span id="pinBadge">PIN 확인 필요</span></div>
+  </header>
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
-        )
-      )
-      .then(() => self.clients.claim())
-  );
-});
+  <main class="wrap">
+    <section class="paper-shell">
+      <article id="paper" class="a4-paper" aria-label="A4 위험성평가 및 안전작업 서약서">
+        <div class="paper-inner">
+          <header class="paper-head">
+            <div class="paper-brand">
+              <img class="paper-logo" src="./ncore-logo.png" alt="N-CORE 로고" />
+              <h1 class="paper-title">위험성평가 및<br>안전작업 서약서</h1>
+            </div>
+            <div class="paper-meta">
+              <div class="meta-row doc-no-row" style="display:none"><span>문서번호</span><strong id="docNoText">작성 전</strong></div>
+              <div class="meta-row"><span>작성일자</span><button id="dateEditBtn" class="date-edit-btn" type="button"><strong id="dateText">-</strong></button></div>
+              <div class="meta-row"><span>담당자</span><strong id="managerText">-</strong></div>
+              <div class="meta-row"><span>회사명</span><strong>N-CORE</strong></div>
+            </div>
+          </header>
 
-self.addEventListener("fetch", (event) => {
-  const request = event.request;
+          <div class="lead">본인은 작업 전 아래 안전수칙과 현장 유의사항을 충분히 읽고 이해하였습니다.<br>작업 중 안전관리자의 지시를 준수하고 필요한 보호조치를 성실히 이행할 것을 확인합니다.</div>
 
-  if (request.method !== "GET") return;
+          <h2 class="section-title">안전수칙 및 확인사항</h2>
+          <div class="rules">
+            <div class="rule"><div class="rule-no">01</div><div class="rule-text">작업 전 안내받은 작업 범위와 위험요소를 확인하고, 이해되지 않는 사항은 작업 시작 전에 반드시 문의합니다.</div></div>
+            <div class="rule"><div class="rule-no">02</div><div class="rule-text">안전모, 안전화, 장갑 등 작업에 필요한 개인보호구를 올바르게 착용하고 훼손된 보호구는 즉시 교체합니다.</div></div>
+            <div class="rule"><div class="rule-no">03</div><div class="rule-text">허가받지 않은 장비나 공구를 임의로 사용하지 않으며, 장비 사용 전 이상 유무를 확인합니다.</div></div>
+            <div class="rule"><div class="rule-no">04</div><div class="rule-text">추락, 낙하, 감전, 화재, 분진 등 위험이 있는 구역에서는 안전시설과 통제선의 안내를 준수합니다.</div></div>
+            <div class="rule"><div class="rule-no">05</div><div class="rule-text">음주 또는 정상적인 작업이 어려운 상태에서는 작업하지 않으며, 몸 상태에 이상이 있으면 즉시 관리자에게 알립니다.</div></div>
+            <div class="rule"><div class="rule-no">06</div><div class="rule-text">위험한 상황이나 사고 징후를 발견하면 즉시 작업을 중지하고 관리자에게 보고합니다.</div></div>
+            <div class="rule"><div class="rule-no">07</div><div class="rule-text">작업 중 정해진 이동통로와 작업순서를 지키며, 다른 작업자의 안전을 위협하는 행동을 하지 않습니다.</div></div>
+            <div class="rule"><div class="rule-no">08</div><div class="rule-text">현장 내 안전수칙 위반으로 인한 사고 예방을 위해 관리자의 시정·중지 지시에 즉시 따릅니다.</div></div>
+          </div>
 
-  const url = new URL(request.url);
+          <div class="confirm-box"><span class="confirm-line">본인은 위 내용을 읽고 충분히 이해하였으며, 안전수칙을 준수하지 않을 경우 작업이 제한되거나 중지될 수 있음을 확인합니다.</span><span class="confirm-line">아래 서명은 본인이 직접 작성한 것입니다.</span></div>
 
-  // index.html / safety.html은 항상 최신 파일 우선
-  if (
-    request.mode === "navigate" ||
-    url.pathname.endsWith("/index.html") ||
-    url.pathname.endsWith("/safety.html")
-  ) {
-    event.respondWith(
-      fetch(request, {
-        cache: "no-store"
-      })
-        .then((response) => {
-          if (response && response.ok) {
-            const clone = response.clone();
+          <div class="identity-grid">
+            <button id="openIdentityBtn" class="field-touch" type="button"><span>성명</span><strong id="nameText">터치하여 입력</strong></button>
+            <button id="openIdentityBtn2" class="field-touch" type="button"><span>연락처</span><strong id="phoneText">터치하여 입력</strong></button>
+          </div>
 
-            caches.open(CACHE_NAME)
-              .then((cache) => cache.put(request, clone));
-          }
+          <button id="signaturePreview" class="signature-preview empty" type="button" aria-label="서명란 열기">
+            <img id="signatureImage" alt="" />
+          </button>
 
-          return response;
-        })
-        .catch(async () => {
-          return (
-            (await caches.match(request, {
-              ignoreSearch: true
-            })) ||
-            (await caches.match("./index.html")) ||
-            new Response(
-              "오프라인 상태입니다.\n인터넷 연결 후 다시 시도해 주세요.",
-              {
-                status: 503,
-                headers: {
-                  "Content-Type": "text/plain; charset=utf-8"
-                }
-              }
-            )
-          );
-        })
-    );
+          <div class="paper-foot"><span id="timestampText">작성일시: -</span><span>N-CORE 현장 안전관리</span></div>
+        </div>
+      </article>
+    </section>
 
-    return;
+    <section class="action-box compact-action-box">
+      <div class="agree">
+        <input id="agreeCheck" type="checkbox" />
+        <label for="agreeCheck">내용을 확인했습니다.</label>
+      </div>
+      <div class="action-buttons">
+        <button id="completeBtn" class="btn btn-primary" type="button" disabled>제출하기</button>
+        <button id="sendSmsBtn" class="btn btn-success" type="button" disabled>전송하기</button>
+      </div>
+      <button id="backToMenuBtn" class="btn btn-light" type="button">메인 메뉴로 돌아가기</button>
+      <div id="saveState" class="save-state"></div>
+    </section>
+  </main>
+</div>
+
+<div id="pinModal" class="modal" aria-hidden="false">
+  <div class="modal-card pin-start-card">
+    <img class="pin-start-logo" src="./ncore-logo.png" alt="N-CORE 로고" />
+    <h2 class="pin-start-title">담당자 확인</h2>
+    <p class="pin-start-copy">등록된 PIN 번호를 입력하면 담당자명이 자동으로 확인됩니다.</p>
+    <div class="manager-preview"><span>담당자</span><strong id="pinManagerPreview">PIN 확인 후 자동 표시</strong></div>
+    <div class="input-grid">
+      <div class="input-field" style="text-align:left">
+        <label for="pinInput">PIN 번호</label>
+        <input id="pinInput" type="password" inputmode="numeric" placeholder="PIN 4자리 입력" maxlength="4" autocomplete="off" />
+      </div>
+      <button id="pinConfirmBtn" class="btn btn-primary" type="button">담당자 확인</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="dateModal" class="modal" aria-hidden="true">
+  <div class="modal-card" style="max-width:420px">
+    <div class="modal-head">
+      <h2 class="modal-title">작성일자</h2>
+      <button id="closeDateBtn" class="modal-close" type="button">×</button>
+    </div>
+    <div class="input-grid">
+      <div class="input-field">
+        <label for="dateInput">날짜</label>
+        <input id="dateInput" type="date" />
+      </div>
+      <div class="action-buttons">
+        <button id="dateCancelBtn" class="btn btn-light" type="button">취소</button>
+        <button id="dateApplyBtn" class="btn btn-primary" type="button">적용</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="identityModal" class="modal" aria-hidden="true">
+  <div class="modal-card" style="max-width:520px">
+    <div class="modal-head">
+      <div><h2 class="modal-title">성명 · 연락처</h2></div>
+      <button id="closeIdentityBtn" class="modal-close" type="button">×</button>
+    </div>
+    <div class="input-grid">
+      <div class="input-field">
+        <label for="nameInput">성명</label>
+        <input id="nameInput" type="text" placeholder="예: 홍길동" autocomplete="name" />
+      </div>
+      <div class="input-field">
+        <label for="phoneInput">연락처</label>
+        <input id="phoneInput" type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel" />
+      </div>
+      <div class="action-buttons">
+        <button id="identityCancelBtn" class="btn btn-light" type="button">취소</button>
+        <button id="identityApplyBtn" class="btn btn-primary" type="button">입력 완료</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="signatureModal" class="modal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div><h2 class="modal-title">본인 서명</h2></div>
+      <button id="closeSignBtn" class="modal-close" type="button">×</button>
+    </div>
+    <div class="signature-pad-wrap">
+      <canvas id="signatureCanvas"></canvas>
+      <div id="signGuide" class="sign-guide">여기에 서명</div>
+    </div>
+    <div class="modal-actions">
+      <button id="clearSignBtn" class="btn btn-light" type="button">다시 쓰기</button>
+      <button id="cancelSignBtn" class="btn btn-light" type="button">취소</button>
+      <button id="applySignBtn" class="btn btn-primary" type="button">서명 완료</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const pinModal = $('#pinModal');
+  const identityModal = $('#identityModal');
+  const dateModal = $('#dateModal');
+  const signModal = $('#signatureModal');
+  const paper = $('#paper');
+  const nameInput = $('#nameInput');
+  const phoneInput = $('#phoneInput');
+  const agreeCheck = $('#agreeCheck');
+  const pinInput = $('#pinInput');
+  const nameText = $('#nameText');
+  const phoneText = $('#phoneText');
+  const managerText = $('#managerText');
+  const managerBadgeText = $('#managerBadgeText');
+  const pinBadge = $('#pinBadge');
+  const pinManagerPreview = $('#pinManagerPreview');
+  const dateText = $('#dateText');
+  const dateEditBtn = $('#dateEditBtn');
+  const dateInput = $('#dateInput');
+  const docNoText = $('#docNoText');
+  const timestampText = $('#timestampText');
+  const signaturePreview = $('#signaturePreview');
+  const signatureImage = $('#signatureImage');
+  const saveState = $('#saveState');
+  const completeBtn = $('#completeBtn');
+  const sendSmsBtn = $('#sendSmsBtn');
+  const toast = $('#toast');
+  const canvas = $('#signatureCanvas');
+  const ctx = canvas.getContext('2d');
+  const signGuide = $('#signGuide');
+  signatureImage.removeAttribute('src');
+  signaturePreview.classList.remove('has-signature');
+
+  let drawing = false;
+  let hasInk = false;
+  let signatureDataUrl = '';
+  let completed = false;
+  let generated = { pngBlob:null, pdfBlob:null, fileBase:'', pngUrl:'' };
+  let currentManager = '';
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function nowParts(){
+    const d = new Date();
+    return {
+      d,
+      date:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,
+      compact:`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`,
+      time:`${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`,
+      stamp:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+    };
+  }
+  function showToast(message){
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(()=>toast.classList.remove('show'),2600);
+  }
+  function openModal(el){ el.classList.add('open'); el.setAttribute('aria-hidden','false'); }
+  function closeModal(el){ el.classList.remove('open'); el.setAttribute('aria-hidden','true'); }
+  const initial = nowParts();
+  dateText.textContent = initial.date;
+  dateInput.value = initial.date;
+  timestampText.textContent = `작성일시: ${initial.stamp}`;
+
+  function sanitizePhone(v){
+    const digits = v.replace(/\D/g,'').slice(0,11);
+    if(digits.length < 4) return digits;
+    if(digits.length < 8) return `${digits.slice(0,3)}-${digits.slice(3)}`;
+    return `${digits.slice(0,3)}-${digits.slice(3,digits.length-4)}-${digits.slice(-4)}`;
   }
 
-  // Apps Script 등 외부 도메인은 서비스워커가 건드리지 않음
-  if (url.origin !== self.location.origin) return;
+  function updateIdentityTexts(){
+    nameText.textContent = nameInput.value.trim() || '터치하여 입력';
+    phoneText.textContent = phoneInput.value || '터치하여 입력';
+    updateReady();
+  }
+  phoneInput.addEventListener('input', ()=>{ phoneInput.value = sanitizePhone(phoneInput.value); updateIdentityTexts(); });
+  nameInput.addEventListener('input', updateIdentityTexts);
+  agreeCheck.addEventListener('change', updateReady);
 
-  // 아이콘 / 폰트 / 로고 등은 캐시 우선
-  event.respondWith(
-    caches.match(request)
-      .then((cached) => {
-        const network = fetch(request)
-          .then((response) => {
-            if (response && response.ok) {
-              const clone = response.clone();
+  function updateReady(){
+    completeBtn.disabled = !(currentManager && nameInput.value.trim() && phoneInput.value.replace(/\D/g,'').length >= 10 && agreeCheck.checked && signatureDataUrl);
+  }
 
-              caches.open(CACHE_NAME)
-                .then((cache) => cache.put(request, clone));
-            }
+  function makeDocNo(){
+    const n = nowParts();
+    const selected = (dateText.textContent || n.date).replace(/-/g,'').slice(2);
+    return `SAF-${selected}-${n.time}`;
+  }
 
-            return response;
-          })
-          .catch(() => cached);
+  async function getPinMap(){
+    const endpoint = (window.NCORE_CONFIG && window.NCORE_CONFIG.appsScriptUrl) || '';
+    if(!endpoint || endpoint.includes('YOUR_APPS_SCRIPT')) throw new Error('Apps Script URL이 설정되지 않았습니다.');
+    const res = await fetch(endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'getPinMap'})});
+    const data = await res.json();
+    if(!data.ok) throw new Error(data.message || 'PIN 정보를 불러오지 못했습니다.');
+    return data.pinMap || [];
+  }
 
-        return cached || network;
-      })
-  );
-});
+  $('#pinConfirmBtn').addEventListener('click', async ()=>{
+    const pin = pinInput.value.trim();
+
+    if(!pin){
+      showToast('PIN 번호를 입력해 주세요.');
+      pinInput.focus();
+      return;
+    }
+
+    try{
+      const pinMap = await getPinMap();
+      const match = pinMap.find(v => String(v.pin) === pin && String(v.active || '').toUpperCase() === 'Y');
+      if(!match){ showToast('사용 가능한 PIN이 아닙니다.'); return; }
+      applyManager(match.name || '');
+      closeModal(pinModal);
+      showToast('담당자 확인 완료');
+    }catch(err){
+      showToast(err.message || 'PIN 확인 실패');
+    }
+  });
+  pinInput.addEventListener('keydown', e=>{ if(e.key==='Enter') $('#pinConfirmBtn').click(); });
+
+  // date modal: default today, editable only before submission
+  dateEditBtn.addEventListener('click', ()=>{
+    if(completed) return;
+    dateInput.value = dateText.textContent || nowParts().date;
+    openModal(dateModal);
+  });
+  $('#closeDateBtn').addEventListener('click', ()=>closeModal(dateModal));
+  $('#dateCancelBtn').addEventListener('click', ()=>closeModal(dateModal));
+  $('#dateApplyBtn').addEventListener('click', ()=>{
+    if(!dateInput.value){ showToast('작성일자를 선택해 주세요.'); return; }
+    dateText.textContent = dateInput.value;
+    closeModal(dateModal);
+  });
+
+  // identity modal
+  ['#openIdentityBtn','#openIdentityBtn2'].forEach(sel=>$(sel).addEventListener('click',()=>openModal(identityModal)));
+  $('#closeIdentityBtn').addEventListener('click', ()=>closeModal(identityModal));
+  $('#identityCancelBtn').addEventListener('click', ()=>closeModal(identityModal));
+  $('#identityApplyBtn').addEventListener('click', ()=>{
+    if(!nameInput.value.trim()){ showToast('성명을 입력해 주세요.'); return; }
+    if(phoneInput.value.replace(/\D/g,'').length < 10){ showToast('연락처를 확인해 주세요.'); return; }
+    updateIdentityTexts();
+    closeModal(identityModal);
+  });
+
+  // signature modal
+  function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.max(window.devicePixelRatio || 1, 2);
+    const old = hasInk ? canvas.toDataURL('image/png') : '';
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = 2.8;
+    if(old){
+      const img = new Image();
+      img.onload = ()=>ctx.drawImage(img,0,0,rect.width,rect.height);
+      img.src = old;
+    }
+  }
+  function openSign(){ openModal(signModal); setTimeout(resizeCanvas,40); }
+  signaturePreview.addEventListener('click', openSign);
+  $('#closeSignBtn').addEventListener('click', ()=>closeModal(signModal));
+  $('#cancelSignBtn').addEventListener('click', ()=>closeModal(signModal));
+  function point(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+  canvas.addEventListener('pointerdown', e=>{ e.preventDefault(); canvas.setPointerCapture(e.pointerId); drawing=true; hasInk=true; signGuide.style.display='none'; const p=point(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
+  canvas.addEventListener('pointermove', e=>{ if(!drawing) return; e.preventDefault(); const p=point(e); ctx.lineTo(p.x,p.y); ctx.stroke(); });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>canvas.addEventListener(ev, ()=>drawing=false));
+  $('#clearSignBtn').addEventListener('click', ()=>{ const r=canvas.getBoundingClientRect(); ctx.clearRect(0,0,r.width,r.height); hasInk=false; signGuide.style.display='block'; });
+  $('#applySignBtn').addEventListener('click', ()=>{
+    if(!hasInk){ showToast('서명을 먼저 작성해 주세요.'); return; }
+    signatureDataUrl = canvas.toDataURL('image/png');
+    signatureImage.src = signatureDataUrl;
+    signaturePreview.classList.remove('empty');
+    signaturePreview.classList.add('has-signature');
+    closeModal(signModal);
+    updateReady();
+  });
+  window.addEventListener('resize', ()=>{ if(signModal.classList.contains('open')) resizeCanvas(); });
+
+  function canvasToBlob(c, type='image/png', quality=1){ return new Promise(resolve => c.toBlob(resolve, type, quality)); }
+  function triggerDownload(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 3000);
+  }
+  async function renderA4(){
+    const clone = paper.cloneNode(true);
+    clone.id = 'capturePaper';
+    clone.classList.add('capture-clone');
+    document.body.appendChild(clone);
+    const img = clone.querySelector('#signatureImage');
+    if(img && signatureDataUrl){ img.src = signatureDataUrl; img.hidden = false; clone.querySelector('#signaturePreview').classList.remove('empty'); }
+    await new Promise(r=>setTimeout(r,80));
+    const c = await html2canvas(clone,{backgroundColor:'#FFFFFF',scale:3.125,useCORS:true,logging:false,width:794,height:1123,windowWidth:794,windowHeight:1123});
+    clone.remove();
+    return c;
+  }
+  async function buildFiles(){
+    const c = await renderA4();
+    const pngBlob = await canvasToBlob(c, 'image/png', 1);
+    const { jsPDF } = window.jspdf || {};
+    if(!jsPDF) throw new Error('PDF 생성 라이브러리를 불러오지 못했습니다.');
+    const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a4', compress:false});
+    pdf.addImage(c.toDataURL('image/png'), 'PNG', 0, 0, 210, 297, undefined, 'FAST');
+    const pdfBlob = pdf.output('blob');
+    const p = nowParts();
+    const safeName = (nameInput.value.trim() || '작성자').replace(/[\/:*?"<>|]/g,'_');
+    const fileBase = `${p.compact}_${safeName}_안전동의서`;
+    generated = { pngBlob, pdfBlob, fileBase, pngUrl:URL.createObjectURL(pngBlob) };
+    return generated;
+  }
+
+  async function uploadToGoogleDrive(files){
+    const endpoint = (window.NCORE_CONFIG && window.NCORE_CONFIG.appsScriptUrl) || '';
+    if(!endpoint || endpoint.includes('YOUR_APPS_SCRIPT')) return {skipped:true};
+    const toBase64 = blob => new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(String(r.result).split(',')[1]); r.onerror=reject; r.readAsDataURL(blob); });
+    const payload = {
+      action:'saveSafetyConsent',
+      documentNo:(docNoText ? docNoText.textContent : ''),
+      manager:currentManager,
+      name:nameInput.value.trim(),
+      phone:phoneInput.value,
+      documentDate:dateText.textContent,
+      createdAt:timestampText.textContent.replace('작성일시: ',''),
+      fileBase:files.fileBase,
+      pdfBase64:await toBase64(files.pdfBlob)
+    };
+    const res = await fetch(endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+    const data = await res.json();
+    if(!data.ok) throw new Error(data.message || '구글드라이브 저장에 실패했습니다.');
+    return data;
+  }
+
+  completeBtn.addEventListener('click', async ()=>{
+    completeBtn.disabled = true;
+    completeBtn.textContent = '저장 중...';
+    try{
+      const n = nowParts();
+      if (docNoText) docNoText.textContent = makeDocNo();
+      timestampText.textContent = `작성일시: ${n.stamp}`;
+      const files = await buildFiles();
+      triggerDownload(files.pngBlob, `${files.fileBase}.png`);
+      triggerDownload(files.pdfBlob, `${files.fileBase}.pdf`);
+      let stateText = '태블릿 저장 완료';
+      try{
+        const drive = await uploadToGoogleDrive(files);
+        stateText = drive.skipped ? '태블릿 저장 완료 · 드라이브 주소 설정 전' : '태블릿 및 구글드라이브 저장 완료';
+      }catch(err){
+        stateText = `태블릿 저장 완료 · 드라이브 저장 실패: ${err.message}`;
+      }
+      completed = true;
+      dateEditBtn.disabled = true;
+      sendSmsBtn.disabled = false;
+      saveState.textContent = stateText;
+      saveState.classList.add('show');
+      showToast('안전동의서가 저장되었습니다.');
+    }catch(err){
+      showToast(err.message || '저장 중 오류가 발생했습니다.');
+    }finally{
+      completeBtn.textContent = '제출하기';
+      updateReady();
+    }
+  });
+  sendSmsBtn.addEventListener('click', async ()=>{
+    if(!completed){ showToast('먼저 제출해 주세요.'); return; }
+    if(!generated.pngBlob) await buildFiles();
+    triggerDownload(generated.pngBlob, `${generated.fileBase}.png`);
+    const number = phoneInput.value.replace(/\D/g,'');
+    const body = '안녕하세요. N-CORE입니다.\n작성하신 안전동의서를 전달드립니다.';
+    setTimeout(()=>{ window.location.href = `sms:${number}?body=${encodeURIComponent(body)}`; }, 450);
+  });
+
+  $('#backToMenuBtn').addEventListener('click', ()=>{ window.location.href = './index.html'; });
+
+  // 견적 프로그램에서 로그인한 담당자를 그대로 이어받습니다.
+  // 담당자 이름이 넘어오면 PIN을 다시 묻지 않습니다.
+  function getStaffFromUrl(){
+    try{
+      const params = new URLSearchParams(window.location.search);
+      return (params.get('staff') || '').trim();
+    }catch(err){ return ''; }
+  }
+
+  function applyManager(name){
+    currentManager = name;
+    pinManagerPreview.textContent = name;
+    managerText.textContent = name;
+    if (managerBadgeText) managerBadgeText.textContent = name;
+    if (pinBadge) pinBadge.textContent = name;
+    updateReady();
+  }
+
+  const handedStaff = getStaffFromUrl();
+  if (handedStaff) {
+    applyManager(handedStaff);
+    closeModal(pinModal);
+  } else {
+    openModal(pinModal);
+    setTimeout(()=>pinInput.focus(),120);
+  }
+  if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+  // v2: 견적 프로그램과 같은 서비스워커를 공유합니다.
+})();
+</script>
+<script>
+  window.NCORE_CONFIG = {
+    appsScriptUrl: 'https://script.google.com/macros/s/AKfycbxah3GxSWRqmco9CXimKaEQtwwz4vWezcR8icExD30Yjsvqm_LzC43e1uJiANeIZSD89g/exec'
+  };
+</script>
+</body>
+</html>
