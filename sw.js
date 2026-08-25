@@ -1,4 +1,4 @@
-const CACHE_NAME = "ncore-field-estimate-pwa-v41";
+const CACHE_NAME = "ncore-field-estimate-pwa-v42";
 
 const CORE_ASSETS = [
   "./",
@@ -16,7 +16,13 @@ const CORE_ASSETS = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(CORE_ASSETS))
+      .then((cache) =>
+        Promise.all(
+          CORE_ASSETS.map((url) =>
+            cache.add(url).catch(() => null)
+          )
+        )
+      )
       .then(() => self.skipWaiting())
   );
 });
@@ -24,60 +30,92 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      ))
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== CACHE_NAME)
+            .map((key) => caches.delete(key))
+        )
+      )
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
+
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
 
-  if (request.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/safety.html")) {
+  /*
+   * index.html / safety.html 등 화면은
+   * 항상 최신 GitHub 파일을 우선 가져온다.
+   */
+  if (
+    request.mode === "navigate" ||
+    url.pathname.endsWith("/index.html") ||
+    url.pathname.endsWith("/safety.html")
+  ) {
     event.respondWith(
-      fetch(request)
+      fetch(request, {
+        cache: "no-store"
+      })
         .then((response) => {
           if (response && response.ok) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+
+            caches.open(CACHE_NAME)
+              .then((cache) => cache.put(request, clone));
           }
+
           return response;
         })
         .catch(async () => {
           return (
-            await caches.match(request, { ignoreSearch: true }) ||
-            await caches.match("./index.html") ||
-            new Response("오프라인 상태입니다.\n인터넷 연결 후 다시 시도해 주세요.", {
-              status: 503,
-              headers: { "Content-Type": "text/plain; charset=utf-8" }
-            })
+            (await caches.match(request, {
+              ignoreSearch: true
+            })) ||
+            (await caches.match("./index.html")) ||
+            new Response(
+              "오프라인 상태입니다.\n인터넷 연결 후 다시 시도해 주세요.",
+              {
+                status: 503,
+                headers: {
+                  "Content-Type": "text/plain; charset=utf-8"
+                }
+              }
+            )
           );
         })
     );
+
     return;
   }
 
-  if (url.origin === self.location.origin) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
+  /*
+   * GitHub 내부 아이콘/폰트/로고 등은 캐시 우선.
+   * Apps Script 같은 외부 도메인은 서비스워커가 건드리지 않는다.
+   */
+  if (url.origin !== self.location.origin) return;
+
+  event.respondWith(
+    caches.match(request)
+      .then((cached) => {
         const network = fetch(request)
           .then((response) => {
             if (response && response.ok) {
               const clone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+
+              caches.open(CACHE_NAME)
+                .then((cache) => cache.put(request, clone));
             }
+
             return response;
           })
           .catch(() => cached);
 
         return cached || network;
       })
-    );
-  }
+  );
 });
