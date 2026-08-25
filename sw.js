@@ -1,4 +1,4 @@
-const CACHE_NAME = "ncore-field-estimate-pwa-v42";
+const CACHE_NAME = "ncore-field-estimate-pwa-v43";
 
 const CORE_ASSETS = [
   "./",
@@ -48,10 +48,7 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  /*
-   * index.html / safety.html 등 화면은
-   * 항상 최신 GitHub 파일을 우선 가져온다.
-   */
+  // index.html / safety.html은 항상 최신 파일 우선
   if (
     request.mode === "navigate" ||
     url.pathname.endsWith("/index.html") ||
@@ -93,12 +90,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /*
-   * GitHub 내부 아이콘/폰트/로고 등은 캐시 우선.
-   * Apps Script 같은 외부 도메인은 서비스워커가 건드리지 않는다.
-   */
+  // Apps Script 등 외부 도메인은 서비스워커가 건드리지 않음
   if (url.origin !== self.location.origin) return;
 
+  // 아이콘 / 폰트 / 로고 등은 캐시 우선
   event.respondWith(
     caches.match(request)
       .then((cached) => {
