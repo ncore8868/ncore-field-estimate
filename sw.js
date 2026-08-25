@@ -1,14 +1,13 @@
 /* =========================================================================
-   N-CORE 서비스워커 v46
+   N-CORE 서비스워커 v48
 
-   index.html 에 애드온 스크립트가 직접 들어갔으므로
-   v45 의 자동 주입 장치는 뺐습니다. 구조가 단순해집니다.
-
-   ncore-estimate-v2.js 는 항상 최신 파일을 먼저 가져옵니다.
-   앞으로 그 파일만 덮어쓰면 캐시 버전을 올리지 않아도 바로 반영됩니다.
+   v47 대비 달라진 점
+   - 새 로고 파일(ncore-logo-v8.png / ncore-watermark-v8.png)을 캐시에 등록
+   - 안전동의서가 쓰는 ncore-logo.png 도 새 로고로 교체되었으므로
+     캐시 이름을 올려 예전 이미지가 남지 않게 합니다.
    ========================================================================= */
 
-const CACHE_NAME = "ncore-field-estimate-pwa-v46";
+const CACHE_NAME = "ncore-field-estimate-pwa-v48";
 
 const CORE_ASSETS = [
   "./",
@@ -18,6 +17,8 @@ const CORE_ASSETS = [
   "./PretendardVariable.woff2",
   "./icon-192-v2.png",
   "./icon-512-v2.png",
+  "./ncore-logo-v8.png",
+  "./ncore-watermark-v8.png",
   "./ncore-dark-logo-v7.png",
   "./ncore-watermark-v7.png",
   "./ncore-logo.png",

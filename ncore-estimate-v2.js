@@ -13,6 +13,7 @@
      3) 시공사 칸에 회사 도장을 항상 자동으로 찍습니다.
      4) 발주자 칸을 누르면 서명 패드가 떠서 고객이 직접 서명합니다.
      5) 서명본 PDF 를 구글드라이브 01_견적서 폴더에 저장합니다.
+     6) 안드로이드 뒤로가기로 앱이 꺼지지 않고 직전 화면으로 돌아갑니다.
 
    왜 통짜 수정이 아니라 별도 파일인가
      index.html 의 기존 함수는 전역에 선언되어 있어서, 나중에 읽히는
@@ -46,6 +47,8 @@
 
   const VAT_RATE = 0.1;
   const STAMP_FILE = "./ncore-stamp.png";
+  const LOGO_FILE = "./ncore-logo-v8.png";
+  const MARK_FILE = "./ncore-watermark-v8.png";
 
   const TERMS = [
     "공사 착수 전 총 계약금액의 50%를 계약금으로 선입금하며, 입금 확인 후 공사를 진행합니다.",
@@ -351,11 +354,11 @@
 
     return '' +
       '<section ' + idAttr + ' class="nc2-paper' + density + '">' +
-        '<img class="nc2-watermark" src="./ncore-watermark-v7.png" alt="" aria-hidden="true" />' +
+        '<img class="nc2-watermark" src="' + MARK_FILE + '" alt="" aria-hidden="true" />' +
 
         /* 머리 */
         '<header class="nc2-head">' +
-          '<img class="nc2-logo" src="./ncore-dark-logo-v7.png" alt="N-CORE" />' +
+          '<img class="nc2-logo" src="' + LOGO_FILE + '" alt="N-CORE" />' +
           '<h1 class="nc2-title">견 적 서</h1>' +
         "</header>" +
 
@@ -812,6 +815,106 @@
   }
 
   /* ---------------------------------------------------------------
+     11-2. 안드로이드 뒤로가기
+     갤럭시 뒤로가기 버튼을 누르면 앱이 통째로 꺼지던 문제를 잡습니다.
+     화면을 옮길 때마다 방문기록을 한 칸씩 쌓아 두고,
+     뒤로가기가 눌리면 앱이 닫히는 대신 직전 화면으로 되돌립니다.
+     - 창(모달)이 떠 있으면 창만 닫습니다.
+     - 메인 메뉴에서 누르면 원래대로 앱이 종료됩니다.
+     - 서명이 끝난 견적서에서는 되돌아가지 않습니다.
+     --------------------------------------------------------------- */
+  const origShowPage = window.showPage;
+  const origShowScreen = window.showScreen;
+  const origShowLogin = window.showLoginScreen;
+
+  let navStack = [];
+  let navIndex = -1;
+  let navSuppress = false;
+
+  function sameView(a, b) {
+    return !!a && !!b && a.type === b.type && String(a.value) === String(b.value);
+  }
+
+  function recordView(view) {
+    if (navSuppress) return;
+    if (sameView(navStack[navIndex], view)) return;
+
+    navStack = navStack.slice(0, navIndex + 1);
+    navStack.push(view);
+    navIndex = navStack.length - 1;
+
+    const entry = { nc: true, i: navIndex };
+    // 첫 화면은 방문기록을 새로 쌓지 않습니다.
+    // 여기서 뒤로가기를 누르면 원래대로 앱이 닫혀야 하기 때문입니다.
+    if (navIndex === 0) history.replaceState(entry, "");
+    else history.pushState(entry, "");
+  }
+
+  function applyView(view) {
+    navSuppress = true;
+    try {
+      if (view.type === "page") origShowPage(Number(view.value));
+      else origShowScreen(String(view.value));
+    } finally {
+      navSuppress = false;
+    }
+  }
+
+  function openModalCount() {
+    return document.querySelector(".modal-backdrop.show");
+  }
+
+  function initBackNav() {
+    if (typeof origShowPage !== "function" || typeof origShowScreen !== "function") return;
+
+    window.showPage = function (pageNo) {
+      const result = origShowPage.apply(this, arguments);
+      recordView({ type: "page", value: pageNo });
+      return result;
+    };
+
+    window.showScreen = function (id) {
+      const result = origShowScreen.apply(this, arguments);
+      recordView({ type: "screen", value: id });
+      return result;
+    };
+
+    if (typeof origShowLogin === "function") {
+      window.showLoginScreen = function () {
+        navStack = [];
+        navIndex = -1;
+        return origShowLogin.apply(this, arguments);
+      };
+    }
+
+    window.addEventListener("popstate", function (event) {
+      // 1) 창이 떠 있으면 창만 닫습니다.
+      const modal = openModalCount();
+      if (modal) {
+        modal.classList.remove("show");
+        history.pushState({ nc: true, i: Math.max(navIndex, 0) }, "");
+        return;
+      }
+
+      const entry = event.state;
+      if (!entry || !entry.nc) return;
+
+      // 2) 서명이 끝난 견적서는 금액이 바뀌면 안 되므로 되돌아가지 않습니다.
+      const now = navStack[navIndex];
+      if (isSigned() && now && now.type === "page" && Number(now.value) === 5) {
+        history.pushState({ nc: true, i: navIndex }, "");
+        return;
+      }
+
+      const target = navStack[entry.i];
+      if (!target) return;
+
+      navIndex = entry.i;
+      applyView(target);
+    });
+  }
+
+  /* ---------------------------------------------------------------
      12. 스타일
      --------------------------------------------------------------- */
   const CSS = `
@@ -823,7 +926,7 @@
     display:flex;flex-direction:column;isolation:isolate;}
   .nc2-paper *{box-sizing:border-box;}
   .nc2-watermark{position:absolute;left:50%;top:52%;width:440px;max-height:170px;
-    transform:translate(-50%,-50%);object-fit:contain;opacity:.035;filter:grayscale(1);
+    transform:translate(-50%,-50%);object-fit:contain;opacity:.06;
     z-index:0;pointer-events:none;}
   .nc2-paper > *:not(.nc2-watermark){position:relative;z-index:1;}
 
@@ -971,6 +1074,7 @@
     injectSignedButton();
     buildSignModal();
     loadStamp();
+    initBackNav();
   }
 
   if (document.readyState === "loading") {
