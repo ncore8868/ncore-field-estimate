@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#D76016" />
+  <title>N-CORE 견적서 서명</title>
+
+  <style>
+    /* Pretendard 는 index.html 과 같은 폴더의 파일을 씁니다. */
+    @font-face {
+      font-family: "NCorePretendard";
+      src: local("Pretendard Variable"), local("Pretendard"),
+           url("./PretendardVariable.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 45 920;
+      font-display: swap;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0;
+      background: #F2F2F0;
+      color: #111;
+      font-family: "NCorePretendard", "Pretendard", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .wrap {
+      width: min(860px, 100%);
+      margin: 0 auto;
+      padding: 14px 12px calc(24px + env(safe-area-inset-bottom));
+      display: grid;
+      gap: 12px;
+    }
+
+    .head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid rgba(17,17,17,.1);
+      box-shadow: 0 8px 20px rgba(17,17,17,.05);
+    }
+
+    .head img { width: 132px; height: auto; display: block; }
+
+    .head-text { min-width: 0; }
+    .head-title { font-size: 16px; font-weight: 950; letter-spacing: -.6px; }
+    .head-sub { margin-top: 3px; font-size: 12px; font-weight: 750; color: #777; }
+
+    .paper-shell {
+      padding: 8px;
+      border-radius: 18px;
+      background: #E6E6E3;
+      border: 1px solid rgba(17,17,17,.08);
+      box-shadow: 0 10px 26px rgba(17,17,17,.08);
+    }
+
+    .paper-inner { background: #fff; overflow: hidden; }
+
+    .panel {
+      padding: 16px;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid rgba(17,17,17,.1);
+      box-shadow: 0 8px 20px rgba(17,17,17,.05);
+      display: grid;
+      gap: 12px;
+    }
+
+    .amount-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 850;
+      color: #666;
+    }
+
+    .amount-row strong { color: #111; font-weight: 950; }
+
+    .amount-row.grand {
+      padding-top: 10px;
+      border-top: 1px solid rgba(17,17,17,.12);
+      font-size: 16px;
+    }
+
+    .amount-row.grand strong { font-size: 22px; color: #B94E0D; letter-spacing: -.6px; }
+
+    .guide {
+      padding: 13px 15px;
+      border-radius: 14px;
+      background: #FFF6EF;
+      border: 1px solid rgba(215,96,22,.18);
+      color: #7A4014;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.55;
+      word-break: keep-all;
+    }
+
+    .btn {
+      width: 100%;
+      min-height: 60px;
+      border: 0;
+      border-radius: 18px;
+      background: #D76016;
+      color: #fff;
+      font-family: inherit;
+      font-size: 19px;
+      font-weight: 950;
+      letter-spacing: -.4px;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(215,96,22,.2);
+      transition: transform .08s ease, opacity .08s ease;
+    }
+
+    .btn:active { transform: scale(.99); opacity: .94; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+    .btn.ghost {
+      background: #fff;
+      color: #333;
+      border: 1px solid rgba(17,17,17,.14);
+      box-shadow: none;
+      min-height: 52px;
+      font-size: 16px;
+    }
+
+    .status {
+      min-height: 20px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.5;
+      color: #777;
+      word-break: keep-all;
+    }
+
+    .status.error { color: #C0392B; }
+    .status.done { color: #1F7A4D; }
+
+    .state-box {
+      padding: 40px 22px;
+      text-align: center;
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .state-title { font-size: 22px; font-weight: 950; letter-spacing: -.8px; }
+    .state-text { font-size: 14px; font-weight: 780; line-height: 1.6; color: #777; word-break: keep-all; }
+
+    .spinner {
+      width: 34px; height: 34px;
+      border: 4px solid rgba(215,96,22,.18);
+      border-top-color: #D76016;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .done-mark {
+      width: 62px; height: 62px;
+      border-radius: 50%;
+      background: #1F7A4D;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 900;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+    <header class="head">
+      <img src="./ncore-logo-v8.png" alt="N-CORE" />
+      <div class="head-text">
+        <div class="head-title">현장 견적서</div>
+        <div class="head-sub" id="headSub">불러오는 중입니다.</div>
+      </div>
+    </header>
+
+    <!-- 불러오는 중 / 오류 -->
+    <section class="panel" id="statePanel">
+      <div class="state-box">
+        <div class="spinner" id="stateSpinner"></div>
+        <div class="state-title" id="stateTitle">견적서를 불러오는 중입니다</div>
+        <div class="state-text" id="stateText">잠시만 기다려 주세요.</div>
+      </div>
+    </section>
+
+    <!-- 견적서 -->
+    <section class="paper-shell hidden" id="paperShell">
+      <div class="paper-inner" id="paperHost"></div>
+    </section>
+
+    <!-- 금액 / 서명 -->
+    <section class="panel hidden" id="actionPanel">
+      <div class="amount-row"><span>공급가액</span><strong id="sumSupply">-</strong></div>
+      <div class="amount-row"><span>부가세 10%</span><strong id="sumVat">-</strong></div>
+      <div class="amount-row grand"><span>총 계</span><strong id="sumTotal">-</strong></div>
+
+      <div class="guide" id="guideBox">
+        견적 내용을 확인하신 뒤 아래 버튼을 눌러 서명해 주세요.<br />
+        서명하시면 시공사에 자동으로 전달됩니다.
+      </div>
+
+      <button type="button" class="btn" id="signBtn">서명하기</button>
+      <button type="button" class="btn ghost hidden" id="resignBtn">서명 다시 하기</button>
+      <button type="button" class="btn hidden" id="submitBtn">서명 제출하기</button>
+
+      <div class="status" id="statusText"></div>
+    </section>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="./ncore-doc.js"></script>
+
+  <script>
+    /* =====================================================================
+       고객 폰 서명 페이지
+
+       주소 형식
+         sign.html?code=NC-260825-001&t=토큰
+
+       토큰이 없거나 틀리면 서버가 견적서를 내려주지 않습니다.
+       견적번호가 규칙적이라 번호만으로는 열리지 않게 막는 장치입니다.
+       ===================================================================== */
+
+    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwvhO1d-3uVHNqJJWszSt9t3NyTPP6MJ7ftnHMTD0Dwo0iWrGDBe7qH8k2dRiaSn62y-Q/exec";
+
+    const D = window.NCoreDoc;
+    const params = new URLSearchParams(location.search);
+    const CODE = (params.get("code") || "").trim();
+    const TOKEN = (params.get("t") || "").trim();
+
+    let docData = null;
+    let signature = null;
+    let submitted = false;
+
+    const el = (id) => document.getElementById(id);
+
+    /* ---------- 서버 통신 ---------- */
+    const JSONP_TIMEOUT = 30000;
+
+    function jsonpOnce(query, timeout) {
+      return new Promise((resolve, reject) => {
+        const name = "ncoreSign_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+        const script = document.createElement("script");
+        let done = false;
+
+        const timer = setTimeout(() => {
+          if (done) return;
+          cleanup();
+          reject(new Error("서버 응답이 늦습니다."));
+        }, timeout);
+
+        function cleanup() {
+          done = true;
+          clearTimeout(timer);
+          window[name] = function () {};
+          setTimeout(() => { try { delete window[name]; } catch (e) { window[name] = undefined; } }, 60000);
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[name] = (data) => { if (done) return; cleanup(); resolve(data || {}); };
+
+        const q = new URLSearchParams({ ...query, callback: name, t2: String(Date.now()) });
+        script.src = GOOGLE_SHEET_API_URL + "?" + q.toString();
+        script.onerror = () => { if (done) return; cleanup(); reject(new Error("서버에 연결하지 못했습니다.")); };
+        document.body.appendChild(script);
+      });
+    }
+
+    async function jsonpRequest(query) {
+      let lastError = null;
+      for (let i = 0; i < 2; i++) {
+        try { return await jsonpOnce(query, JSONP_TIMEOUT); }
+        catch (err) {
+          lastError = err;
+          if (i === 0) await new Promise(r => setTimeout(r, 700));
+        }
+      }
+      throw lastError || new Error("서버 응답이 없습니다.");
+    }
+
+    /* ---------- 화면 ---------- */
+    function showState(title, text, opts) {
+      const o = opts || {};
+      el("stateSpinner").classList.toggle("hidden", !o.loading);
+      el("stateTitle").textContent = title;
+      el("stateTitle").style.color = o.error ? "#C0392B" : "#111";
+      el("stateText").innerHTML = text;
+      el("statePanel").classList.remove("hidden");
+      el("paperShell").classList.add("hidden");
+      el("actionPanel").classList.add("hidden");
+      el("headSub").textContent = o.error ? "열 수 없는 견적서입니다." : "불러오는 중입니다.";
+    }
+
+    function renderPaper() {
+      const data = Object.assign({}, docData, {
+        sign: signature || {},
+        signable: false   // 종이 위 터치 대신 아래 큰 버튼을 씁니다.
+      });
+
+      const host = el("paperHost");
+      host.innerHTML = D.screenShell(D.buildDoc(data, ""));
+      D.fitScreenDoc(host.querySelector(".nc2-screen-host"), null);
+    }
+
+    window.addEventListener("resize", function () {
+      const host = el("paperHost").querySelector(".nc2-screen-host");
+      if (host) D.fitScreenDoc(host, null);
+    });
+
+    /* ---------- 불러오기 ---------- */
+    async function load() {
+      D.injectStyle();
+
+      if (!CODE || !TOKEN) {
+        showState("주소가 올바르지 않습니다",
+          "문자로 받으신 링크를 다시 눌러 주세요.<br />주소를 직접 입력하면 열리지 않습니다.",
+          { error: true });
+        return;
+      }
+
+      showState("견적서를 불러오는 중입니다", "잠시만 기다려 주세요.", { loading: true });
+
+      try {
+        const result = await jsonpRequest({ action: "signDoc", code: CODE, t: TOKEN });
+
+        if (!result || !result.ok) {
+          showState("견적서를 열 수 없습니다",
+            (result && result.message ? result.message : "링크가 만료되었거나 올바르지 않습니다.") +
+            "<br />담당자에게 문의해 주세요.",
+            { error: true });
+          return;
+        }
+
+        docData = result.doc || {};
+
+        // 이미 서명이 끝난 건이면 서명본 상태로만 보여 줍니다.
+        if (result.signed) {
+          signature = { dataUrl: result.signImage || "", signedAt: result.signedAt || "" };
+          D.loadStamp(function () { if (docData) renderPaper(); });
+          showAfterLoad();
+          markDone("이미 서명이 완료된 견적서입니다.",
+            result.signedAt ? ("서명일시 " + result.signedAt) : "");
+          return;
+        }
+
+        D.loadStamp(function () { if (docData) renderPaper(); });
+        showAfterLoad();
+      } catch (err) {
+        console.error(err);
+        showState("연결에 실패했습니다",
+          "인터넷 상태를 확인한 뒤 링크를 다시 눌러 주세요.", { error: true });
+      }
+    }
+
+    function showAfterLoad() {
+      el("statePanel").classList.add("hidden");
+      el("paperShell").classList.remove("hidden");
+      el("actionPanel").classList.remove("hidden");
+
+      el("headSub").textContent =
+        (docData.customerName || "-") + " 귀하 · " + (docData.code || "");
+
+      el("sumSupply").textContent = D.num(docData.supply) + "원";
+      el("sumVat").textContent = D.num(docData.vat) + "원";
+      el("sumTotal").textContent = D.num(docData.total) + "원";
+
+      renderPaper();
+    }
+
+    /* ---------- 서명 ---------- */
+    el("signBtn").addEventListener("click", function () {
+      D.openSignPad(function (result) {
+        signature = result;
+        renderPaper();
+        el("signBtn").classList.add("hidden");
+        el("resignBtn").classList.remove("hidden");
+        el("submitBtn").classList.remove("hidden");
+        el("guideBox").innerHTML =
+          "서명이 견적서에 들어갔습니다.<br />아래 <strong>서명 제출하기</strong>를 눌러야 시공사에 전달됩니다.";
+        el("paperShell").scrollIntoView({ behavior: "smooth", block: "end" });
+      });
+    });
+
+    el("resignBtn").addEventListener("click", function () {
+      D.openSignPad(function (result) {
+        signature = result;
+        renderPaper();
+      });
+    });
+
+    /* ---------- 제출 ---------- */
+    el("submitBtn").addEventListener("click", async function () {
+      if (submitted || !signature) return;
+
+      const btn = el("submitBtn");
+      const status = el("statusText");
+
+      btn.disabled = true;
+      el("resignBtn").disabled = true;
+      btn.textContent = "서명본 만드는 중...";
+      status.className = "status";
+      status.textContent = "잠시만 기다려 주세요.";
+
+      try {
+        const data = Object.assign({}, docData, { sign: signature, signable: false });
+        const blob = await D.makePdfBlob(data);
+        const base64 = await D.blobToBase64(blob);
+
+        btn.textContent = "전송 중...";
+        status.textContent = "시공사에 전달하고 있습니다.";
+
+        const response = await fetch(GOOGLE_SHEET_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "saveSignature",
+            code: CODE,
+            t: TOKEN,
+            signedAt: signature.signedAt,
+            signImage: signature.dataUrl,
+            pdfBase64: base64
+          })
+        });
+
+        const result = await response.json();
+        if (!result || !result.ok) {
+          throw new Error((result && result.message) || "전송하지 못했습니다.");
+        }
+
+        submitted = true;
+        markDone("서명이 완료되었습니다.", "서명일시 " + (signature.signedAt || ""));
+      } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+        el("resignBtn").disabled = false;
+        btn.textContent = "서명 제출하기";
+        status.className = "status error";
+        status.textContent = err.message || "전송에 실패했습니다. 잠시 후 다시 눌러 주세요.";
+      }
+    });
+
+    function markDone(title, sub) {
+      el("signBtn").classList.add("hidden");
+      el("resignBtn").classList.add("hidden");
+      el("submitBtn").classList.add("hidden");
+
+      el("guideBox").outerHTML =
+        '<div class="state-box">' +
+          '<div class="done-mark">✓</div>' +
+          '<div class="state-title">' + title + "</div>" +
+          '<div class="state-text">' + (sub || "") +
+            "<br />시공사에서 곧 연락드립니다.</div>" +
+        "</div>";
+
+      const status = el("statusText");
+      status.className = "status done";
+      status.textContent = "이 화면은 닫으셔도 됩니다.";
+    }
+
+    load();
+  </script>
+</body>
+</html>

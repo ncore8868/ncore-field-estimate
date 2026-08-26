@@ -1,27 +1,26 @@
 /* =========================================================================
-   N-CORE 서비스워커 v48
+   N-CORE 서비스워커 v49
 
-   v47 대비 달라진 점
-   - 새 로고 파일(ncore-logo-v8.png / ncore-watermark-v8.png)을 캐시에 등록
-   - 안전동의서가 쓰는 ncore-logo.png 도 새 로고로 교체되었으므로
-     캐시 이름을 올려 예전 이미지가 남지 않게 합니다.
+   v48 대비 달라진 점
+   - 견적서 서식 공용 파일(ncore-doc.js)과
+     고객 폰 서명 페이지(sign.html)를 캐시·최신우선 목록에 추가
    ========================================================================= */
 
-const CACHE_NAME = "ncore-field-estimate-pwa-v48";
+const CACHE_NAME = "ncore-field-estimate-pwa-v49";
 
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./safety.html",
+  "./sign.html",
   "./manifest.webmanifest",
   "./PretendardVariable.woff2",
   "./icon-192-v2.png",
   "./icon-512-v2.png",
   "./ncore-logo-v8.png",
   "./ncore-watermark-v8.png",
-  "./ncore-dark-logo-v7.png",
-  "./ncore-watermark-v7.png",
   "./ncore-logo.png",
+  "./ncore-doc.js",
   "./ncore-estimate-v2.js",
   "./ncore-stamp.png"
 ];
@@ -80,11 +79,13 @@ self.addEventListener("fetch", (event) => {
   // Apps Script 등 외부 도메인은 서비스워커가 건드리지 않습니다.
   if (url.origin !== self.location.origin) return;
 
-  // HTML 과 애드온 스크립트는 항상 최신 우선
+  // HTML 과 스크립트는 항상 최신 우선
   if (
     request.mode === "navigate" ||
     url.pathname.endsWith("/index.html") ||
     url.pathname.endsWith("/safety.html") ||
+    url.pathname.endsWith("/sign.html") ||
+    url.pathname.endsWith("/ncore-doc.js") ||
     url.pathname.endsWith("/ncore-estimate-v2.js")
   ) {
     event.respondWith(networkFirst(request));
