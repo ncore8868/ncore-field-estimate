@@ -241,9 +241,33 @@
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwvhO1d-3uVHNqJJWszSt9t3NyTPP6MJ7ftnHMTD0Dwo0iWrGDBe7qH8k2dRiaSn62y-Q/exec";
 
     const D = window.NCoreDoc;
+    /* 주소에서 견적번호와 토큰을 꺼냅니다.
+       문자 앱이 & 를 만나면 링크를 잘라 버리는 경우가 있어
+       기본 형식은 k=견적번호.토큰 하나로 보냅니다.
+       예전에 보낸 code=..&t=.. 형식도 계속 열리게 함께 지원합니다. */
     const params = new URLSearchParams(location.search);
-    const CODE = (params.get("code") || "").trim();
-    const TOKEN = (params.get("t") || "").trim();
+
+    let CODE = (params.get("code") || "").trim();
+    let TOKEN = (params.get("t") || "").trim();
+
+    const packed = (params.get("k") || "").trim();
+    if (packed) {
+      const dot = packed.lastIndexOf(".");
+      if (dot > 0) {
+        CODE = packed.slice(0, dot);
+        TOKEN = packed.slice(dot + 1);
+      }
+    }
+
+    // 해시(#)로 들어온 경우도 받아 줍니다.
+    if (!CODE && location.hash) {
+      const hashPacked = location.hash.replace(/^#k?=?/, "").trim();
+      const dot = hashPacked.lastIndexOf(".");
+      if (dot > 0) {
+        CODE = hashPacked.slice(0, dot);
+        TOKEN = hashPacked.slice(dot + 1);
+      }
+    }
 
     let docData = null;
     let signature = null;
@@ -329,8 +353,12 @@
       D.injectStyle();
 
       if (!CODE || !TOKEN) {
+        const got = (location.search || location.hash || "").slice(0, 120);
         showState("주소가 올바르지 않습니다",
-          "문자로 받으신 링크를 다시 눌러 주세요.<br />주소를 직접 입력하면 열리지 않습니다.",
+          "문자로 받으신 링크를 <strong>끝까지</strong> 눌러 주세요.<br />" +
+          "링크가 잘린 경우 담당자에게 다시 요청해 주세요." +
+          (got ? '<br /><span style="font-size:11px;color:#aaa;word-break:break-all;">받은 주소: ' +
+                 got.replace(/</g, "&lt;") + "</span>" : ""),
           { error: true });
         return;
       }

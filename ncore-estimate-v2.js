@@ -350,6 +350,35 @@
     return location.origin + path + "sign.html";
   }
 
+  /* 링크에 & 가 들어가면 문자 앱이 링크를 그 앞에서 잘라 버립니다.
+     그래서 견적번호와 토큰을 점으로 이어 하나의 값으로 보냅니다. */
+  function buildSignLink(code, token) {
+    return getSignBaseUrl() + "?k=" + encodeURIComponent(code + "." + token);
+  }
+
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) { /* 아래 방법으로 다시 시도합니다 */ }
+
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
+    } catch (e) { return false; }
+  }
+
   async function sendSignLink() {
     const btn = document.getElementById("nc2SignLinkBtn");
     const status = document.getElementById("pdfActionStatus");
@@ -372,20 +401,26 @@
         throw new Error((result && result.message) || "서명 링크를 만들지 못했습니다.");
       }
 
-      const link = getSignBaseUrl() + "?code=" + encodeURIComponent(code) + "&t=" + encodeURIComponent(result.token);
+      const link = buildSignLink(code, result.token);
+      lastSignLink = link;
 
+      // 문자가 막히면 카톡에 붙여넣을 수 있도록 클립보드에 미리 담아 둡니다.
+      await copyText(link);
+
+      // 링크는 반드시 마지막 줄에 혼자 두어야 문자 앱이 끝까지 인식합니다.
       const body =
         "[N-CORE] 현장 견적서가 도착했습니다.\n" +
         "총 " + D.num(grandTotal()) + "원 (부가세 포함)\n" +
-        "아래 링크에서 내용을 확인하고 서명해 주세요.\n" + link;
+        "아래 링크에서 내용을 확인하고 서명해 주세요.\n" +
+        link;
 
-      if (status) status.textContent = "문자 앱을 여는 중입니다.";
+      if (status) status.textContent = "문자 앱을 여는 중입니다. 링크는 복사도 해 두었습니다.";
       window.location.href = "sms:" + phone + "?body=" + encodeURIComponent(body);
 
       setTimeout(function () {
         btn.disabled = false;
         btn.textContent = "고객 폰으로 서명 링크 보내기";
-        if (status) status.textContent = "고객이 서명하면 견적대장에 자동으로 기록됩니다.";
+        showLinkBox(link);
       }, 1200);
     } catch (err) {
       console.error(err);
@@ -394,6 +429,35 @@
       if (status) status.textContent = "서명 링크를 만들지 못했습니다.";
       alert(err.message || "서명 링크를 만들지 못했습니다.");
     }
+  }
+
+  /* 만들어진 링크를 화면에도 남겨 둡니다.
+     문자가 실패했을 때 카톡 등으로 직접 보낼 수 있게 하기 위함입니다. */
+  let lastSignLink = "";
+
+  function showLinkBox(link) {
+    const holder = document.querySelector("#page5 .estimate-pdf-actions");
+    if (!holder) return;
+
+    let box = document.getElementById("nc2LinkBox");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "nc2LinkBox";
+      box.className = "nc2-link-box";
+      holder.appendChild(box);
+    }
+
+    box.innerHTML =
+      '<div class="nc2-link-label">서명 링크 (복사됨)</div>' +
+      '<div class="nc2-link-url">' + D.esc(link) + "</div>" +
+      '<button type="button" class="estimate-pdf-btn secondary" id="nc2LinkCopyBtn">링크 다시 복사</button>';
+
+    document.getElementById("nc2LinkCopyBtn").addEventListener("click", async function () {
+      const ok = await copyText(lastSignLink);
+      this.textContent = ok ? "복사되었습니다" : "복사하지 못했습니다";
+      const self = this;
+      setTimeout(function () { self.textContent = "링크 다시 복사"; }, 1600);
+    });
   }
 
   /* ---------------------------------------------------------------
@@ -611,6 +675,11 @@
   .nc2-amount-grand{padding-top:8px;border-top:1px solid rgba(17,17,17,.12);font-size:15px;}
   .nc2-amount-grand strong{font-size:20px;color:#B94E0D;letter-spacing:-.5px;}
   #page5 .estimate-pdf-actions.single-action{display:grid !important;gap:9px;}
+  .nc2-link-box{display:grid;gap:7px;padding:12px 13px;border-radius:14px;
+    background:#FFF8F3;border:1px solid rgba(215,96,22,.18);}
+  .nc2-link-label{font-size:11.5px;font-weight:900;color:#B94E0D;}
+  .nc2-link-url{font-size:11px;font-weight:750;color:#555;line-height:1.45;
+    word-break:break-all;}
   `;
 
   function injectExtraStyle() {
