@@ -14,6 +14,8 @@
      5) 서명본 PDF 를 구글드라이브 01_견적서 폴더에 저장합니다.
      6) 고객 폰으로 서명 링크를 문자 발송합니다. (sign.html)
      7) 안드로이드 뒤로가기로 앱이 꺼지지 않고 직전 화면으로 돌아갑니다.
+     8) [v3] 저장 확인창에서 같은 연락처의 기존 현장을 찾아 알려 줍니다.
+     9) [v3] 안전동의서로 넘어갈 때 지금 보고 있는 현장을 함께 넘깁니다.
 
    index.html 의 기존 함수를 덮어쓰는 방식이라
    문제가 생기면 이 파일을 읽는 <script> 한 줄만 빼면 원래대로 돌아갑니다.
@@ -689,6 +691,25 @@
     word-break:break-all;}
   .nc2-open-link{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;
     background:#D76016;color:#fff;font-size:11px;font-weight:900;text-decoration:none;}
+
+  /* v3: 같은 연락처 현장 경고 */
+  .nc2-dup-box{margin:0 0 14px;padding:13px 15px;border-radius:14px;
+    background:#FDF1EF;border:1px solid rgba(192,57,43,.26);}
+  .nc2-dup-title{font-size:14.5px;font-weight:950;color:#C0392B;letter-spacing:-.3px;
+    margin-bottom:8px;}
+  .nc2-dup-row{padding:8px 10px;margin-bottom:6px;border-radius:10px;background:#FFFFFF;
+    border:1px solid rgba(17,17,17,.08);}
+  .nc2-dup-code{font-size:11.5px;font-weight:900;color:#C0392B;
+    font-variant-numeric:tabular-nums;}
+  .nc2-dup-name{font-size:13.5px;font-weight:900;color:#111;line-height:1.3;
+    margin-top:2px;word-break:keep-all;}
+  .nc2-dup-sub{font-size:11.5px;font-weight:800;color:#777;margin-top:2px;}
+  .nc2-dup-help{font-size:12.5px;font-weight:800;color:#5A2A24;line-height:1.5;
+    word-break:keep-all;margin-top:4px;}
+  .nc2-dup-btn{width:100%;min-height:46px;margin-top:10px;border:0;border-radius:12px;
+    background:#C0392B;color:#fff;font-size:14px;font-weight:900;cursor:pointer;
+    font-family:inherit;}
+  .nc2-dup-btn:active{transform:scale(.99);}
   `;
 
   function injectExtraStyle() {
@@ -1048,7 +1069,157 @@
   }
 
   /* ---------------------------------------------------------------
-     15. 시작
+     15. [v3] 같은 연락처 현장 알림
+
+     저장 확인창이 뜨면 같은 연락처로 접수된 현장이 있는지 조용히 찾아보고,
+     있으면 확인창 맨 위에 알려 줍니다.
+
+     ★ 저장을 막지는 않습니다.
+       같은 고객이 다른 현장을 또 맡기는 경우도 있어서
+       자동으로 추가견적으로 바꾸면 오히려 위험합니다.
+       판단은 사람이 하고, 프로그램은 놓치지 않게만 해 줍니다.
+     --------------------------------------------------------------- */
+  function dupBox() {
+    const modal = document.getElementById("saveConfirmModal");
+    if (!modal) return null;
+    const text = modal.querySelector(".modal-text");
+    if (!text) return null;
+
+    let box = document.getElementById("nc2DupBox");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "nc2DupBox";
+      box.className = "nc2-dup-box";
+      box.style.display = "none";
+      text.insertBefore(box, text.firstChild);
+    }
+    return box;
+  }
+
+  function hideDupBox() {
+    const box = document.getElementById("nc2DupBox");
+    if (box) { box.style.display = "none"; box.innerHTML = ""; }
+  }
+
+  function dupStateText(row) {
+    const contract = String(row.contractStatus || "").trim();
+    if (contract) return contract;
+    return String(row.progress || "").trim() || "진행 중";
+  }
+
+  async function checkDuplicatePhone() {
+    // 이미 추가견적으로 작성 중이면 물어볼 것이 없습니다.
+    if (state.addon && state.addon.baseCode) { hideDupBox(); return; }
+
+    const phone = String(state.project.phone || "").replace(/\D/g, "");
+    if (phone.length < 9) { hideDupBox(); return; }
+
+    const modal = document.getElementById("saveConfirmModal");
+    if (!modal || !modal.classList.contains("show")) return;
+
+    let rows = [];
+    try {
+      const result = await jsonpRequest({ action: "findByPhone", phone: phone, limit: "5" });
+      rows = (result && result.ok && result.rows) ? result.rows : [];
+    } catch (err) {
+      // 조회에 실패해도 저장은 그대로 진행되어야 합니다.
+      console.warn("연락처 조회 실패", err);
+      return;
+    }
+
+    // 지금 작성 중인 건 자신은 뺍니다.
+    const myCode = state.estimateCode || "";
+    rows = rows.filter(function (row) { return row.code !== myCode; });
+
+    // 그새 창을 닫았으면 그립니다 마시고 끝냅니다.
+    if (!modal.classList.contains("show")) return;
+    if (!rows.length) { hideDupBox(); return; }
+
+    const box = dupBox();
+    if (!box) return;
+
+    box.innerHTML =
+      '<div class="nc2-dup-title">⚠ 같은 연락처의 현장이 이미 있습니다</div>' +
+      rows.map(function (row) {
+        return '<div class="nc2-dup-row">' +
+          '<div class="nc2-dup-code">' + D.esc(row.code) + "</div>" +
+          '<div class="nc2-dup-name">' + D.esc(row.customerName || "-") + " · " +
+            D.esc(row.address || "-") + "</div>" +
+          '<div class="nc2-dup-sub">' + D.esc(String(row.savedAt || "").slice(0, 10)) +
+            " · " + D.esc(dupStateText(row)) +
+            (row.addonCount ? " · 추가견적 " + row.addonCount + "건" : "") + "</div>" +
+        "</div>";
+      }).join("") +
+      '<div class="nc2-dup-help">같은 현장의 <b>추가 공사</b>라면 여기서 저장하지 마시고 ' +
+        "추가견적으로 작성해 주세요. 다른 현장이면 그대로 저장하시면 됩니다.</div>" +
+      '<button type="button" class="nc2-dup-btn" id="nc2DupGoBtn">추가견적으로 작성하기</button>';
+
+    box.style.display = "block";
+
+    document.getElementById("nc2DupGoBtn").addEventListener("click", function () {
+      const ok = window.confirm(
+        "지금 입력한 내용은 저장하지 않고 추가견적 화면으로 이동합니다.\n\n" +
+        "이동하시겠습니까?"
+      );
+      if (!ok) return;
+      modal.classList.remove("show");
+      hideDupBox();
+      showScreen("pageAddonList");
+      loadAddonBases();
+    });
+  }
+
+  function hookSaveConfirm() {
+    // 확인창이 열릴 때마다 조용히 확인합니다.
+    wrap("openSaveConfirmModal", function () {
+      hideDupBox();
+      setTimeout(function () { checkDuplicatePhone(); }, 30);
+    });
+
+    // 저장하거나 수정하러 나가면 알림을 지웁니다.
+    ["saveConfirm", "saveEditInfo"].forEach(function (id) {
+      const btn = document.getElementById(id);
+      if (btn) btn.addEventListener("click", hideDupBox);
+    });
+  }
+
+  /* ---------------------------------------------------------------
+     16. [v3] 안전동의서로 현장 넘기기
+
+     지금 보고 있는 현장이 있으면 안전동의서 화면에 함께 넘겨
+     현장을 두 번 고르지 않게 합니다.
+     현장이 없으면 예전처럼 담당자만 넘어갑니다.
+     --------------------------------------------------------------- */
+  function safetyUrl() {
+    const params = ["staff=" + encodeURIComponent(getCurrentStaffName() || "")];
+    const saved = state.savedEstimate || {};
+    const project = saved.project || state.project || {};
+    const code = saved.code || state.estimateCode || "";
+
+    if (code) {
+      params.push("code=" + encodeURIComponent(code));
+      if (project.customerName) params.push("customer=" + encodeURIComponent(project.customerName));
+      if (project.address) params.push("addr=" + encodeURIComponent(project.address));
+    }
+    return "./safety.html?" + params.join("&");
+  }
+
+  function hookSafetyMenu() {
+    const old = document.getElementById("menuSafety");
+    if (!old || old.dataset.nc2Hooked) return;
+
+    // 기존에 걸린 이동 동작을 떼어내기 위해 버튼을 새로 만들어 갈아 끼웁니다.
+    const fresh = old.cloneNode(true);
+    fresh.dataset.nc2Hooked = "1";
+    old.parentNode.replaceChild(fresh, old);
+
+    fresh.addEventListener("click", function () {
+      window.location.href = safetyUrl();
+    });
+  }
+
+  /* ---------------------------------------------------------------
+     17. 시작
      --------------------------------------------------------------- */
   function boot() {
     D.injectStyle();
@@ -1059,6 +1230,8 @@
     D.buildSignModal();
     buildScreens();
     buildMenuCards();
+    hookSaveConfirm();
+    hookSafetyMenu();
     D.loadStamp(function () {
       if (document.querySelector("#page5 .nc2-screen-host")) renderEstimatePage();
     });
