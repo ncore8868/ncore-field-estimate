@@ -211,8 +211,8 @@
       <div class="amount-row grand"><span>총 계</span><strong id="sumTotal">-</strong></div>
 
       <div class="guide" id="guideBox">
-        견적 내용을 확인하신 뒤 아래 버튼을 눌러 서명해 주세요.<br />
-        서명하시면 시공사에 자동으로 전달됩니다.
+        견적 내용을 확인하신 뒤 <strong>서명하기</strong>를 눌러 주세요.<br />
+        견적서의 <strong>발주자 (인)</strong> 칸을 직접 눌러도 됩니다.
       </div>
 
       <button type="button" class="btn" id="signBtn">서명하기</button>
@@ -335,13 +335,22 @@
     function renderPaper() {
       const data = Object.assign({}, docData, {
         sign: signature || {},
-        signable: false   // 종이 위 터치 대신 아래 큰 버튼을 씁니다.
+        // 아직 제출 전이면 견적서의 발주자 칸을 직접 눌러도 서명창이 열립니다.
+        signable: !submitted
       });
 
       const host = el("paperHost");
       host.innerHTML = D.screenShell(D.buildDoc(data, ""));
       D.fitScreenDoc(host.querySelector(".nc2-screen-host"), null);
     }
+
+    /* 견적서 안의 발주자 칸을 눌렀을 때 */
+    document.addEventListener("click", function (e) {
+      const box = e.target.closest('[data-nc2-sign="customer"]');
+      if (!box || submitted) return;
+      e.preventDefault();
+      startSign();
+    });
 
     window.addEventListener("resize", function () {
       const host = el("paperHost").querySelector(".nc2-screen-host");
@@ -413,25 +422,28 @@
     }
 
     /* ---------- 서명 ---------- */
-    el("signBtn").addEventListener("click", function () {
+    function startSign() {
       D.openSignPad(function (result) {
         signature = result;
         renderPaper();
+
         el("signBtn").classList.add("hidden");
         el("resignBtn").classList.remove("hidden");
         el("submitBtn").classList.remove("hidden");
-        el("guideBox").innerHTML =
-          "서명이 견적서에 들어갔습니다.<br />아래 <strong>서명 제출하기</strong>를 눌러야 시공사에 전달됩니다.";
-        el("paperShell").scrollIntoView({ behavior: "smooth", block: "end" });
-      });
-    });
 
-    el("resignBtn").addEventListener("click", function () {
-      D.openSignPad(function (result) {
-        signature = result;
-        renderPaper();
+        const guide = el("guideBox");
+        if (guide) {
+          guide.innerHTML =
+            "서명이 견적서에 들어갔습니다.<br />" +
+            "아래 <strong>서명 제출하기</strong>를 눌러야 시공사에 전달됩니다.";
+        }
+
+        el("submitBtn").scrollIntoView({ behavior: "smooth", block: "center" });
       });
-    });
+    }
+
+    el("signBtn").addEventListener("click", startSign);
+    el("resignBtn").addEventListener("click", startSign);
 
     /* ---------- 제출 ---------- */
     el("submitBtn").addEventListener("click", async function () {

@@ -160,6 +160,10 @@
     const d = data || {};
     const rows = collapseGroups(d.rows);
 
+    // 원 견적에 이어 붙는 추가 공사면 제목과 표기를 바꿉니다.
+    const isAddon = !!d.addonBase;
+    const docTitle = isAddon ? "추가 견적서" : "견 적 서";
+
     /* 행이 많으면 글자와 줄높이를 단계적으로 줄여 1장에 맞춥니다. */
     let density = "";
     if (rows.length > 34) density = " nc2-dense-2";
@@ -211,7 +215,7 @@
         /* 머리 */
         '<header class="nc2-head">' +
           '<img class="nc2-logo" src="' + LOGO_FILE + '" alt="N-CORE" />' +
-          '<h1 class="nc2-title">견 적 서</h1>' +
+          '<h1 class="nc2-title' + (isAddon ? " nc2-title-addon" : "") + '">' + docTitle + "</h1>" +
         "</header>" +
 
         /* 고객 · 공급자 */
@@ -225,7 +229,9 @@
               '<div class="nc2-ck">견적일자</div><div class="nc2-cv">' + esc(d.dateText || todayText()) + "</div>" +
               '<div class="nc2-ck">공사기간</div><div class="nc2-cv">' + esc((Number(d.workDays) || 1) + "일") + "</div>" +
               '<div class="nc2-ck">견적번호</div><div class="nc2-cv">' + esc(d.code || "-") + "</div>" +
-              '<div class="nc2-ck">담당자</div><div class="nc2-cv">' + esc(d.staffName || "-") + "</div>" +
+              (isAddon
+                ? '<div class="nc2-ck">원 견적</div><div class="nc2-cv">' + esc(d.addonBase) + "</div>"
+                : '<div class="nc2-ck">담당자</div><div class="nc2-cv">' + esc(d.staffName || "-") + "</div>") +
             "</div>" +
           "</div>" +
 
@@ -279,6 +285,12 @@
             '<div class="nc2-total-row nc2-total-grand"><span>총 계</span><strong>' + num(total) + "</strong></div>" +
           "</div>" +
         "</div>" +
+
+        /* 추가공사 안내 */
+        (isAddon
+          ? '<div class="nc2-addon-note">본 견적서는 ' + esc(d.addonBase) +
+            ' 현장의 <strong>추가 공사</strong>에 대한 별도 견적입니다. 기존 계약 금액에 합산됩니다.</div>'
+          : "") +
 
         /* 특약 */
         '<div class="nc2-terms">' +
@@ -611,7 +623,13 @@
   .nc2-sign-label{font-size:11.5px;font-weight:900;color:#333;}
   .nc2-sign-box{width:150px;height:84px;border:1px solid #BFBFBF;border-radius:3px;
     background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-  .nc2-sign-touch{cursor:pointer;border-style:dashed;border-color:#D76016;background:#FFFBF8;}
+  .nc2-sign-touch{cursor:pointer;border:2px dashed #D76016;background:#FFF4EA;
+    animation:nc2Pulse 1.6s ease-in-out infinite;}
+  @keyframes nc2Pulse{
+    0%,100%{background:#FFF4EA;border-color:#D76016;}
+    50%{background:#FFE6D2;border-color:#B94E0D;}
+  }
+  .nc2-sign-touch .nc2-sign-empty{color:#D76016;}
   .nc2-sign-empty{font-size:14px;font-weight:850;color:#B4B4B4;}
   .nc2-sign-img{max-width:88%;max-height:80%;object-fit:contain;}
   .nc2-stamp{width:74px;height:74px;object-fit:contain;}
@@ -629,6 +647,12 @@
   .nc2-total-grand{min-height:38px;background:#FFF3EA;}
   .nc2-total-grand span{background:#D76016;color:#fff;border-right-color:#C05512;font-size:13px;}
   .nc2-total-grand strong{font-size:19px;letter-spacing:-.5px;color:#B94E0D;}
+
+  .nc2-title-addon{font-size:31px;letter-spacing:6px;}
+
+  .nc2-addon-note{margin-top:12px;padding:8px 11px;border-radius:5px;
+    background:#FFF4EA;border:1px solid rgba(215,96,22,.28);
+    color:#8A4412;font-size:10.5px;font-weight:850;line-height:1.5;}
 
   .nc2-terms{margin-top:14px;padding-top:9px;border-top:1px solid #DDD;}
   .nc2-terms-title{font-size:10.5px;font-weight:900;color:#333;margin-bottom:3px;}

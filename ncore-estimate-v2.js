@@ -219,7 +219,8 @@
       rows: buildRows(),
       supply: supply,
       vat: D.vatOf(supply),
-      total: supply + D.vatOf(supply)
+      total: supply + D.vatOf(supply),
+      addonBase: (state.addon && state.addon.baseCode) || ""
     };
   }
 
@@ -529,6 +530,11 @@
       payload.vatAmount = vatAmount();
       payload.grandTotal = grandTotal();
 
+      // 추가견적이면 원 견적번호를 함께 남깁니다.
+      if (state.addon && state.addon.baseCode) {
+        payload.addon = { baseCode: state.addon.baseCode, seq: state.addon.seq || "" };
+      }
+
       // 고객 폰 서명 페이지가 읽을 견적서 원본입니다.
       if (String(payload.stage || "final") === "final") {
         try { payload.docData = JSON.stringify(buildDocData()); } catch (e) { payload.docData = ""; }
@@ -539,6 +545,7 @@
 
   wrap("resetEstimateState", function () {
     state.project.workDays = 1;
+    state.addon = null;
     state.signature = { customer: { dataUrl: "", signedAt: "", method: "" } };
     renderWorkDays();
   });
@@ -680,6 +687,8 @@
   .nc2-link-label{font-size:11.5px;font-weight:900;color:#B94E0D;}
   .nc2-link-url{font-size:11px;font-weight:750;color:#555;line-height:1.45;
     word-break:break-all;}
+  .nc2-open-link{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;
+    background:#D76016;color:#fff;font-size:11px;font-weight:900;text-decoration:none;}
   `;
 
   function injectExtraStyle() {
@@ -691,7 +700,355 @@
   }
 
   /* ---------------------------------------------------------------
-     14. 시작
+     14. 추가견적 · 서명 현황
+
+     완료된 견적에 추가 공사가 생기면 원 견적번호에 이어지는
+     추가 견적번호(NC-260826-001-A1)를 새로 발급받아 작성합니다.
+     현장 정보와 현장 폴더는 원 견적 것을 그대로 씁니다.
+     --------------------------------------------------------------- */
+  function chip(text, kind) {
+    return '<span class="status-chip ' + (kind || "wait") + '">' + D.esc(text) + "</span>";
+  }
+
+  function buildScreens() {
+    const app = document.querySelector(".app");
+    if (!app || document.getElementById("pageSignStatus")) return;
+
+    /* 서명 현황 */
+    const signPage = document.createElement("section");
+    signPage.id = "pageSignStatus";
+    signPage.className = "screen";
+    signPage.innerHTML =
+      '<header class="topbar">' +
+        '<div class="brand">' +
+          '<div class="logo-mark">N-CORE</div>' +
+          '<div class="brand-text">' +
+            '<div class="title">서명 현황</div>' +
+            '<div class="sub">고객이 견적서에 서명했는지 확인합니다.</div>' +
+          "</div>" +
+        "</div>" +
+        '<div class="step-pill"><span>서명</span><span class="step-dot"></span>' +
+          '<strong id="nc2SignCountLabel">0건</strong></div>' +
+      "</header>" +
+
+      '<section class="work-content">' +
+        '<section class="panel work-main">' +
+          '<div class="work-header">' +
+            "<div>" +
+              '<h1 class="work-title">발송한 견적서</h1>' +
+              '<div class="work-sub">최근에 만든 것부터 표시됩니다. 서명본은 눌러서 바로 열 수 있습니다.</div>' +
+            "</div>" +
+            '<div class="amount-badge" id="nc2SignBadge">0건</div>' +
+          "</div>" +
+          '<div id="nc2SignList" class="list-scroll"></div>' +
+        "</section>" +
+
+        '<aside class="panel work-side">' +
+          '<div class="filter-row">' +
+            '<div class="filter-label">상태</div>' +
+            '<div class="toggle-group three">' +
+              '<button type="button" class="toggle-btn active" data-nc2-signfilter="전체">전체</button>' +
+              '<button type="button" class="toggle-btn" data-nc2-signfilter="완료">서명완료</button>' +
+              '<button type="button" class="toggle-btn" data-nc2-signfilter="대기">서명대기</button>' +
+            "</div>" +
+          "</div>" +
+          '<div class="project-guide-list">' +
+            "<div>서명대기는 링크는 보냈지만 아직 서명 전인 건입니다.</div>" +
+            "<div>오래 걸리면 고객에게 직접 확인해 주세요.</div>" +
+            "<div>서명본은 현장폴더 01_견적서에 함께 보관됩니다.</div>" +
+          "</div>" +
+          '<button type="button" id="nc2SignRefresh" class="nav-btn next" ' +
+            'style="height:52px;font-size:17px;border-radius:16px;">새로고침</button>' +
+        "</aside>" +
+      "</section>" +
+
+      '<nav class="bottom-nav">' +
+        '<button id="nc2SignBack" class="nav-btn prev">메뉴</button>' +
+        '<div class="bottom-status" id="nc2SignStatusText">불러오는 중입니다.</div>' +
+        "<div></div>" +
+      "</nav>";
+
+    /* 추가견적 대상 현장 */
+    const addonPage = document.createElement("section");
+    addonPage.id = "pageAddonList";
+    addonPage.className = "screen";
+    addonPage.innerHTML =
+      '<header class="topbar">' +
+        '<div class="brand">' +
+          '<div class="logo-mark">N-CORE</div>' +
+          '<div class="brand-text">' +
+            '<div class="title">추가견적 작성</div>' +
+            '<div class="sub">이미 견적이 나간 현장에 추가 공사를 얹습니다.</div>' +
+          "</div>" +
+        "</div>" +
+        '<div class="step-pill"><span>추가견적</span><span class="step-dot"></span>' +
+          "<strong>현장 선택</strong></div>" +
+      "</header>" +
+
+      '<section class="work-content">' +
+        '<section class="panel work-main">' +
+          '<div class="work-header">' +
+            "<div>" +
+              '<h1 class="work-title">현장 선택</h1>' +
+              '<div class="work-sub">현장을 누르면 고객정보를 그대로 이어받아 추가 공사만 산정합니다.</div>' +
+            "</div>" +
+            '<div class="amount-badge" id="nc2AddonBadge">0건</div>' +
+          "</div>" +
+          '<div id="nc2AddonList" class="list-scroll"></div>' +
+        "</section>" +
+
+        '<aside class="panel work-side">' +
+          '<div class="project-guide-card">' +
+            '<div class="label">작성 안내</div>' +
+            '<div class="value">원 견적 → 추가견적</div>' +
+          "</div>" +
+          '<div class="project-guide-list">' +
+            "<div>고객명·주소·연락처는 자동으로 채워집니다.</div>" +
+            "<div>추가로 들어가는 인원·장비·폐기물만 입력합니다.</div>" +
+            "<div>견적번호는 원 번호 뒤에 -A1, -A2 로 붙습니다.</div>" +
+            "<div>사진과 서명본은 같은 현장 폴더에 모입니다.</div>" +
+          "</div>" +
+          '<button type="button" id="nc2AddonRefresh" class="nav-btn next" ' +
+            'style="height:52px;font-size:17px;border-radius:16px;">새로고침</button>' +
+        "</aside>" +
+      "</section>" +
+
+      '<nav class="bottom-nav">' +
+        '<button id="nc2AddonBack" class="nav-btn prev">메뉴</button>' +
+        '<div class="bottom-status" id="nc2AddonStatusText">불러오는 중입니다.</div>' +
+        "<div></div>" +
+      "</nav>";
+
+    app.appendChild(signPage);
+    app.appendChild(addonPage);
+
+    document.getElementById("nc2SignBack").addEventListener("click", showMainMenu);
+    document.getElementById("nc2SignRefresh").addEventListener("click", loadSignStatus);
+    document.getElementById("nc2AddonBack").addEventListener("click", showMainMenu);
+    document.getElementById("nc2AddonRefresh").addEventListener("click", loadAddonBases);
+
+    document.addEventListener("click", function (e) {
+      const btn = e.target.closest("[data-nc2-signfilter]");
+      if (!btn) return;
+      signFilter = btn.dataset.nc2Signfilter;
+      loadSignStatus();
+    });
+  }
+
+  function buildMenuCards() {
+    const menu = document.getElementById("menuContent");
+    if (!menu || document.getElementById("nc2MenuAddon")) return;
+
+    const safety = document.getElementById("menuSafety");
+
+    const addonCard = document.createElement("button");
+    addonCard.type = "button";
+    addonCard.id = "nc2MenuAddon";
+    addonCard.className = "panel menu-card office-only";
+    addonCard.innerHTML =
+      '<span class="menu-card-no">00</span>' +
+      '<span class="menu-card-title">추가견적 작성</span>' +
+      '<span class="menu-card-desc">이미 견적이 나간 현장에 추가 공사가 생겼을 때 작성합니다.</span>';
+    addonCard.addEventListener("click", function () {
+      showScreen("pageAddonList");
+      loadAddonBases();
+    });
+
+    const signCard = document.createElement("button");
+    signCard.type = "button";
+    signCard.id = "nc2MenuSign";
+    signCard.className = "panel menu-card office-only";
+    signCard.innerHTML =
+      '<span class="menu-card-no">00</span>' +
+      '<span class="menu-card-title">서명 현황</span>' +
+      '<span class="menu-card-desc">고객이 견적서에 서명했는지 한눈에 확인합니다.</span>';
+    signCard.addEventListener("click", function () {
+      showScreen("pageSignStatus");
+      loadSignStatus();
+    });
+
+    if (safety) {
+      menu.insertBefore(addonCard, safety);
+      menu.insertBefore(signCard, safety);
+    } else {
+      menu.appendChild(addonCard);
+      menu.appendChild(signCard);
+    }
+  }
+
+  /* ---------- 서명 현황 ---------- */
+  let signFilter = "전체";
+
+  async function loadSignStatus() {
+    const listEl = document.getElementById("nc2SignList");
+    const statusEl = document.getElementById("nc2SignStatusText");
+    const badgeEl = document.getElementById("nc2SignBadge");
+    const countEl = document.getElementById("nc2SignCountLabel");
+    if (!listEl) return;
+
+    document.querySelectorAll("[data-nc2-signfilter]").forEach(function (b) {
+      b.classList.toggle("active", b.dataset.nc2Signfilter === signFilter);
+    });
+
+    listEl.innerHTML = '<div class="list-empty">불러오는 중입니다...</div>';
+    statusEl.textContent = "불러오는 중...";
+
+    try {
+      const result = await jsonpRequest({ action: "signStatusList", filter: signFilter });
+      if (!result || !result.ok) throw new Error((result && result.message) || "불러오지 못했습니다.");
+
+      const rows = result.rows || [];
+      badgeEl.textContent = rows.length + "건";
+      countEl.textContent = rows.length + "건";
+      statusEl.textContent = rows.length ? "서명본은 눌러서 바로 열 수 있습니다." : "해당하는 건이 없습니다.";
+
+      if (!rows.length) {
+        listEl.innerHTML = '<div class="list-empty">해당하는 견적서가 없습니다.</div>';
+        return;
+      }
+
+      listEl.innerHTML = rows.map(function (row) {
+        const done = row.signStatus === "서명완료";
+        return '<div class="site-row" style="cursor:default;">' +
+          '<span class="site-row-main">' +
+            '<span class="site-row-code">' + D.esc(row.code) + " · " + D.esc(row.staff || "-") + "</span>" +
+            '<span class="site-row-title">' + D.esc(row.customerName || "-") + " · " +
+              D.esc(row.address || "-") + "</span>" +
+            '<span class="site-row-sub">' +
+              (done ? "서명 " + D.esc(row.signedAt || "-") + " · " + D.esc(row.signMethod || "")
+                    : "발송 " + D.esc(row.sendStatus || "발송 전")) +
+            "</span>" +
+          "</span>" +
+          '<span class="site-row-right">' +
+            '<span class="site-row-amount">' + D.esc(formatWon(row.totalAmount)) + "</span>" +
+            chip(done ? "서명완료" : "서명대기", done ? "done" : "wait") +
+            (row.signedFileUrl
+              ? '<a class="nc2-open-link" href="' + D.esc(row.signedFileUrl) +
+                '" target="_blank" rel="noopener">서명본 열기</a>'
+              : "") +
+          "</span>" +
+        "</div>";
+      }).join("");
+    } catch (err) {
+      console.error(err);
+      badgeEl.textContent = "0건";
+      statusEl.textContent = "불러오지 못했습니다.";
+      listEl.innerHTML = '<div class="list-empty">불러오지 못했습니다.<br />' +
+        D.esc(err.message || "") + "</div>";
+    }
+  }
+
+  /* ---------- 추가견적 대상 현장 ---------- */
+  async function loadAddonBases() {
+    const listEl = document.getElementById("nc2AddonList");
+    const statusEl = document.getElementById("nc2AddonStatusText");
+    const badgeEl = document.getElementById("nc2AddonBadge");
+    if (!listEl) return;
+
+    listEl.innerHTML = '<div class="list-empty">불러오는 중입니다...</div>';
+    statusEl.textContent = "불러오는 중...";
+
+    try {
+      const result = await jsonpRequest({ action: "addonBaseList" });
+      if (!result || !result.ok) throw new Error((result && result.message) || "불러오지 못했습니다.");
+
+      const rows = result.rows || [];
+      badgeEl.textContent = rows.length + "건";
+      statusEl.textContent = rows.length
+        ? "현장을 눌러 추가견적 작성을 시작합니다."
+        : "추가견적을 붙일 현장이 없습니다.";
+
+      if (!rows.length) {
+        listEl.innerHTML = '<div class="list-empty">추가견적을 붙일 현장이 없습니다.<br />' +
+          "견적서가 만들어진 현장만 표시됩니다.</div>";
+        return;
+      }
+
+      listEl.innerHTML = rows.map(function (row, index) {
+        return '<button type="button" class="site-row" data-nc2-addon="' + index + '">' +
+          '<span class="site-row-main">' +
+            '<span class="site-row-code">' + D.esc(row.code) + " · " + D.esc(row.staff || "-") + "</span>" +
+            '<span class="site-row-title">' + D.esc(row.customerName || "-") + " · " +
+              D.esc(row.address || "-") + "</span>" +
+            '<span class="site-row-sub">' + D.esc(row.industry || "-") + " · " +
+              D.esc(String(row.pyeong || 0)) + "평 · " + D.esc(row.floorLabel || "-") +
+              (row.addonCount ? " · 추가견적 " + row.addonCount + "건" : "") + "</span>" +
+          "</span>" +
+          '<span class="site-row-right">' +
+            '<span class="site-row-amount">' + D.esc(formatWon(row.totalAmount)) + "</span>" +
+            chip(row.contractStatus || "계약 전", row.contractStatus ? "done" : "wait") +
+          "</span>" +
+        "</button>";
+      }).join("");
+
+      listEl.querySelectorAll("[data-nc2-addon]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          startAddon(rows[Number(btn.dataset.nc2Addon)]);
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      badgeEl.textContent = "0건";
+      statusEl.textContent = "불러오지 못했습니다.";
+      listEl.innerHTML = '<div class="list-empty">불러오지 못했습니다.<br />' +
+        D.esc(err.message || "") + "</div>";
+    }
+  }
+
+  /* 원 현장 정보를 그대로 이어받아 추가견적 작성을 시작합니다. */
+  function startAddon(row) {
+    if (!row) return;
+
+    const ok = window.confirm(
+      "아래 현장의 추가견적을 작성합니다.\n\n" +
+      "원 견적번호: " + row.code + "\n" +
+      "고객: " + (row.customerName || "-") + "\n" +
+      "현장: " + (row.address || "-") + "\n\n" +
+      "고객정보는 그대로 이어받고, 추가로 들어가는 비용만 입력하시면 됩니다."
+    );
+    if (!ok) return;
+
+    resetEstimateState();
+
+    state.project.customerName = row.customerName || "";
+    state.project.phone = row.phone || "";
+    state.project.address = row.address || "";
+    state.project.industry = row.industry || "";
+    state.project.pyeong = Number(row.pyeong) || 0;
+    state.project.floor = Number(row.floor) || 1;
+    state.project.elevator = row.elevator || "";
+    state.project.workDays = 1;
+
+    state.addon = { baseCode: row.code };
+    state.siteFolderUrl = row.siteFolderUrl || "";
+
+    syncProjectInputsFromState();
+    setActive("labor");
+    showPage(0);
+  }
+
+  /* 저장할 때 추가견적 번호를 따로 발급받습니다. */
+  const origIssueCode = window.issueEstimateCode;
+  if (typeof origIssueCode === "function") {
+    window.issueEstimateCode = async function () {
+      if (state.addon && state.addon.baseCode) {
+        const result = await jsonpRequest({
+          action: "issueAddonCode",
+          base: state.addon.baseCode,
+          staffName: getCurrentStaffName()
+        });
+        if (!result || !result.ok || !result.code) {
+          throw new Error((result && result.message) || "추가견적 번호를 발급받지 못했습니다.");
+        }
+        state.addon.seq = result.seq || "";
+        return result;
+      }
+      return origIssueCode.apply(this, arguments);
+    };
+  }
+
+  /* ---------------------------------------------------------------
+     15. 시작
      --------------------------------------------------------------- */
   function boot() {
     D.injectStyle();
@@ -700,6 +1057,8 @@
     injectWorkDaysField();
     injectButtons();
     D.buildSignModal();
+    buildScreens();
+    buildMenuCards();
     D.loadStamp(function () {
       if (document.querySelector("#page5 .nc2-screen-host")) renderEstimatePage();
     });
