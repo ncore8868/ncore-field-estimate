@@ -5,7 +5,7 @@
    - 추가견적 작성과 서명 현황 화면이 들어가 캐시를 갱신합니다.
    ========================================================================= */
 
-const CACHE_NAME = "ncore-field-estimate-pwa-v52";
+const CACHE_NAME = "ncore-field-estimate-pwa-v53";
 
 const CORE_ASSETS = [
   "./",
