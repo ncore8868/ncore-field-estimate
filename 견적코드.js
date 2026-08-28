@@ -120,6 +120,25 @@ const PROGRESS_FINAL = '견적작성 완료';
 let requestSpreadsheet = null;
 let requestWorkboardSpreadsheet = null;
 
+/* 요청 하나 안에서 같은 시트를 여러 번 잡지 않게 담아둡니다 (2026-08-28).
+   getLedgerSheet_() 은 부를 때마다 머리글 한 줄을 다시 읽고 있었습니다.
+   견적 한 건을 저장하면 이 함수가 서너 번 불리므로 그만큼 구글에 헛되이 물었습니다.
+   ★ 요청이 끝나면 사라지는 값이라 낡은 값이 남을 일이 없습니다. */
+let requestSheets = {};
+let requestLedgerValues = null;
+let requestStaffRows = null;      // 워크보드 명부 — 요청당 한 번만 읽는다
+
+/* 담당자 이름 목록만 잠깐 담아둡니다 (2026-08-28).
+   앱을 열 때마다 워크보드 스프레드시트를 여느라 1~2초를 썼습니다.
+
+   ★ 이름·직급만 담습니다. PIN 해시와 재직상태 판정은 담지 않습니다.
+     로그인은 언제나 시트에서 새로 읽습니다 — 퇴사 처리한 사람이
+     담아둔 값 때문에 들어오는 일이 있으면 안 됩니다.
+   ★ EST_STAFF_CACHE_ON = false 로 옛 방식으로 즉시 돌아갑니다. */
+const EST_STAFF_CACHE_ON = true;
+const EST_STAFF_CACHE_KEY = 'estimate_staff_names_v1';
+const EST_STAFF_CACHE_SECONDS = 600;
+
 const SEND_HEADERS = [
   '발송일시','견적번호','회차','담당자','고객명','발송번호',
   '위치상태','위도','경도','위치오차(m)','비고'
@@ -132,6 +151,9 @@ const SAFETY_HEADERS = [
 function doGet(e) {
   requestSpreadsheet = null;
   requestWorkboardSpreadsheet = null;
+  requestSheets = {};
+  requestLedgerValues = null;
+  requestStaffRows = null;
   const params = e && e.parameter ? e.parameter : {};
   const action = params.action || '';
   const callback = params.callback || '';
@@ -231,6 +253,9 @@ function doGet(e) {
 function doPost(e) {
   requestSpreadsheet = null;
   requestWorkboardSpreadsheet = null;
+  requestSheets = {};
+  requestLedgerValues = null;
+  requestStaffRows = null;
   try {
     const payload = parsePostPayload_(e);
     const action = String(payload.action || '').trim();
@@ -326,8 +351,12 @@ function getMaxLedgerSeq_(dateKey) {
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return 0;
 
+  /* 오늘 번호는 언제나 시트 맨 아래쪽에 있습니다.
+     대장 전체를 읽을 이유가 없어 뒤에서 400줄만 봅니다.
+     (하루 400건을 넘길 일이 없고, 넘겨도 스크립트 속성이 순번을 들고 있습니다) */
   const prefix = CODE_PREFIX + '-' + dateKey + '-';
-  const values = sheet.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
+  const from = Math.max(2, lastRow - 399);
+  const values = sheet.getRange(from, 1, lastRow - from + 1, 1).getDisplayValues();
   let max = 0;
 
   for (const row of values) {
@@ -462,11 +491,9 @@ function updateLedgerFinal_(sheet, rowNo, payload) {
    현장견적 (현장반장 제출분)
    ========================================================= */
 function getFieldReportList_(params) {
-  const sheet = getLedgerSheet_();
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return { ok: true, rows: [] };
+  const values = ledgerValues_();          // 요청당 한 번만 읽는다
+  if (!values.length) return { ok: true, rows: [] };
 
-  const values = sheet.getRange(2, 1, lastRow - 1, LEDGER_HEADERS.length).getDisplayValues();
   const limit = Math.min(Number(params.limit || 60) || 60, 200);
   const rows = [];
 
@@ -502,11 +529,8 @@ function getFieldReportList_(params) {
  * 사무실이 고객에게 직접 확인 전화를 걸 때 씁니다.
  */
 function getUnclaimedList_(params) {
-  const sheet = getLedgerSheet_();
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return { ok: true, rows: [] };
-
-  const values = sheet.getRange(2, 1, lastRow - 1, LEDGER_HEADERS.length).getDisplayValues();
+  const values = ledgerValues_();          // 요청당 한 번만 읽는다
+  if (!values.length) return { ok: true, rows: [] };
   const minDays = Number(params.minDays || 0) || 0;
   const now = new Date();
   const rows = [];
@@ -555,11 +579,9 @@ function getMyReports_(params) {
   const staff = normalizeStaffText(params.staffName);
   if (!staff) return { ok: false, message: '담당자 정보가 없습니다.' };
 
-  const sheet = getLedgerSheet_();
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return { ok: true, rows: [] };
+  const values = ledgerValues_();          // 요청당 한 번만 읽는다
+  if (!values.length) return { ok: true, rows: [] };
 
-  const values = sheet.getRange(2, 1, lastRow - 1, LEDGER_HEADERS.length).getDisplayValues();
   const limit = Math.min(Number(params.limit || 100) || 100, 300);
   const rows = [];
 
@@ -751,8 +773,10 @@ function updateLedgerSendStatus_(code, sentAt, seq) {
   for (let i = values.length - 1; i >= 0; i--) {
     if (String(values[i][0] || '').trim() !== code) continue;
     const rowNo = i + 2;
-    sheet.getRange(rowNo, LEDGER_COL.sendStatus).setValue('발송완료 (' + seq + '회)');
-    sheet.getRange(rowNo, LEDGER_COL.sentAt).setValue(sentAt);
+    const sendCells = {};
+    sendCells[LEDGER_COL.sendStatus] = '발송완료 (' + seq + '회)';
+    sendCells[LEDGER_COL.sentAt] = sentAt;
+    writeCells_(sheet, rowNo, sendCells);      // 이어진 칸이라 왕복 1회
     return true;
   }
   return false;
@@ -764,11 +788,9 @@ function updateLedgerSendStatus_(code, sentAt, seq) {
 
 /** 실제원가가 아직 입력되지 않은 현장 목록 */
 function getPendingList_(params) {
-  const sheet = getLedgerSheet_();
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return { ok: true, rows: [] };
+  const values = ledgerValues_();          // 요청당 한 번만 읽는다
+  if (!values.length) return { ok: true, rows: [] };
 
-  const values = sheet.getRange(2, 1, lastRow - 1, LEDGER_HEADERS.length).getDisplayValues();
   const limit = Math.min(Number(params.limit || 60) || 60, 200);
   const rows = [];
 
@@ -860,9 +882,8 @@ function saveActualCost_(params) {
 
 /** 과거 유사현장 조회 (실제원가가 입력된 현장만) */
 function lookupSites_(params) {
-  const sheet = getLedgerSheet_();
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return { ok: true, rows: [] };
+  const values = ledgerValues_();          // 요청당 한 번만 읽는다
+  if (!values.length) return { ok: true, rows: [] };
 
   const industry = String(params.industry || '').trim();
   const elevator = String(params.elevator || '').trim();
@@ -870,7 +891,6 @@ function lookupSites_(params) {
   const range = toNumber_(params.range) || 10;
   const limit = Math.min(Number(params.limit || 20) || 20, 60);
 
-  const values = sheet.getRange(2, 1, lastRow - 1, LEDGER_HEADERS.length).getDisplayValues();
   const rows = [];
 
   for (let i = values.length - 1; i >= 0 && rows.length < limit; i--) {
@@ -945,8 +965,10 @@ function ensureSiteFolderForCode_(code, customerName) {
 
     SITE_SUBFOLDERS.forEach(sub => getOrCreateFolder_(folder, sub));
 
-    sheet.getRange(rowNo, LEDGER_COL.siteFolderUrl).setValue(folder.getUrl());
-    sheet.getRange(rowNo, LEDGER_COL.siteFolderId).setValue(folder.getId());
+    const folderCells = {};
+    folderCells[LEDGER_COL.siteFolderUrl] = folder.getUrl();
+    folderCells[LEDGER_COL.siteFolderId] = folder.getId();
+    writeCells_(sheet, rowNo, folderCells);    // 이어진 칸이라 왕복 1회
 
     return folder;
   } catch (err) {
@@ -1006,11 +1028,9 @@ function savePhoto_(payload) {
 
 /** 추가견적을 붙일 수 있는 현장 목록 (견적서가 만들어진 건) */
 function getAddonBaseList_(params) {
-  const sheet = getLedgerSheet_();
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return { ok: true, rows: [] };
+  const values = ledgerValues_();          // 요청당 한 번만 읽는다
+  if (!values.length) return { ok: true, rows: [] };
 
-  const values = sheet.getRange(2, 1, lastRow - 1, LEDGER_HEADERS.length).getDisplayValues();
   const limit = Math.min(Number(params.limit || 80) || 80, 300);
 
   // 원 견적별로 이미 만들어진 추가견적 건수를 세어 둡니다.
@@ -1127,8 +1147,10 @@ function copySiteFolder_(sheet, baseCode, newCode) {
     const id = sheet.getRange(baseRow, LEDGER_COL.siteFolderId).getDisplayValue();
     if (!id) return false;
 
-    sheet.getRange(newRow, LEDGER_COL.siteFolderUrl).setValue(url);
-    sheet.getRange(newRow, LEDGER_COL.siteFolderId).setValue(id);
+    const copyCells = {};
+    copyCells[LEDGER_COL.siteFolderUrl] = url;
+    copyCells[LEDGER_COL.siteFolderId] = id;
+    writeCells_(sheet, newRow, copyCells);     // 이어진 칸이라 왕복 1회
     return true;
   } catch (err) {
     return false;
@@ -1140,12 +1162,10 @@ function copySiteFolder_(sheet, baseCode, newCode) {
  * filter 는 전체 / 완료 / 대기 중 하나입니다.
  */
 function getSignStatusList_(params) {
-  const sheet = getLedgerSheet_();
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return { ok: true, rows: [] };
+  const values = ledgerValues_();          // 요청당 한 번만 읽는다
+  if (!values.length) return { ok: true, rows: [] };
 
   const filter = String(params.filter || '전체').trim();
-  const values = sheet.getRange(2, 1, lastRow - 1, LEDGER_HEADERS.length).getDisplayValues();
   const limit = Math.min(Number(params.limit || 100) || 100, 300);
   const rows = [];
 
@@ -1355,18 +1375,21 @@ function saveEstimateFile_(payload) {
 
   if (rowNo) {
     if (isSigned) {
-      sheet.getRange(rowNo, LEDGER_COL.signStatus).setValue('서명완료');
-      sheet.getRange(rowNo, LEDGER_COL.signedAt).setValue(
-        payload.signedAt || Utilities.formatDate(now, tz, 'yyyy-MM-dd HH:mm:ss')
-      );
-      sheet.getRange(rowNo, LEDGER_COL.signMethod).setValue(
-        String(payload.signMethod || 'tablet') === 'link' ? '고객폰 링크' : '현장 태블릿'
-      );
-      sheet.getRange(rowNo, LEDGER_COL.signedFileUrl).setValue(url);
+      /* 서명 상태 네 칸(56~59)은 이어져 있어 한 번에 씁니다.
+         예전에는 칸마다 따로 써서 고객 앞에서 여섯 번을 기다렸습니다. */
+      const cells = {};
+      cells[LEDGER_COL.signStatus] = '서명완료';
+      cells[LEDGER_COL.signedAt] =
+        payload.signedAt || Utilities.formatDate(now, tz, 'yyyy-MM-dd HH:mm:ss');
+      cells[LEDGER_COL.signMethod] =
+        String(payload.signMethod || 'tablet') === 'link' ? '고객폰 링크' : '현장 태블릿';
+      cells[LEDGER_COL.signedFileUrl] = url;
 
       // 계약상태가 비어 있으면 서명 사실을 남겨 미계약 목록에서 빠지게 합니다.
       const contract = String(sheet.getRange(rowNo, LEDGER_COL.contractStatus).getDisplayValue() || '').trim();
-      if (!contract) sheet.getRange(rowNo, LEDGER_COL.contractStatus).setValue('견적서 서명완료');
+      if (!contract) cells[LEDGER_COL.contractStatus] = '견적서 서명완료';
+
+      writeCells_(sheet, rowNo, cells);
     } else {
       sheet.getRange(rowNo, LEDGER_COL.fileUrl).setValue(url);
     }
@@ -1380,6 +1403,42 @@ function getEstimateRootFolder_() {
 
   const folders = DriveApp.getFoldersByName(ESTIMATE_FOLDER_NAME);
   return folders.hasNext() ? folders.next() : DriveApp.createFolder(ESTIMATE_FOLDER_NAME);
+}
+
+/**
+ * 한 줄의 여러 칸을 가장 적은 왕복으로 씁니다.  { 칸번호: 값 }
+ *
+ * 예전에는 칸마다 setValue 를 따로 불렀습니다.
+ * 서명 저장 한 번에 여섯 번을 나눠 써서 고객이 그만큼 기다렸습니다.
+ * 이어진 칸은 한 번에 쓰고, 사이가 조금 벌어진 곳은
+ * 지금 값을 한 번 읽어 그대로 되돌려 놓고 함께 씁니다.
+ */
+function writeCells_(sheet, rowNo, cells) {
+  const cols = Object.keys(cells).map(Number).sort(function (a, b) { return a - b; });
+  if (!rowNo || !cols.length) return;
+
+  let i = 0;
+  while (i < cols.length) {
+    const start = cols[i];
+    let end = start;
+    let j = i;
+    // 사이가 4칸 이내면 같이 묶는다 (한 번 읽고 한 번 쓰는 편이 싸다)
+    while (j + 1 < cols.length && cols[j + 1] - end <= 4) { end = cols[j + 1]; j += 1; }
+
+    const width = end - start + 1;
+    const wanted = cols.slice(i, j + 1);
+    let values;
+
+    if (wanted.length === width) {
+      values = wanted.map(function (c) { return cells[c]; });   // 빈틈 없음 — 읽지 않는다
+    } else {
+      values = sheet.getRange(rowNo, start, 1, width).getValues()[0];
+      wanted.forEach(function (c) { values[c - start] = cells[c]; });
+    }
+
+    sheet.getRange(rowNo, start, 1, width).setValues([values]);
+    i = j + 1;
+  }
 }
 
 function findLedgerRow_(sheet, code) {
@@ -1490,6 +1549,10 @@ function getEstimateSheet() {
 }
 
 function getLedgerSheet_() {
+  /* 머리글 확인은 요청당 한 번이면 충분합니다.
+     예전에는 부를 때마다 머리글 한 줄을 다시 읽었습니다. */
+  if (requestSheets[LEDGER_SHEET_NAME]) return requestSheets[LEDGER_SHEET_NAME];
+
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(LEDGER_SHEET_NAME) || ss.insertSheet(LEDGER_SHEET_NAME);
   const current = sheet.getRange(1, 1, 1, LEDGER_HEADERS.length).getDisplayValues()[0];
@@ -1500,10 +1563,28 @@ function getLedgerSheet_() {
     sheet.getRange(1, 1, 1, LEDGER_HEADERS.length).setValues([LEDGER_HEADERS]);
     sheet.setFrozenRows(1);
   }
+
+  requestSheets[LEDGER_SHEET_NAME] = sheet;
   return sheet;
 }
 
+/**
+ * 견적대장 전체를 요청당 한 번만 읽습니다.
+ * 목록 화면들이 저마다 getLastRow + getDisplayValues 를 다시 부르고 있었습니다.
+ * 돌려받은 배열은 고쳐 쓰지 마세요 (여러 곳이 같은 것을 봅니다).
+ */
+function ledgerValues_() {
+  if (requestLedgerValues) return requestLedgerValues;
+  const sheet = getLedgerSheet_();
+  const lastRow = sheet.getLastRow();
+  requestLedgerValues = (lastRow < 2)
+    ? []
+    : sheet.getRange(2, 1, lastRow - 1, LEDGER_HEADERS.length).getDisplayValues();
+  return requestLedgerValues;
+}
+
 function getSendLogSheet_() {
+  if (requestSheets[SEND_LOG_SHEET_NAME]) return requestSheets[SEND_LOG_SHEET_NAME];
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(SEND_LOG_SHEET_NAME) || ss.insertSheet(SEND_LOG_SHEET_NAME);
   const current = sheet.getRange(1, 1, 1, SEND_HEADERS.length).getDisplayValues()[0];
@@ -1511,6 +1592,7 @@ function getSendLogSheet_() {
     sheet.getRange(1, 1, 1, SEND_HEADERS.length).setValues([SEND_HEADERS]);
     sheet.setFrozenRows(1);
   }
+  requestSheets[SEND_LOG_SHEET_NAME] = sheet;
   return sheet;
 }
 
@@ -1518,6 +1600,7 @@ function getSendLogSheet_() {
    사람 정보는 워크보드 '직원' 시트 한 곳에만 있습니다. */
 
 function getSafetyLogSheet_() {
+  if (requestSheets[SAFETY_LOG_SHEET_NAME]) return requestSheets[SAFETY_LOG_SHEET_NAME];
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(SAFETY_LOG_SHEET_NAME) || ss.insertSheet(SAFETY_LOG_SHEET_NAME);
   const current = sheet.getRange(1, 1, 1, SAFETY_HEADERS.length).getDisplayValues()[0];
@@ -1525,6 +1608,7 @@ function getSafetyLogSheet_() {
     sheet.getRange(1, 1, 1, SAFETY_HEADERS.length).setValues([SAFETY_HEADERS]);
     sheet.setFrozenRows(1);
   }
+  requestSheets[SAFETY_LOG_SHEET_NAME] = sheet;
   return sheet;
 }
 
@@ -1607,6 +1691,8 @@ function normPhone_(value) {
 
 /** 워크보드 직원 목록을 이 앱이 쓰는 모양으로 읽어온다 */
 function readWorkboardStaff_() {
+  /* 한 요청에서 두 번 읽지 않는다 (로그인 → 이름 확인처럼 이어 부르는 곳이 있다) */
+  if (requestStaffRows) return requestStaffRows;
   const ss = getWorkboardSpreadsheet_();
   const sheet = ss.getSheetByName(WORKBOARD_STAFF_SHEET);
   if (!sheet) throw new Error("워크보드에 '직원' 시트가 없습니다.");
@@ -1647,12 +1733,32 @@ function readWorkboardStaff_() {
       rank: rank
     });
   }
+
+  requestStaffRows = out;
   return out;
 }
 
 /** 지금 쓸 수 있는 담당자 이름 목록 */
 function getActiveStaffNames() {
-  return readWorkboardStaff_().map(function (s) { return s.displayName; });
+  /* 앱을 열 때마다 부르는 길입니다.
+     예전에는 여기서 워크보드 스프레드시트를 열었습니다 (1~2초).
+     이름·직급뿐이라 잠깐 담아둡니다. PIN 은 담지 않습니다. */
+  if (EST_STAFF_CACHE_ON) {
+    try {
+      const hit = CacheService.getScriptCache().get(EST_STAFF_CACHE_KEY);
+      if (hit) return JSON.parse(hit);
+    } catch (e) { /* 없거나 깨졌으면 아래에서 읽는다 */ }
+  }
+
+  const names = readWorkboardStaff_().map(function (s) { return s.displayName; });
+
+  if (EST_STAFF_CACHE_ON) {
+    try {
+      CacheService.getScriptCache()
+        .put(EST_STAFF_CACHE_KEY, JSON.stringify(names), EST_STAFF_CACHE_SECONDS);
+    } catch (e) { /* 못 담아도 값은 이미 있다 */ }
+  }
+  return names;
 }
 
 function validateStaffPin(pin) {
@@ -1773,4 +1879,112 @@ function outputJson(data, callback) {
 function csvEscape(value) {
   const text = String(value == null ? '' : value);
   return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+
+/* ============================================================
+ *  속도_재기 · 대장_확인   (편집기에서 직접 실행)
+ *
+ *  이 앱에서 시간을 만드는 것은 계산이 아니라
+ *  '구글에 몇 번 묻는가' 입니다. 그것만 셉니다.
+ * ========================================================== */
+
+/** 목록 화면들이 실제로 몇 ms 걸리는지 잰다 */
+function 속도_재기() {
+  const 줄 = [];
+
+  function 재기(이름, fn) {
+    // 요청이 새로 시작된 것처럼 담아둔 것을 비운다
+    requestSpreadsheet = null;
+    requestWorkboardSpreadsheet = null;
+    requestSheets = {};
+    requestLedgerValues = null;
+
+    const t0 = new Date().getTime();
+    let 건수 = 0;
+    try {
+      const r = fn();
+      건수 = (r && r.rows) ? r.rows.length : 0;
+    } catch (err) {
+      줄.push(이름 + '  실패: ' + (err && err.message ? err.message : err));
+      return;
+    }
+    줄.push(이름.padEnd(18) + (new Date().getTime() - t0) + 'ms   ' + 건수 + '건');
+  }
+
+  재기('현장 견적 목록', function () { return getFieldReportList_({}); });
+  재기('미계약 목록',    function () { return getUnclaimedList_({}); });
+  재기('실제원가 대기',  function () { return getPendingList_({}); });
+  재기('서명 현황',      function () { return getSignStatusList_({}); });
+  재기('추가견적 대상',  function () { return getAddonBaseList_({}); });
+
+  // 한 요청에서 목록 두 개를 만들면 대장을 몇 번 읽는가
+  requestSpreadsheet = null; requestSheets = {}; requestLedgerValues = null;
+  const t0 = new Date().getTime();
+  getFieldReportList_({});
+  getUnclaimedList_({});
+  getSignStatusList_({});
+  줄.push('');
+  줄.push('한 요청에서 목록 3개  ' + (new Date().getTime() - t0) + 'ms');
+  줄.push('  (대장은 한 번만 읽습니다 — 예전에는 세 번 읽었습니다)');
+
+  const 대장 = getLedgerSheet_();
+  줄.push('');
+  줄.push('견적대장 줄 수  ' + Math.max(대장.getLastRow() - 1, 0));
+  줄.push('');
+  줄.push('★ 줄 수는 시간을 거의 만들지 않습니다.');
+  줄.push('   시간을 만드는 것은 스프레드시트 열기(1~2초)와');
+  줄.push('   시트를 몇 번 읽고 쓰는가(한 번에 0.15~1초)입니다.');
+
+  const 결과 = 줄.join('\n');
+  Logger.log(결과);
+  try { SpreadsheetApp.getUi().alert('현장견적 속도', 결과, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) {}
+  return 결과;
+}
+
+
+/**
+ * 요청당 한 번만 읽도록 바꾼 뒤에도 값이 그대로인지 확인합니다.
+ * 담아둔 값과 시트에서 새로 읽은 값을 칸 하나하나 견줍니다.
+ */
+function 대장_확인() {
+  requestSpreadsheet = null; requestSheets = {}; requestLedgerValues = null;
+
+  const 담긴것 = ledgerValues_();
+
+  const sheet = getLedgerSheet_();
+  const lastRow = sheet.getLastRow();
+  const 원본 = (lastRow < 2)
+    ? []
+    : sheet.getRange(2, 1, lastRow - 1, LEDGER_HEADERS.length).getDisplayValues();
+
+  let 검사 = 0, 다름 = 0;
+  const 줄 = [];
+
+  if (담긴것.length !== 원본.length) {
+    다름 += 1;
+    줄.push('줄 수가 다릅니다  ' + 담긴것.length + ' vs ' + 원본.length);
+  }
+
+  const n = Math.min(담긴것.length, 원본.length);
+  for (let i = 0; i < n; i += 1) {
+    for (let j = 0; j < LEDGER_HEADERS.length; j += 1) {
+      검사 += 1;
+      if (String(담긴것[i][j]) !== String(원본[i][j])) {
+        다름 += 1;
+        if (다름 <= 12) {
+          줄.push((i + 2) + '행 ' + LEDGER_HEADERS[j] +
+                  '  "' + 담긴것[i][j] + '"  vs  "' + 원본[i][j] + '"');
+        }
+      }
+    }
+  }
+
+  const 머리 = (다름 === 0)
+    ? '통과 — 검사 ' + 검사 + '칸, 다른 칸 0개'
+    : '★ 다른 칸 ' + 다름 + '개';
+
+  const 결과 = 머리 + '\n\n' + 줄.join('\n');
+  Logger.log(결과);
+  try { SpreadsheetApp.getUi().alert('견적대장 확인', 결과, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) {}
+  return 결과;
 }
