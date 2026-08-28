@@ -17,6 +17,7 @@
            현장을 고르지 않으면 예전처럼 저장되며 _현장미지정 폴더로 들어갑니다. -->
   <style>
     :root{
+      color-scheme: light;
       --accent:#E97132;
       --accent-deep:#C85620;
       --ink:#181818;
@@ -107,6 +108,8 @@
     .site-pick-value.none{color:#999}
     .site-pick-btn{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid #DDDCD8;
       background:#F4F4F2;color:#222;font-size:13px;font-weight:900;white-space:nowrap}
+    .site-pick-btn,.modal-close,.date-edit-btn{min-height:44px}
+    .modal-close{width:44px;height:44px}
     .site-search{width:100%;height:46px;border:1px solid #D2D2CE;border-radius:12px;padding:0 14px;font-size:15px;font-weight:750;outline:0}
     .site-search:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(233,113,50,.12)}
     .site-list{max-height:44vh;overflow-y:auto;display:grid;gap:8px;-webkit-overflow-scrolling:touch}
@@ -178,6 +181,30 @@
       .modal-actions{grid-template-columns:1fr 1fr}
       .modal-actions .btn-primary{grid-column:1/-1}
       .site-list{max-height:46vh}
+
+      .a4-paper{aspect-ratio:auto;overflow:visible}
+      .paper-inner{height:auto;display:block;padding:20px;}
+      .paper-head{margin-bottom:16px}
+      .paper-logo{width:132px}
+      .paper-title{font-size:24px}
+      .paper-meta{font-size:11px}
+      .meta-row{grid-template-columns:62px 1fr;min-height:28px}
+      .meta-row span,.meta-row strong{padding:0 8px}
+      .lead{font-size:14px;line-height:1.6;margin-bottom:16px}
+      .section-title{font-size:14px;gap:8px;margin:16px 0 8px}
+      .section-title::before{width:6px;height:18px}
+      .rules{display:block}
+      .rule{grid-template-columns:40px 1fr;min-height:44px;font-size:14px;line-height:1.5}
+      .rule-text{padding:8px 12px}
+      .confirm-box{font-size:14px;line-height:1.6;padding:13px 15px;margin-top:16px}
+      .identity-grid{gap:10px;margin-top:16px}
+      .field-touch{grid-template-columns:70px 1fr;min-height:44px;border-radius:8px}
+      .field-touch span,.field-touch strong{padding:0 11px;font-size:14px}
+      .signature-preview{height:92px;margin-top:16px}
+      .signature-preview.empty::before{font-size:14px}
+      .paper-foot{font-size:12px;padding-top:12px;margin-top:16px}
+      .date-edit-btn{font-size:14px}
+      .date-edit-btn,.site-pick-btn,.modal-close{min-height:44px}
     }
   </style>
 </head>
