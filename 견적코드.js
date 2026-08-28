@@ -117,6 +117,8 @@ const LEDGER_COL = {
 
 const PROGRESS_FIELD = '현장견적 접수';
 const PROGRESS_FINAL = '견적작성 완료';
+let requestSpreadsheet = null;
+let requestWorkboardSpreadsheet = null;
 
 const SEND_HEADERS = [
   '발송일시','견적번호','회차','담당자','고객명','발송번호',
@@ -128,6 +130,8 @@ const SAFETY_HEADERS = [
 ];
 
 function doGet(e) {
+  requestSpreadsheet = null;
+  requestWorkboardSpreadsheet = null;
   const params = e && e.parameter ? e.parameter : {};
   const action = params.action || '';
   const callback = params.callback || '';
@@ -225,6 +229,8 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  requestSpreadsheet = null;
+  requestWorkboardSpreadsheet = null;
   try {
     const payload = parsePostPayload_(e);
     const action = String(payload.action || '').trim();
@@ -413,44 +419,43 @@ function updateLedgerFinal_(sheet, rowNo, payload) {
   const profit = payload.profit || {};
   const site = payload.site || {};
   const estTotals = (payload.internal && payload.internal.totals) || {};
+  const row = sheet.getRange(rowNo, 1, 1, LEDGER_HEADERS.length).getValues()[0];
+  const set = (column, value) => { row[column - 1] = value; };
 
-  sheet.getRange(rowNo, LEDGER_COL.savedAt).setValue(formatDateTimeText_(payload.savedAt, tz));
+  set(LEDGER_COL.savedAt, formatDateTimeText_(payload.savedAt, tz));
 
   // 연락처는 사무실이 견적을 확정할 때 채웁니다. 고객명·주소도 함께 맞춥니다.
   const project = payload.project || {};
-  if (project.customerName) sheet.getRange(rowNo, LEDGER_COL.customerName).setValue(project.customerName);
-  if (project.phone) sheet.getRange(rowNo, LEDGER_COL.phone).setValue(project.phone);
-  if (project.address) sheet.getRange(rowNo, LEDGER_COL.address).setValue(project.address);
+  if (project.customerName) set(LEDGER_COL.customerName, project.customerName);
+  if (project.phone) set(LEDGER_COL.phone, project.phone);
+  if (project.address) set(LEDGER_COL.address, project.address);
 
   // 공사기간은 1단계에서 입력받아 견적서에 표시됩니다.
-  if (site.workDays) sheet.getRange(rowNo, LEDGER_COL.workDays).setValue(site.workDays);
+  if (site.workDays) set(LEDGER_COL.workDays, site.workDays);
 
-  sheet.getRange(rowNo, LEDGER_COL.totalAmount, 1, 7).setValues([[
-    payload.totalAmount || 0,
-    amounts.demolition || 0,
-    amounts.restoration || 0,
-    amounts.equipment || 0,
-    amounts.waste || 0,
-    amounts.protection || 0,
-    payload.selectedCount || 0
-  ]]);
-
-  sheet.getRange(rowNo, LEDGER_COL.estLabor, 1, 5).setValues([[
-    estTotals.labor || 0, estTotals.equipment || 0, estTotals.waste || 0,
-    estTotals.extra || 0, estTotals.total || 0
-  ]]);
-
-  sheet.getRange(rowNo, LEDGER_COL.costTotal, 1, 4).setValues([[
-    estTotals.total || 0,
-    profit.amount || 0,
-    profit.rate || 0,
-    PROGRESS_FINAL
-  ]]);
+  [
+    [LEDGER_COL.totalAmount, payload.totalAmount || 0],
+    [LEDGER_COL.totalAmount + 1, amounts.demolition || 0],
+    [LEDGER_COL.totalAmount + 2, amounts.restoration || 0],
+    [LEDGER_COL.totalAmount + 3, amounts.equipment || 0],
+    [LEDGER_COL.totalAmount + 4, amounts.waste || 0],
+    [LEDGER_COL.totalAmount + 5, amounts.protection || 0],
+    [LEDGER_COL.totalAmount + 6, payload.selectedCount || 0],
+    [LEDGER_COL.estLabor, estTotals.labor || 0],
+    [LEDGER_COL.estEquip, estTotals.equipment || 0],
+    [LEDGER_COL.estWaste, estTotals.waste || 0],
+    [LEDGER_COL.estEtc, estTotals.extra || 0],
+    [LEDGER_COL.estTotal, estTotals.total || 0],
+    [LEDGER_COL.costTotal, estTotals.total || 0],
+    [LEDGER_COL.profit, profit.amount || 0],
+    [LEDGER_COL.profitRate, profit.rate || 0],
+    [LEDGER_COL.progress, PROGRESS_FINAL]
+  ].forEach(([column, value]) => set(column, value));
 
   // 고객 폰 서명 페이지가 읽을 견적서 원본을 저장합니다.
-  if (payload.docData) {
-    sheet.getRange(rowNo, LEDGER_COL.docData).setValue(String(payload.docData));
-  }
+  if (payload.docData) set(LEDGER_COL.docData, String(payload.docData));
+
+  sheet.getRange(rowNo, 1, 1, LEDGER_HEADERS.length).setValues([row]);
 }
 
 /* =========================================================
@@ -1464,6 +1469,8 @@ function saveSafetyConsent_(payload) {
    시트 준비
    ========================================================= */
 function getSpreadsheet() {
+  if (requestSpreadsheet) return requestSpreadsheet;
+
   const propId = (function () {
     try { return String(PropertiesService.getScriptProperties().getProperty('SHEET_ID') || '').trim(); }
     catch (e) { return ''; }
@@ -1471,9 +1478,10 @@ function getSpreadsheet() {
 
   const useId = SPREADSHEET_ID || propId;
 
-  return useId
+  requestSpreadsheet = useId
     ? SpreadsheetApp.openById(useId)
     : SpreadsheetApp.getActiveSpreadsheet();
+  return requestSpreadsheet;
 }
 
 function getEstimateSheet() {
@@ -1567,13 +1575,16 @@ function normalizeStaffText(value) {
 
 /** 워크보드 스프레드시트를 연다 */
 function getWorkboardSpreadsheet_() {
+  if (requestWorkboardSpreadsheet) return requestWorkboardSpreadsheet;
+
   const id = (function () {
     try { return String(PropertiesService.getScriptProperties().getProperty('WORKBOARD_ID') || '').trim(); }
     catch (e) { return ''; }
   })();
 
   if (!id) throw new Error('워크보드 시트가 연결되지 않았습니다. 스크립트 속성 WORKBOARD_ID 를 확인해 주세요.');
-  return SpreadsheetApp.openById(id);
+  requestWorkboardSpreadsheet = SpreadsheetApp.openById(id);
+  return requestWorkboardSpreadsheet;
 }
 
 /** PIN 을 되돌릴 수 없는 형태로 바꾼다 (워크보드와 같은 방식) */

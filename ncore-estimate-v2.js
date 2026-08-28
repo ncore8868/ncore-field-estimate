@@ -488,7 +488,7 @@
       const blob = await D.makePdfBlob(data);
       const base64 = await D.blobToBase64(blob);
 
-      if (status) status.textContent = "구글드라이브에 저장하고 있습니다.";
+      if (status) status.textContent = "파일을 저장하고 있습니다.";
 
       await submitEstimateFileToDrive({
         kind: "signed",

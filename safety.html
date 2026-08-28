@@ -800,11 +800,11 @@
           stateText = '태블릿 저장 완료 · 드라이브 주소 설정 전';
         }else{
           stateText = selectedSite.code
-            ? `태블릿 및 구글드라이브 저장 완료 · ${selectedSite.name || selectedSite.code} 현장 폴더 03_안전동의서`
-            : '태블릿 및 구글드라이브 저장 완료 · 현장 미지정 (_현장미지정 폴더)';
+            ? `저장 완료 · ${selectedSite.name || selectedSite.code}`
+            : '저장 완료';
         }
       }catch(err){
-        stateText = `태블릿 저장 완료 · 드라이브 저장 실패: ${err.message}`;
+        stateText = `저장 실패: ${err.message}`;
       }
       completed = true;
       dateEditBtn.disabled = true;
