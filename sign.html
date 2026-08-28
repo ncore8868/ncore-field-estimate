@@ -17,6 +17,10 @@
       font-display: swap;
     }
 
+    /* 이 화면은 밝은 배경 하나로만 씁니다. 어두운 모드 폰에서 브라우저가
+       스크롤바·기본 요소를 뒤집지 않도록 못 박아 둡니다. */
+    :root { color-scheme: light; }
+
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     html, body {
@@ -51,7 +55,7 @@
 
     .head-text { min-width: 0; }
     .head-title { font-size: 16px; font-weight: 950; letter-spacing: -.6px; }
-    .head-sub { margin-top: 3px; font-size: 12px; font-weight: 750; color: #777; }
+    .head-sub { margin-top: 3px; font-size: 13px; font-weight: 750; color: #666; }
 
     .paper-shell {
       padding: 8px;
@@ -99,9 +103,9 @@
       background: #FFF6EF;
       border: 1px solid rgba(215,96,22,.18);
       color: #7A4014;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 800;
-      line-height: 1.55;
+      line-height: 1.6;
       word-break: keep-all;
     }
 
@@ -136,10 +140,10 @@
     .status {
       min-height: 20px;
       text-align: center;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 800;
       line-height: 1.5;
-      color: #777;
+      color: #666;
       word-break: keep-all;
     }
 
@@ -155,7 +159,7 @@
     }
 
     .state-title { font-size: 22px; font-weight: 950; letter-spacing: -.8px; }
-    .state-text { font-size: 14px; font-weight: 780; line-height: 1.6; color: #777; word-break: keep-all; }
+    .state-text { font-size: 15px; font-weight: 780; line-height: 1.6; color: #666; word-break: keep-all; }
 
     .spinner {
       width: 34px; height: 34px;

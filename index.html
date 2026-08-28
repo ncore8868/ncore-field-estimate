@@ -1197,7 +1197,7 @@
     }
 
     .scope-filter-btn {
-      min-height: 38px;
+      min-height: 44px;
       border-radius: 999px;
       border: 1px solid var(--line);
       background: #FFFFFF;
@@ -2700,7 +2700,7 @@
     /* v63: 내부 정보 초기화 - 자주 누르지 않는 하단 보조 기능 */
     .internal-reset-btn {
       width: 100%;
-      min-height: 38px;
+      min-height: 44px;
       flex: 0 0 auto;
       border: 1px solid rgba(17,17,17,.14);
       border-radius: 12px;
@@ -3491,7 +3491,7 @@
       .memo {
         min-height: 96px;
         border-radius: 16px;
-        font-size: 15px;
+        font-size: 16px;
       }
 
       .category-card,
@@ -3577,7 +3577,7 @@
       }
 
       .scope-filter-btn {
-        min-height: 36px;
+        min-height: 44px;
         padding: 0 12px;
         font-size: 12px;
       }
@@ -4116,7 +4116,7 @@
         min-height: 92px;
         border-radius: 16px;
         padding: 13px;
-        font-size: 14px;
+        font-size: 16px;
       }
 
       .right-panel {
@@ -4174,8 +4174,8 @@
       }
 
       .internal-reset-btn {
-        min-height: 34px;
-        font-size: 11px;
+        min-height: 44px;
+        font-size: 12.5px;
         flex: 0 0 auto;
       }
 
@@ -7191,8 +7191,8 @@
 
     .staff-session-pill button {
       flex: 0 0 auto !important;
-      height: 30px !important;
-      min-height: 30px !important;
+      height: 44px !important;
+      min-height: 44px !important;
       padding: 0 10px !important;
       border-radius: 999px !important;
       border: 0 !important;
@@ -7860,7 +7860,7 @@
       padding: 13px 15px;
       box-sizing: border-box;
       font-family: inherit;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 700;
       line-height: 1.45;
       outline: none;
@@ -8300,10 +8300,10 @@
 
     .photo-thumb-del {
       position: absolute;
-      right: 4px;
-      top: 4px;
-      width: 22px;
-      height: 22px;
+      right: 6px;
+      top: 6px;
+      width: 32px;
+      height: 32px;
       border: 0;
       border-radius: 50%;
       background: rgba(17,17,17,.72);
@@ -8315,6 +8315,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    /* 사진 삭제는 22px 이라 여러 번 눌러야 했습니다.
+       보이는 원을 32px 로 키우고, 눌리는 범위만 44px 로 넓힙니다
+       (::before 는 색이 없어 보이지 않습니다). */
+    .photo-thumb-del::before {
+      content: "";
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
     }
 
     .photo-thumb-del:disabled { display: none; }
