@@ -47,23 +47,39 @@ const ESTIMATE_SHEET_NAME = '현장견적_수신';
 const LEDGER_SHEET_NAME = '견적대장';
 const SEND_LOG_SHEET_NAME = '발송이력';
 const SAFETY_LOG_SHEET_NAME = '안전동의서_기록';
-const SAFETY_FOLDER_ID = '1aDNKQwWEFBb5PsFM4FvKgjWdFHwHLji1';   // UNION ONE > 01_현장
 
-// 견적서 PDF를 보관할 구글 드라이브 폴더 ID.
-// 비워두면 내 드라이브에 'N-CORE_현장견적서' 폴더를 자동으로 만들어 사용합니다.
-const ESTIMATE_FOLDER_ID = '1aDNKQwWEFBb5PsFM4FvKgjWdFHwHLji1';   // UNION ONE > 01_현장
-const ESTIMATE_FOLDER_NAME = '01_현장';
+/* =========================================================
+   드라이브 폴더  (2026-08-29 통일)
 
-// 현장별 자료 폴더. 비워두면 내 드라이브에서 이름으로 찾고, 없으면 만듭니다.
-const SITE_ROOT_FOLDER_ID = '1aDNKQwWEFBb5PsFM4FvKgjWdFHwHLji1';   // UNION ONE > 01_현장
+   현장 하나에 관한 모든 자료는 그 현장 폴더 안에 모입니다. 예외를 두지 않습니다.
+   01_현장 바로 아래에는 현장 폴더(고객명_yyyyMMdd)만 둡니다.
+   연도 폴더도, 낱개 파일도 만들지 않습니다.
+
+   ※ 예전에는 SAFETY_FOLDER_ID · ESTIMATE_FOLDER_ID · SITE_ROOT_FOLDER_ID
+      셋이 전부 같은 01_현장 을 가리켜서, 견적서가 연·월 폴더와 현장 폴더
+      두 곳으로 갈라져 쌓였습니다. 이제 폴더 상수는 이 하나뿐입니다.
+   ========================================================= */
+const SITE_ROOT_FOLDER_ID = '1aDNKQwWEFBb5PsFM4FvKgjWdFHwHLji1';   // 공유 드라이브 UNION ONE > 01_현장
 const SITE_ROOT_FOLDER_NAME = '01_현장';
+
+/* 현장 폴더 안의 칸. 이것이 표준 구조입니다.
+   ★ 한꺼번에 만들지 않습니다. 쓰이는 칸 하나만 그때 만듭니다(계정 안전 규칙).
+      08_출퇴근사진 은 출퇴근 앱이, 나머지는 이 앱이 필요할 때 만듭니다. */
 const SITE_SUBFOLDERS = [
   '00_작업파일', '01_견적서', '02_계약서', '03_현장사진',
-  '04_공사중', '05_완료사진', '06_폐기물', '07_기타자료'
+  '04_공사중', '05_완료사진', '06_폐기물', '07_기타자료',
+  '08_출퇴근사진', '09_동의서'
 ];
 const SITE_PHOTO_FOLDER = '03_현장사진';
 const SITE_ESTIMATE_FOLDER = '01_견적서';
 const SITE_CONTRACT_FOLDER = '02_계약서';
+const SITE_CONSENT_FOLDER = '09_동의서';
+
+/* 현장을 끝내 알 수 없을 때만 쓰는 예외 자리입니다.
+   01_현장 / _현장미지정 / 01_견적서 · 09_동의서
+   파일을 잃지 않으려고 두는 것이지 정상 경로가 아닙니다.
+   여기에 파일이 쌓이면 사람이 어느 현장인지 정해서 옮겨야 합니다. */
+const SITE_UNKNOWN_FOLDER = '_현장미지정';
 const START_COL = 3;
 const EXCEL_API_KEY = 'ncore8868';
 const CODE_PREFIX = 'NC';
@@ -127,6 +143,7 @@ let requestWorkboardSpreadsheet = null;
 let requestSheets = {};
 let requestLedgerValues = null;
 let requestStaffRows = null;      // 워크보드 명부 — 요청당 한 번만 읽는다
+let requestSiteFolders = {};      // 현장 폴더 — 견적번호별로 요청당 한 번만 찾는다
 
 /* 담당자 이름 목록만 잠깐 담아둡니다 (2026-08-28).
    앱을 열 때마다 워크보드 스프레드시트를 여느라 1~2초를 썼습니다.
@@ -145,7 +162,8 @@ const SEND_HEADERS = [
 ];
 
 const SAFETY_HEADERS = [
-  '작성일자','제출일시','담당자','성명','연락처','문서번호','PNG 링크','PDF 링크'
+  '작성일자','제출일시','담당자','성명','연락처','문서번호','PNG 링크','PDF 링크',
+  '현장견적번호','현장명'
 ];
 
 function doGet(e) {
@@ -154,6 +172,7 @@ function doGet(e) {
   requestSheets = {};
   requestLedgerValues = null;
   requestStaffRows = null;
+  requestSiteFolders = {};
   const params = e && e.parameter ? e.parameter : {};
   const action = params.action || '';
   const callback = params.callback || '';
@@ -185,6 +204,10 @@ function doGet(e) {
 
     if (action === 'lookupSites') {
       return outputJson(lookupSites_(params), callback);
+    }
+
+    if (action === 'siteList') {
+      return outputJson(getSiteList_(params), callback);
     }
 
     if (action === 'fieldReportList') {
@@ -256,6 +279,7 @@ function doPost(e) {
   requestSheets = {};
   requestLedgerValues = null;
   requestStaffRows = null;
+  requestSiteFolders = {};
   try {
     const payload = parsePostPayload_(e);
     const action = String(payload.action || '').trim();
@@ -490,6 +514,41 @@ function updateLedgerFinal_(sheet, rowNo, payload) {
 /* =========================================================
    현장견적 (현장반장 제출분)
    ========================================================= */
+/**
+ * 안전동의서 화면(safety.html)의 현장 고르기 목록입니다.
+ *
+ * ★ 이 길이 없으면 안전동의서가 어느 현장 것인지 정할 수 없어
+ *   전부 _현장미지정 으로 떨어집니다. 화면에는 버튼이 이미 있었는데
+ *   서버에 이 action 이 없어 '현장 목록을 불러오지 못했습니다' 만 떴습니다.
+ *
+ * 견적대장을 요청당 한 번만 읽고, 최근 것부터 limit 건만 돌려줍니다.
+ * 돌려주는 것은 견적번호·고객명·주소·저장일시·담당자뿐입니다.
+ * (다른 목록 API 가 이미 내보내는 값과 같습니다. 새로 여는 개인정보가 없습니다)
+ */
+function getSiteList_(params) {
+  const values = ledgerValues_();
+  if (!values.length) return { ok: true, rows: [] };
+
+  const limit = Math.min(Number(params.limit || 60) || 60, 200);
+  const rows = [];
+
+  for (let i = values.length - 1; i >= 0 && rows.length < limit; i--) {
+    const row = values[i];
+    const code = String(row[LEDGER_COL.code - 1] || '').trim();
+    if (!code) continue;
+
+    rows.push({
+      code: code,
+      savedAt: row[LEDGER_COL.savedAt - 1] || '',
+      staff: row[LEDGER_COL.staff - 1] || '',
+      customerName: row[LEDGER_COL.customerName - 1] || '',
+      address: row[LEDGER_COL.address - 1] || ''
+    });
+  }
+
+  return { ok: true, rows: rows };
+}
+
 function getFieldReportList_(params) {
   const values = ledgerValues_();          // 요청당 한 번만 읽는다
   if (!values.length) return { ok: true, rows: [] };
@@ -933,9 +992,13 @@ function lookupSites_(params) {
 }
 
 /* =========================================================
-   현장별 자료 폴더
-   NCORE_현장별자료 / 상호_날짜 / 00~07 하위폴더 구조를 만듭니다.
-   폴더 이름은 나중에 바꾸셔도 됩니다. 프로그램은 폴더 ID로 찾습니다.
+   현장별 자료 폴더  —  드나드는 문은 여기 하나뿐입니다
+
+   01_현장 / 고객명_yyyyMMdd / 01_견적서 · 03_현장사진 · 09_동의서 ...
+
+   ★ 다른 곳에서 DriveApp 으로 폴더를 직접 만들지 마세요.
+     견적서·사진·동의서가 서로 다른 규칙으로 흩어진 원인이 그것이었습니다.
+     경로가 바뀌면 이 구역만 고치면 됩니다.
    ========================================================= */
 function getSiteRootFolder_() {
   if (SITE_ROOT_FOLDER_ID) return DriveApp.getFolderById(SITE_ROOT_FOLDER_ID);
@@ -943,44 +1006,102 @@ function getSiteRootFolder_() {
   return folders.hasNext() ? folders.next() : DriveApp.createFolder(SITE_ROOT_FOLDER_NAME);
 }
 
-/** 견적번호에 연결된 현장 폴더를 확보하고 견적대장에 기록합니다. */
+/**
+ * 현장 폴더 이름을 정합니다.  고객명_yyyyMMdd
+ *
+ * ★ 날짜는 '오늘' 이 아니라 견적번호 안의 날짜입니다 (NC-260828-001 → 20260828).
+ *   오늘 날짜로 지으면, 견적대장의 현장폴더ID 가 비었을 때 다음 날 같은 현장을
+ *   다시 찾다가 이름이 달라져 폴더가 하나 더 생깁니다.
+ */
+function siteFolderName_(code, customerName) {
+  const hit = String(code || '').match(/-(\d{6})-/);
+  const dateText = hit
+    ? ('20' + hit[1])
+    : Utilities.formatDate(new Date(), getTimeZone_(), 'yyyyMMdd');
+  const who = String(customerName || '').trim() || '현장';
+  return sanitizeFileName_(who + '_' + dateText);
+}
+
+/**
+ * 견적번호에 연결된 현장 폴더를 확보합니다.  현장 폴더를 얻는 길은 이것 하나입니다.
+ *
+ *   ① 견적대장의 현장폴더ID 가 있으면 그것을 쓴다
+ *   ② 없으면 고객명_yyyyMMdd 이름으로 01_현장 안에서 찾는다
+ *   ③ 그래도 없으면 만들고, 만든 ID 를 견적대장에 적어둔다
+ *   ④ 하위 폴더는 여기서 만들지 않는다 — 쓰는 쪽이 필요한 칸 하나만 만든다
+ *
+ * ★ 예전에는 폴더를 만들 때마다 하위 폴더 여덟 개를 한꺼번에 만들었습니다.
+ *   견적 한 건 저장에 드라이브 호출이 아홉 번 몰렸습니다. 계정 안전 규칙에 어긋납니다.
+ */
 function ensureSiteFolderForCode_(code, customerName) {
+  const key = String(code || '').trim();
+  if (!key) return null;
+
+  // 한 요청에서 같은 현장을 두 번 찾지 않습니다.
+  if (Object.prototype.hasOwnProperty.call(requestSiteFolders, key)) return requestSiteFolders[key];
+
+  let folder = null;
   try {
     const sheet = getLedgerSheet_();
-    const rowNo = findLedgerRow_(sheet, code);
-    if (!rowNo) return null;
+    const rowNo = findLedgerRow_(sheet, key);
+    if (!rowNo) { requestSiteFolders[key] = null; return null; }
 
     const savedId = String(sheet.getRange(rowNo, LEDGER_COL.siteFolderId).getDisplayValue() || '').trim();
     if (savedId) {
-      try { return DriveApp.getFolderById(savedId); } catch (err) { /* 폴더가 지워진 경우 새로 만듭니다 */ }
+      try {
+        folder = DriveApp.getFolderById(savedId);
+        requestSiteFolders[key] = folder;
+        return folder;
+      } catch (err) { /* 폴더가 지워진 경우에만 아래에서 새로 만듭니다 */ }
     }
 
-    const tz = getTimeZone_();
-    const dateText = Utilities.formatDate(new Date(), tz, 'yyyyMMdd');
-    const name = sanitizeFileName_((customerName || '현장') + '_' + dateText);
+    const who = String(customerName || '').trim()
+      || sheet.getRange(rowNo, LEDGER_COL.customerName).getDisplayValue();
+    const name = siteFolderName_(key, who);
 
     const root = getSiteRootFolder_();
     const found = root.getFoldersByName(name);
-    const folder = found.hasNext() ? found.next() : root.createFolder(name);
-
-    SITE_SUBFOLDERS.forEach(sub => getOrCreateFolder_(folder, sub));
+    folder = found.hasNext() ? found.next() : root.createFolder(name);
 
     const folderCells = {};
     folderCells[LEDGER_COL.siteFolderUrl] = folder.getUrl();
     folderCells[LEDGER_COL.siteFolderId] = folder.getId();
     writeCells_(sheet, rowNo, folderCells);    // 이어진 칸이라 왕복 1회
-
-    return folder;
   } catch (err) {
-    return null;
+    folder = null;
   }
+
+  requestSiteFolders[key] = folder;
+  return folder;
 }
 
-/** 견적번호로 현장 폴더의 하위폴더를 가져옵니다. */
+/** 현장 폴더 안의 칸 하나를 가져옵니다. 없으면 그때 만듭니다. */
 function getSiteSubFolder_(code, subName, customerName) {
   const folder = ensureSiteFolderForCode_(code, customerName);
   if (!folder) return null;
   return getOrCreateFolder_(folder, subName);
+}
+
+/**
+ * 현장을 끝내 알 수 없을 때만 쓰는 자리입니다.
+ * 01_현장 / _현장미지정 / <칸이름>
+ * 파일을 잃지 않으려고 두는 것이지 정상 경로가 아닙니다.
+ */
+function unknownSiteFolder_(subName) {
+  const box = getOrCreateFolder_(getSiteRootFolder_(), SITE_UNKNOWN_FOLDER);
+  return subName ? getOrCreateFolder_(box, subName) : box;
+}
+
+/** 견적서 PDF 가 갈 곳. 발송본·서명본 모두 여기 한 곳에 모입니다. */
+function estimateFolder_(code, customerName) {
+  return getSiteSubFolder_(code, SITE_ESTIMATE_FOLDER, customerName)
+      || unknownSiteFolder_(SITE_ESTIMATE_FOLDER);
+}
+
+/** 안전동의서가 갈 곳. */
+function consentFolder_(code, customerName) {
+  return getSiteSubFolder_(code, SITE_CONSENT_FOLDER, customerName)
+      || unknownSiteFolder_(SITE_CONSENT_FOLDER);
 }
 
 /* =========================================================
@@ -1349,13 +1470,10 @@ function saveEstimateFile_(payload) {
   const tz = getTimeZone_();
   const now = new Date();
 
-  // 서명본이든 발송본이든 견적서이므로 같은 01_견적서 폴더에 모읍니다.
-  let targetFolder = getSiteSubFolder_(code, SITE_ESTIMATE_FOLDER, payload.customerName);
-  if (!targetFolder) {
-    const rootFolder = getEstimateRootFolder_();
-    const yearFolder = getOrCreateFolder_(rootFolder, Utilities.formatDate(now, tz, 'yyyy'));
-    targetFolder = getOrCreateFolder_(yearFolder, Utilities.formatDate(now, tz, 'MM월'));
-  }
+  /* 서명본이든 발송본이든 견적서이므로 현장 폴더의 01_견적서 한 곳에 모읍니다.
+     ※ 예전에는 현장을 못 찾으면 01_현장 / 2026 / 08월 로 떨어뜨렸습니다.
+        그래서 견적서가 두 곳으로 갈라졌습니다. 지금은 예외도 _현장미지정 한 곳입니다. */
+  const targetFolder = estimateFolder_(code, payload.customerName);
 
   const customerName = sanitizeFileName_(payload.customerName || '고객');
   const baseName = code + '_' + customerName + '_견적서' + (isSigned ? '_서명본' : '');
@@ -1396,13 +1514,6 @@ function saveEstimateFile_(payload) {
   }
 
   return { ok: true, code: code, signed: isSigned, url: url, folderUrl: targetFolder.getUrl() };
-}
-
-function getEstimateRootFolder_() {
-  if (ESTIMATE_FOLDER_ID) return DriveApp.getFolderById(ESTIMATE_FOLDER_ID);
-
-  const folders = DriveApp.getFoldersByName(ESTIMATE_FOLDER_NAME);
-  return folders.hasNext() ? folders.next() : DriveApp.createFolder(ESTIMATE_FOLDER_NAME);
 }
 
 /**
@@ -1478,11 +1589,19 @@ function saveSafetyConsent_(payload) {
   const manager = resolveStaffDisplayName_(payload.manager);
   if (!manager) throw new Error('사용 가능한 담당자가 아닙니다. PIN을 다시 확인해 주세요.');
 
-  const rootFolder = DriveApp.getFolderById(SAFETY_FOLDER_ID);
   const now = new Date();
   const tz = getTimeZone_();
-  const yearFolder = getOrCreateFolder_(rootFolder, Utilities.formatDate(now, tz, 'yyyy'));
-  const monthFolder = getOrCreateFolder_(yearFolder, Utilities.formatDate(now, tz, 'MM월'));
+
+  /* 현장이 특정되면 그 현장 폴더의 09_동의서 로 넣습니다.
+     ※ 예전에는 SAFETY_FOLDER_ID(=01_현장) 아래 연·월 폴더에 쌓았습니다.
+        현장 폴더가 있어야 할 자리에 2026 / 08월 이 같이 생긴 원인입니다.
+     예외는 하나뿐입니다 — 화면에서 현장을 고르지 않았거나(사무실에서 미리 뽑는 경우)
+     고른 현장이 견적대장에 없을 때. 그때만 _현장미지정 / 09_동의서 로 갑니다. */
+  const siteCode = String(payload.code || '').trim();
+  const siteName = String(payload.customerName || '').trim();
+  const targetFolder = siteCode
+    ? consentFolder_(siteCode, siteName)
+    : unknownSiteFolder_(SITE_CONSENT_FOLDER);
 
   const safeBase = sanitizeFileName_(payload.fileBase || (payload.documentNo + '_안전동의서'));
   const pdfBlob = Utilities.newBlob(
@@ -1490,7 +1609,7 @@ function saveSafetyConsent_(payload) {
     'application/pdf',
     safeBase + '.pdf'
   );
-  const pdfFile = monthFolder.createFile(pdfBlob);
+  const pdfFile = targetFolder.createFile(pdfBlob);
 
   // PNG는 저장용량 절약을 위해 보내오는 경우에만 함께 보관합니다.
   let pngUrl = '';
@@ -1500,7 +1619,7 @@ function saveSafetyConsent_(payload) {
       'image/png',
       safeBase + '.png'
     );
-    pngUrl = monthFolder.createFile(pngBlob).getUrl();
+    pngUrl = targetFolder.createFile(pngBlob).getUrl();
   }
 
   const sheet = getSafetyLogSheet_();
@@ -1512,7 +1631,9 @@ function saveSafetyConsent_(payload) {
     String(payload.phone || '').trim(),
     String(payload.documentNo || '').trim(),
     pngUrl,
-    pdfFile.getUrl()
+    pdfFile.getUrl(),
+    siteCode,          // 어느 현장 폴더로 들어갔는지 나중에 알아볼 수 있게 남깁니다
+    siteName
   ]);
 
   return {
@@ -1520,7 +1641,7 @@ function saveSafetyConsent_(payload) {
     manager: manager,
     pngUrl: pngUrl,
     pdfUrl: pdfFile.getUrl(),
-    folderUrl: monthFolder.getUrl()
+    folderUrl: targetFolder.getUrl()
   };
 }
 
@@ -1987,4 +2108,330 @@ function 대장_확인() {
   Logger.log(결과);
   try { SpreadsheetApp.getUi().alert('견적대장 확인', 결과, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) {}
   return 결과;
+}
+
+
+/* ============================================================
+ *  파일이름_정리하기   —  편집기에서 손으로 한 번 실행합니다
+ * ------------------------------------------------------------
+ *  01_현장 아래에 잘못 생긴 연도 폴더(2026 / 08월)와 낱개 파일에서
+ *  견적서 PDF 를 찾아 각 현장 폴더의 01_견적서 로 옮깁니다.
+ *
+ *      파일이름_정리하기(true)   무엇을 어디로 옮길지 보여주기만 합니다
+ *      파일이름_정리하기()       실제로 옮깁니다
+ *
+ *  ★ 복사가 아니라 이동입니다. 같은 파일이 두 곳에 있으면 어느 것이 진짜인지 알 수 없습니다.
+ *  ★ 한 번에 50건까지만 옮깁니다. 남으면 몇 건인지 알려드립니다.
+ *    다시 실행하면 이어서 합니다. 드라이브 작업을 한 요청에 몰지 않습니다.
+ *  ★ 어느 현장인지 알 수 없는 파일은 옮기지 않고 목록으로 보여줍니다.
+ *  ★ 지우는 것은 다 비워진 연도·월 폴더뿐입니다. 파일은 하나도 지우지 않습니다.
+ *  ★ 자동 실행(트리거)을 걸지 마세요.
+ * ========================================================== */
+function 파일이름_정리하기(미리보기) {
+  const 미리 = (미리보기 === true);
+  const 한번에 = 50;        // 한 번에 옮기는 상한
+  const 훑기상한 = 500;     // 한 번에 훑어보는 파일 수 상한
+
+  // 요청이 새로 시작된 것처럼 담아둔 것을 비웁니다.
+  requestSpreadsheet = null;
+  requestWorkboardSpreadsheet = null;
+  requestSheets = {};
+  requestLedgerValues = null;
+  requestStaffRows = null;
+  requestSiteFolders = {};
+
+  const 줄 = [];
+  줄.push(미리 ? '■ 미리보기 — 아무것도 옮기지 않습니다' : '■ 실제 정리');
+  줄.push('');
+
+  /* ── 견적대장을 한 번만 읽어 표를 만듭니다 ───────────────── */
+  const ledger = getLedgerSheet_();
+  const values = ledgerValues_();
+  const 대장 = {};       // 견적번호 → 현장 정보
+  const 링크주인 = {};   // 드라이브 파일ID → 견적번호 (이름에 번호가 없어도 알아냅니다)
+  const 이름주인 = {};   // 고객명 → 견적번호 (그 이름이 한 곳뿐일 때만)
+
+  values.forEach(function (row, i) {
+    const code = String(row[LEDGER_COL.code - 1] || '').trim();
+    if (!code) return;
+
+    const who = String(row[LEDGER_COL.customerName - 1] || '').trim();
+    대장[code] = {
+      rowNo: i + 2,
+      customerName: who,
+      siteFolderUrl: String(row[LEDGER_COL.siteFolderUrl - 1] || '').trim(),
+      siteFolderId: String(row[LEDGER_COL.siteFolderId - 1] || '').trim(),
+      fileUrl: String(row[LEDGER_COL.fileUrl - 1] || '').trim(),
+      signedFileUrl: String(row[LEDGER_COL.signedFileUrl - 1] || '').trim()
+    };
+
+    [대장[code].fileUrl, 대장[code].signedFileUrl].forEach(function (u) {
+      const id = 드라이브ID_(u);
+      if (id) 링크주인[id] = code;
+    });
+
+    if (who.length >= 2) {
+      이름주인[who] = (이름주인[who] === undefined) ? code : '중복';
+    }
+  });
+
+  /* ── 01_현장 아래를 훑습니다 ─────────────────────────────── */
+  const root = getSiteRootFolder_();
+  const 옮길것 = [];   // { file, name, code, 자리 }
+  const 모름 = [];
+  let 훑은수 = 0;
+  let 훑기넘침 = false;
+
+  function 훑기(folder, 자리) {
+    if (훑기넘침) return;
+    const files = folder.getFiles();
+    while (files.hasNext()) {
+      if (훑은수 >= 훑기상한) { 훑기넘침 = true; return; }
+      훑은수 += 1;
+      분류_(files.next(), 자리);
+    }
+  }
+
+  function 분류_(file, 자리) {
+    const name = file.getName();
+    const id = file.getId();
+
+    // ① 파일 이름 앞의 견적번호  ② 이름에 없으면 견적대장의 견적서링크로 되짚기
+    const code = 코드찾기_(name, 대장) || 링크주인[id] || '';
+
+    if (!code) {
+      모름.push('   ' + 자리 + ' / ' + name + 힌트_(name, 이름주인));
+      return;
+    }
+    if (!견적서인가_(name, id, 링크주인)) {
+      모름.push('   ' + 자리 + ' / ' + name + '   (견적서 PDF 가 아니라 그대로 둡니다)');
+      return;
+    }
+    옮길것.push({ file: file, name: name, code: code, 자리: 자리 });
+  }
+
+  const 연도들 = [];
+  const 하위 = root.getFolders();
+  while (하위.hasNext()) {
+    const f = 하위.next();
+    if (/^\d{4}$/.test(f.getName())) 연도들.push(f);
+  }
+
+  연도들.forEach(function (y) {
+    훑기(y, SITE_ROOT_FOLDER_NAME + '/' + y.getName());
+    const 달들 = y.getFolders();
+    while (달들.hasNext()) {
+      const m = 달들.next();
+      훑기(m, SITE_ROOT_FOLDER_NAME + '/' + y.getName() + '/' + m.getName());
+    }
+  });
+
+  // 01_현장 바로 아래에 떨어진 낱개 파일도 같이 봅니다.
+  훑기(root, SITE_ROOT_FOLDER_NAME);
+
+  줄.push('연도 폴더 ' + 연도들.length + '개 · 훑어본 파일 ' + 훑은수 + '개');
+  if (훑기넘침) {
+    줄.push('★ ' + 훑기상한 + '개까지만 훑었습니다. 이번 것을 끝내고 다시 실행하세요.');
+  }
+  줄.push('');
+
+  /* ── 옮기기 ─────────────────────────────────────────────── */
+  const 할것 = 옮길것.slice(0, 한번에);
+  const 남은건수 = 옮길것.length - 할것.length;
+  const 도착폴더 = {};
+  const 도착이름 = {};   // 도착 폴더에 이미 있는 파일 이름 (폴더당 한 번만 읽습니다)
+  const 실패 = [];
+  const 링크확인 = [];
+  const 같은이름 = [];
+  let 옮김 = 0;
+  let 링크수정 = 0;
+
+  줄.push('[옮길 견적서] ' + 옮길것.length + '건' +
+          (남은건수 ? '  — 이번에 ' + 할것.length + '건, 다음에 ' + 남은건수 + '건' : ''));
+
+  할것.forEach(function (건) {
+    const 정보 = 대장[건.code];
+    const 갈곳 = (정보.siteFolderId ? '' : '새 ') + '현장 폴더 ' +
+                 (정보.siteFolderId ? (정보.customerName || 건.code)
+                                    : siteFolderName_(건.code, 정보.customerName)) +
+                 ' / ' + SITE_ESTIMATE_FOLDER;
+
+    if (미리) {
+      줄.push('   ' + 건.name);
+      줄.push('      ' + 건.자리 + '   →   ' + 갈곳);
+      return;
+    }
+
+    try {
+      let dest = 도착폴더[건.code];
+      if (!dest) {
+        dest = estimateFolder_(건.code, 정보.customerName);
+        도착폴더[건.code] = dest;
+
+        /* 같은 이름이 이미 있는지 보려고 도착 폴더를 한 번만 훑습니다.
+           드라이브는 같은 이름을 두 개 허용하므로, 조용히 겹치면 나중에
+           어느 것이 진짜인지 알 수 없습니다. 지우지 않고 알려만 드립니다. */
+        const 있는것 = {};
+        const 이미 = dest.getFiles();
+        while (이미.hasNext()) 있는것[이미.next().getName()] = true;
+        도착이름[건.code] = 있는것;
+      }
+
+      if (도착이름[건.code][건.name]) {
+        같은이름.push('   ' + 갈곳 + ' / ' + 건.name);
+      }
+      도착이름[건.code][건.name] = true;
+
+      건.file.moveTo(dest);
+      옮김 += 1;
+      줄.push('   옮김  ' + 건.name + '   →   ' + 갈곳);
+
+      /* 링크가 비어 있으면 채웁니다.
+         이미 다른 파일을 가리키고 있으면 덮어쓰지 않고 알려만 드립니다.
+         옛 버전을 옮기다가 최신 링크를 지워 버릴 수 있기 때문입니다. */
+      const 서명본 = 건.name.indexOf('_서명본') >= 0;
+      const 칸 = 서명본 ? LEDGER_COL.signedFileUrl : LEDGER_COL.fileUrl;
+      const 지금 = 서명본 ? 정보.signedFileUrl : 정보.fileUrl;
+      const url = 건.file.getUrl();
+
+      if (!지금) {
+        const cells = {};
+        cells[칸] = url;
+        writeCells_(ledger, 정보.rowNo, cells);
+        if (서명본) { 정보.signedFileUrl = url; } else { 정보.fileUrl = url; }
+        링크수정 += 1;
+      } else if (지금.indexOf(건.file.getId()) < 0) {
+        링크확인.push('   ' + 건.code + '  ' + (서명본 ? '서명본링크' : '견적서링크') +
+                      ' 가 다른 파일을 가리킵니다 — 어느 것이 맞는지 확인해 주세요');
+      }
+    } catch (err) {
+      실패.push('   ' + 건.name + '  →  ' + (err && err.message ? err.message : err));
+    }
+  });
+
+  if (!옮길것.length) 줄.push('   없습니다');
+  줄.push('');
+
+  /* ── 빈 폴더 정리 ───────────────────────────────────────── */
+  const 지운폴더 = [];
+  const 남긴폴더 = [];
+
+  if (!미리) {
+    연도들.forEach(function (y) {
+      try {
+        const 달들 = y.getFolders();
+        while (달들.hasNext()) {
+          const m = 달들.next();
+          if (비었나_(m)) { m.setTrashed(true); 지운폴더.push(y.getName() + '/' + m.getName()); }
+        }
+        if (비었나_(y)) { y.setTrashed(true); 지운폴더.push(y.getName()); }
+        else 남긴폴더.push(y.getName());
+      } catch (err) {
+        실패.push('   폴더 ' + y.getName() + '  →  ' + (err && err.message ? err.message : err));
+      }
+    });
+  }
+
+  /* ── 보고 ───────────────────────────────────────────────── */
+  if (!미리) {
+    줄.push('[결과]');
+    줄.push('   옮긴 파일        ' + 옮김 + '건');
+    줄.push('   채운 견적서링크  ' + 링크수정 + '건');
+    줄.push('   지운 빈 폴더     ' + 지운폴더.length + '개' +
+            (지운폴더.length ? '  (' + 지운폴더.join(', ') + ')' : ''));
+    if (남긴폴더.length) {
+      줄.push('   남긴 폴더        ' + 남긴폴더.join(', ') + '  — 안에 뭔가 남아 있어 지우지 않았습니다');
+    }
+    if (남은건수) {
+      줄.push('   ★ ' + 남은건수 + '건이 남았습니다. 파일이름_정리하기() 를 다시 실행하세요.');
+    }
+    줄.push('');
+  }
+
+  if (같은이름.length) {
+    줄.push('[같은 이름이 두 개가 된 곳] ' + 같은이름.length + '건');
+    줄.push('   옮기기 전에 이미 같은 이름이 있었습니다. 지우지 않았으니 어느 것이');
+    줄.push('   최신인지 보고 사람이 하나를 지워 주세요.');
+    같은이름.forEach(function (t) { 줄.push(t); });
+    줄.push('');
+  }
+
+  if (링크확인.length) {
+    줄.push('[견적대장 링크 확인 필요] ' + 링크확인.length + '건');
+    링크확인.forEach(function (t) { 줄.push(t); });
+    줄.push('');
+  }
+
+  if (모름.length) {
+    줄.push('[어느 현장인지 알 수 없어 그대로 둔 파일] ' + 모름.length + '건');
+    모름.forEach(function (t) { 줄.push(t); });
+    줄.push('');
+  }
+
+  if (실패.length) {
+    줄.push('[실패] ' + 실패.length + '건');
+    실패.forEach(function (t) { 줄.push(t); });
+    줄.push('');
+  }
+
+  if (미리) {
+    줄.push('실제로 옮기려면 편집기에서  파일이름_정리하기()  를 실행하세요.');
+  }
+
+  const 결과 = 줄.join('\n');
+  Logger.log(결과);
+  try {
+    SpreadsheetApp.getUi().alert('현장 폴더 정리', 결과, SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) { /* 편집기에서 실행하면 창이 없습니다. 실행 기록(로그)으로 보세요 */ }
+  return 결과;
+}
+
+
+/** 드라이브 주소에서 파일 ID 만 뽑습니다. */
+function 드라이브ID_(url) {
+  const hit = String(url || '').match(/[-\w]{25,}/);
+  return hit ? hit[0] : '';
+}
+
+
+/** 파일 이름 앞의 견적번호를 견적대장과 맞춰 봅니다. */
+function 코드찾기_(name, 대장) {
+  const hit = String(name || '').match(/([A-Za-z]{2,4}-\d{6}-\d{3}(?:-A\d+)?)/);
+  if (!hit) return '';
+
+  const full = hit[1].toUpperCase();
+  if (대장[full]) return full;
+
+  // 추가견적 번호가 대장에 없으면 원 견적번호로 되짚습니다.
+  const base = full.replace(/-A\d+$/, '');
+  return 대장[base] ? base : '';
+}
+
+
+/** 견적서 PDF 인지 봅니다. 아닌 것은 건드리지 않습니다. */
+function 견적서인가_(name, id, 링크주인) {
+  const 이름 = String(name || '');
+  if (!/\.pdf$/i.test(이름)) return false;
+  if (이름.indexOf('견적서') >= 0) return true;
+  return !!링크주인[id];      // 견적대장이 견적서로 가리키고 있으면 견적서입니다
+}
+
+
+/** 옮기지 못한 파일에 '이 현장으로 보입니다' 힌트만 답니다. 옮기지는 않습니다. */
+function 힌트_(name, 이름주인) {
+  const 이름 = String(name || '');
+  let 찾음 = '';
+  for (const who in 이름주인) {
+    if (이름주인[who] === '중복') continue;
+    if (이름.indexOf(who) < 0) continue;
+    if (찾음) return '';        // 두 현장에 걸리면 힌트를 달지 않습니다
+    찾음 = who;
+  }
+  return 찾음 ? ('   ← ' + 찾음 + ' 현장으로 보입니다 (사람이 확인해 주세요)') : '';
+}
+
+
+/** 폴더가 완전히 비었는지 봅니다. */
+function 비었나_(folder) {
+  return !folder.getFiles().hasNext() && !folder.getFolders().hasNext();
 }

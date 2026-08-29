@@ -1,11 +1,12 @@
 /* =========================================================================
-   N-CORE 서비스워커 v52
+   N-CORE 서비스워커 v53
 
-   v51 대비 달라진 점
-   - 추가견적 작성과 서명 현황 화면이 들어가 캐시를 갱신합니다.
+   v52 대비 달라진 점
+   - safety.html 의 PIN 확인이 없어진 getPinMap 대신
+     견적 화면과 같은 action=login 을 쓰도록 바뀌어 캐시를 갱신합니다.
    ========================================================================= */
 
-const CACHE_NAME = "ncore-field-estimate-pwa-v55";
+const CACHE_NAME = "ncore-field-estimate-pwa-v56";
 
 const CORE_ASSETS = [
   "./",
