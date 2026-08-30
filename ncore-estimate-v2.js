@@ -54,8 +54,15 @@
   /* ---------------------------------------------------------------
      2. 상태
      --------------------------------------------------------------- */
+  /* ★ 예전에는 이 줄이 "if (!window.state) return;" 이었습니다 (v51에서 고침).
+     index.html 의 상태는 "const state = {...}" 로 만들어져 있는데,
+     const 로 만든 것은 window 에 붙지 않습니다. 그래서 이 안전장치가
+     **한 번도 실행된 적이 없었고**, state.signature 가 비어 있는 채로
+     견적서 화면에 들어가면 화면이 통째로 뜨지 않았습니다
+     (새로 시작하기를 거치지 않고 견적서로 간 경우).
+     지금은 렉시컬 변수 state 를 직접 봅니다. 정상 흐름의 동작은 그대로입니다. */
   function initState() {
-    if (!window.state) return;
+    if (typeof state === "undefined" || !state || !state.project) return;
     if (typeof state.project.workDays !== "number") state.project.workDays = 1;
     if (!state.signature) {
       state.signature = { customer: { dataUrl: "", signedAt: "", method: "" } };
