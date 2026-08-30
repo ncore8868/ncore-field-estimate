@@ -72,8 +72,8 @@
     .field-touch{appearance:none;width:100%;display:grid;grid-template-columns:70px 1fr;min-height:42px;border:1px solid #D5D5D5;border-radius:8px;overflow:hidden;background:#fff;text-align:left;padding:0}
     .field-touch span{display:flex;align-items:center;padding:0 11px;background:#F4F4F2;color:#555;font-size:11.4px;font-weight:850}
     .field-touch strong{display:flex;align-items:center;padding:0 11px;font-size:11.4px;font-weight:900;color:#111;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .signature-preview{height:92px;border:1.5px dashed #BCBCBC;border-radius:10px;position:relative;display:flex;align-items:center;justify-content:center;background:#FCFCFB;overflow:hidden}
-    .signature-preview.empty::before{content:"서명란을 터치해 서명해주세요";color:#888;font-size:11.5px;font-weight:800}
+    .signature-preview{height:92px;border:1.5px dashed #9C9C9C;border-radius:10px;position:relative;display:flex;align-items:center;justify-content:center;background:#FCFCFB;overflow:hidden}
+    .signature-preview.empty::before{content:"서명란을 터치해 서명해주세요";color:#6B6B6B;font-size:11.5px;font-weight:800}
     .signature-label{display:none}
     .signature-preview img{display:none;max-width:92%;max-height:86%;object-fit:contain}.signature-preview.has-signature img{display:block}
     .paper-foot{padding-top:2px;display:flex;justify-content:space-between;gap:8px;color:#666;font-size:9.5px;font-weight:750}
@@ -109,7 +109,7 @@
     .site-pick-main{min-width:0}
     .site-pick-label{font-size:12px;font-weight:850;color:#6B6B6B;margin-bottom:2px}
     .site-pick-value{font-size:14px;font-weight:900;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .site-pick-value.none{color:#999}
+    .site-pick-value.none{color:#767676}
     .site-pick-btn{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid #DDDCD8;
       background:#F4F4F2;color:#222;font-size:13px;font-weight:900;white-space:nowrap}
     .site-pick-btn,.modal-close,.date-edit-btn{min-height:44px}
@@ -122,7 +122,7 @@
     .site-item.on{border-color:var(--accent);background:#FFF6F0}
     .site-item b{font-size:14px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .site-item small{font-size:13px;color:#6B6B6B;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .site-empty{padding:26px 12px;text-align:center;color:#888;font-size:12.5px;font-weight:800;line-height:1.6}
+    .site-empty{padding:26px 12px;text-align:center;color:#6B6B6B;font-size:12.5px;font-weight:800;line-height:1.6}
 
     .pin-start-card{max-width:470px!important;padding:28px 26px 24px!important;text-align:center}
     .pin-start-logo{display:block;width:180px;height:auto;margin:0 auto 18px;object-fit:contain}
@@ -148,11 +148,30 @@
     .input-field input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1}
     .signature-pad-wrap{position:relative;height:340px;border:2px solid #222;border-radius:15px;background:#fff;overflow:hidden;touch-action:none}
     #signatureCanvas{display:block;width:100%;height:100%;touch-action:none}
-    .sign-guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;color:#C3C3C3;font-size:19px;font-weight:850}
+    .sign-guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;color:#7A7A7A;font-size:19px;font-weight:850}
     .modal-actions{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;margin-top:12px}
     .toast{position:fixed;left:50%;bottom:24px;z-index:200;transform:translate(-50%,18px);opacity:0;pointer-events:none;max-width:min(92vw,520px);padding:13px 16px;border-radius:13px;background:#202020;color:#fff;font-size:14px;font-weight:800;box-shadow:0 12px 34px rgba(0,0,0,.28);transition:.2s}
     .toast.show{opacity:1;transform:translate(-50%,0)}
     .capture-clone{position:fixed!important;left:-10000px!important;top:0!important;width:794px!important;height:1123px!important;box-shadow:none!important;border:0!important}
+    /* ────────────────────────────────────────────────────────────
+       휴대폰 (≤760px) — 고객이 읽고 서명하는 화면
+
+       ★ 2026-08-29 : 여기에는 규칙이 **두 벌** 들어 있었습니다.
+         앞의 한 벌은 A4 를 그대로 축소하던 시절의 것(본문 8px · 아래 글 5.7px)이고,
+         뒤의 한 벌이 그것을 덮어써서 읽을 수 있게(14px) 만들고 있었습니다.
+         결과는 멀쩡했지만, 파일만 보면 폰에서 6~9px 로 보이는 것처럼 읽혔고
+         사이에 규칙을 하나만 끼워 넣어도 깨알 글씨가 되살아납니다.
+         그래서 **실제로 적용되던 값 그대로** 한 벌로 합쳤습니다.
+
+         합치면서 앞 벌에서 남아 있던 두 가지만 바로잡았습니다.
+           · .lead 안쪽 여백 8px 9px → 13px 15px
+             글자는 14px 로 커졌는데 여백은 축소판 값 그대로여서
+             동의서 첫 문단이 테두리에 붙어 있었습니다.
+             바로 아래 .confirm-box 와 같은 값으로 맞췄습니다.
+           · 모서리 7px → 10px
+             축소판 시절 값입니다. 같은 화면의 .action-box(16px)·
+             데스크톱 기본값(10px)과 뒤섞여 있었습니다.
+       ──────────────────────────────────────────────────────────── */
     @media (max-width:760px){
       .topbar{padding:12px 14px}
       .brand-mark{width:94px;height:40px;font-size:15px}
@@ -160,27 +179,35 @@
       .wrap{padding:10px}
       .paper-shell{padding:6px;border-radius:14px}
       .action-box{padding:14px;border-radius:16px}
-      .paper-inner{padding:4.6%;gap:6px}
-      .paper-head{gap:8px;padding-bottom:8px;border-bottom-width:3px}
-      .paper-logo{width:112px;height:auto;transform:translateY(1px)}
-      .paper-title{font-size:18px;letter-spacing:-.7px}
-      .paper-meta{flex-basis:135px;font-size:6.8px;border-radius:7px}
-      .meta-row{grid-template-columns:40px 1fr;min-height:17px}
-      .meta-row span,.meta-row strong{padding:0 5px}
-      .lead{padding:8px 9px;border-left-width:3px;font-size:8px;line-height:1.55;border-radius:7px}
-      .section-title{margin:0;font-size:8.9px;gap:5px}
-      .section-title::before{width:4px;height:12px}
-      .rules{border-radius:7px}
-      .rule{grid-template-columns:25px 1fr;min-height:0;font-size:9.2px;line-height:1.38}
-      .rule-text{padding:3px 7px}
-      .confirm-box{padding:8px 9px;font-size:7.6px;line-height:1.5;border-radius:7px}
-      .identity-grid{gap:6px}
-      .field-touch{grid-template-columns:43px 1fr;min-height:22px;border-radius:6px}
-      .field-touch span,.field-touch strong{padding:0 6px;font-size:6.7px}
-      .signature-preview{height:52px;border-radius:7px}
-      .signature-preview.empty::before{font-size:6.9px}
-      .signature-label{left:6px;top:5px;font-size:5.8px}
-      .paper-foot{font-size:5.7px;padding-top:5px}
+
+      /* 종이 흉내를 그만두고 위에서 아래로 흐르게 한다 */
+      .a4-paper{aspect-ratio:auto;overflow:visible}
+      .paper-inner{height:auto;display:block;padding:20px}
+      .paper-head{gap:8px;padding-bottom:8px;border-bottom-width:3px;margin-bottom:16px}
+      .paper-logo{width:132px;height:auto;transform:translateY(1px)}
+      .paper-title{font-size:24px;letter-spacing:-.7px}
+      .paper-meta{flex-basis:135px;font-size:11px;border-radius:10px}
+      .meta-row{grid-template-columns:62px 1fr;min-height:28px}
+      .meta-row span,.meta-row strong{padding:0 8px}
+
+      .lead{padding:13px 15px;border-left-width:3px;border-radius:10px;
+        font-size:14px;line-height:1.6;margin-bottom:16px}
+      .section-title{font-size:14px;gap:8px;margin:16px 0 8px}
+      .section-title::before{width:6px;height:18px}
+      .rules{display:block;border-radius:10px}
+      .rule{grid-template-columns:40px 1fr;min-height:44px;font-size:14px;line-height:1.5}
+      .rule-text{padding:8px 12px}
+      .confirm-box{padding:13px 15px;border-radius:10px;
+        font-size:14px;line-height:1.6;margin-top:16px}
+
+      .identity-grid{gap:10px;margin-top:16px}
+      .field-touch{grid-template-columns:70px 1fr;min-height:44px;border-radius:8px}
+      .field-touch span,.field-touch strong{padding:0 11px;font-size:14px}
+      .signature-preview{height:92px;border-radius:10px;margin-top:16px}
+      .signature-preview.empty::before{font-size:14px}
+      .signature-label{left:6px;top:5px;font-size:5.8px}   /* display:none 이라 보이지 않습니다 */
+      .paper-foot{font-size:12px;padding-top:12px;margin-top:16px}
+
       .touch-row,.action-buttons.secondary{grid-template-columns:1fr}
       .compact-action-box .action-buttons{grid-template-columns:1fr 1fr}
       .modal{padding:10px}
@@ -189,28 +216,6 @@
       .modal-actions{grid-template-columns:1fr 1fr}
       .modal-actions .btn-primary{grid-column:1/-1}
       .site-list{max-height:46vh}
-
-      .a4-paper{aspect-ratio:auto;overflow:visible}
-      .paper-inner{height:auto;display:block;padding:20px;}
-      .paper-head{margin-bottom:16px}
-      .paper-logo{width:132px}
-      .paper-title{font-size:24px}
-      .paper-meta{font-size:11px}
-      .meta-row{grid-template-columns:62px 1fr;min-height:28px}
-      .meta-row span,.meta-row strong{padding:0 8px}
-      .lead{font-size:14px;line-height:1.6;margin-bottom:16px}
-      .section-title{font-size:14px;gap:8px;margin:16px 0 8px}
-      .section-title::before{width:6px;height:18px}
-      .rules{display:block}
-      .rule{grid-template-columns:40px 1fr;min-height:44px;font-size:14px;line-height:1.5}
-      .rule-text{padding:8px 12px}
-      .confirm-box{font-size:14px;line-height:1.6;padding:13px 15px;margin-top:16px}
-      .identity-grid{gap:10px;margin-top:16px}
-      .field-touch{grid-template-columns:70px 1fr;min-height:44px;border-radius:8px}
-      .field-touch span,.field-touch strong{padding:0 11px;font-size:14px}
-      .signature-preview{height:92px;margin-top:16px}
-      .signature-preview.empty::before{font-size:14px}
-      .paper-foot{font-size:12px;padding-top:12px;margin-top:16px}
       .date-edit-btn{font-size:14px}
       .date-edit-btn,.site-pick-btn,.modal-close{min-height:44px}
     }
@@ -229,7 +234,13 @@
          html2canvas 가 windowWidth:794 로 그리기 때문에, 이 조건이 없으면
          **드라이브에 보관되는 PDF 의 배치가 바뀝니다.** 종이 문서는 A4 고정입니다.
        ───────────────────────────────────────────────────────────── */
-    @media (min-width:761px) and (max-width:1024px){
+    /* 2026-08-29 : 폭이 1024px 을 넘는 태블릿(아이패드 프로 가로 1194·1366px)이
+       이 조건에서 빠져나가 A4 흉내내기 배치로 되돌아갔습니다.
+       고객 앞에 내미는 바로 그 기기입니다.
+       그래서 '손가락으로 쓰는 기기(pointer:coarse)' 는 폭과 상관없이 같이 넣습니다.
+       마우스를 쓰는 PC 는 지금처럼 A4 모양 그대로입니다. */
+    @media (min-width:761px) and (max-width:1024px),
+           (min-width:761px) and (pointer:coarse){
       .a4-paper:not(.capture-clone){aspect-ratio:auto;overflow:visible}
       .a4-paper:not(.capture-clone) .paper-inner{height:auto;display:block;padding:24px}
       .a4-paper:not(.capture-clone) .paper-head{margin-bottom:16px}
@@ -443,8 +454,20 @@
 </div>
 
 <div id="toast" class="toast"></div>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<!-- ★ defer 를 붙였습니다 (2026-08-29 · 속도)
+
+     이 두 파일은 합쳐서 500KB 가 넘고, 바깥 서버(jsdelivr)에서 받아옵니다.
+     그런데 defer 없이 적혀 있어서 **둘 다 받아 실행이 끝날 때까지
+     아래 화면 코드가 한 줄도 돌지 않았습니다.**
+     고객 앞에서 동의서를 여는 자리인데, 통신이 느리면 몇 초 동안
+     PIN 창도 안 뜨고 아무 일도 일어나지 않는 것처럼 보였습니다.
+
+     두 파일은 [저장] 을 눌렀을 때만 쓰입니다
+     (renderA4 · buildFiles 안에서만 부릅니다. 시작할 때 부르는 곳이 없습니다).
+     그래서 defer 로 미뤄도 기능은 하나도 달라지지 않고,
+     화면만 먼저 뜹니다. -->
+<script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
 (() => {
   const $ = s => document.querySelector(s);
