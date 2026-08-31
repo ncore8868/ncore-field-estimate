@@ -1187,6 +1187,21 @@
       font-size: 13px;
     }
 
+    /* 출퇴근 기준 참고줄 (v55) — 칸을 채워주지 않는다. 옆에 숫자만 보여준다 */
+    .work-ref {
+      margin: 0 0 18px;
+      padding: 12px 14px;
+      border: 1px solid #dfe3e8;
+      border-radius: 10px;
+      background: #f7f9fb;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #3d4650;
+    }
+    .work-ref b { color: #16202b; }
+    .work-ref .who { color: #6b7682; }
+    .work-ref .lead { display: block; font-size: 13px; color: #6b7682; margin: 0 0 2px; }
+
     .scope-filter-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -9479,6 +9494,8 @@
             <div class="amount-badge" id="actualQuoteBadge">견적 0원</div>
           </div>
 
+          <div class="work-ref" id="actualRef" hidden></div>
+
           <div class="actual-form">
             <div class="actual-field">
               <span class="actual-field-label">
@@ -13056,6 +13073,30 @@
 
       renderActualCompare();
       showScreen("pageActualForm");
+      loadActualRef(site.code);
+    }
+
+    /* 이 현장에 사람이 며칠·몇 명 들어갔는지 (출퇴근 앱 기록).
+       ★ 칸을 자동으로 채우지 않습니다 — 보고 사람이 넣습니다.
+       ★ 이 화면을 열 때 한 번만 부릅니다 (왕복 1회). 못 받아오면 그냥 안 보입니다. */
+    async function loadActualRef(code) {
+      const box = document.getElementById("actualRef");
+      box.hidden = true;
+      box.innerHTML = "";
+      if (!code) return;
+      try {
+        const r = await jsonpRequest({ action: "siteWork", code: code });
+        if (!r || !r.ok || !r.linked || !r.workers) return;
+        const people = (r.people || []).slice(0, 6)
+          .map(function (x) { return x.name + " " + x.days + "일"; }).join(" · ");
+        const term = (r.from && r.to) ? (r.from.slice(5) + " ~ " + r.to.slice(5)) : "";
+        box.innerHTML =
+          '<span class="lead">출퇴근 기록 기준</span>' +
+          '<b>연인원 ' + r.workers + '명</b> · 나온 날 ' + r.days + '일' +
+          (term ? ' · ' + term : '') +
+          (people ? '<br><span class="who">' + people + '</span>' : '');
+        box.hidden = false;
+      } catch (err) { /* 참고용이므로 실패해도 입력은 그대로 됩니다 */ }
     }
 
     function getActualTotal() {

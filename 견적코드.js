@@ -202,6 +202,10 @@ function doGet(e) {
       return outputJson(saveActualCost_(params), callback);
     }
 
+    if (action === 'siteWork') {
+      return outputJson(siteWork_(params), callback);
+    }
+
     if (action === 'lookupSites') {
       return outputJson(lookupSites_(params), callback);
     }
@@ -945,6 +949,12 @@ function saveActualCost_(params) {
       staffName, doneAt, String(params.memo || '').trim()
     ]]);
 
+    /* ★ 계약상태 '계약완료' 는 이 줄에서만 들어갑니다 (2026-08-31 확인).
+       즉 '계약완료' = 공사완료 입력이 끝났다 = 그 현장 일이 끝났다 는 뜻입니다.
+       출퇴근 앱의 근무 현장 목록이 이 값을 보고 끝난 현장을 뺍니다 (Api.js · apiSites_).
+       ▸ 진행상태(50번 칸)는 건드리지 않습니다. 미계약 목록·추가공사 기준 목록·
+         서명 현황 세 곳이 '견적작성 완료' 인 줄만 세고 있어서, 여기서 값을 바꾸면
+         끝난 현장이 그 세 목록에서 같이 사라집니다. */
     if (contract > 0) {
       sheet.getRange(rowNo, LEDGER_COL.contractStatus).setValue('계약완료');
     }
@@ -959,6 +969,97 @@ function saveActualCost_(params) {
     lock.releaseLock();
   }
 }
+
+/**
+ * 이 현장에 사람이 며칠 · 몇 명 들어갔나 (v55).
+ *
+ * 공사완료 입력 화면에서 '투입인원' 을 ＋ 버튼으로 세고 있었습니다.
+ * 그런데 출퇴근 앱이 **현장별로** 출퇴근을 이미 쌓고 있습니다.
+ * 세는 일을 없애지는 않고, 참고할 숫자를 옆에 띄워 줍니다 — 칸은 사람이 채웁니다.
+ *
+ * ★ 맞추는 열쇠는 이름이 아니라 **현장폴더ID** 입니다.
+ *   현장 이름은 고객명·주소·폴더명 중 하나라 글자가 달라질 수 있습니다.
+ * ★ 이 화면은 현장 하나가 끝날 때 한 번 여는 곳이라 여기서만 남의 시트를 읽습니다.
+ *   자주 도는 길(견적 작성·목록)에서는 절대 부르지 않습니다.
+ * ★ 스크립트 속성 ATTENDANCE_ID 가 비어 있으면 조용히 아무것도 돌려주지 않습니다
+ *   (참고줄이 안 뜰 뿐, 입력은 그대로 됩니다).
+ */
+function siteWork_(params) {
+  const code = String((params && params.code) || '').trim();
+  if (!code) return { ok: false, message: '견적번호가 없습니다.' };
+
+  const sheet = getLedgerSheet_();
+  const rowNo = findLedgerRow_(sheet, code);
+  if (!rowNo) return { ok: true, linked: false };
+
+  const folderId = String(sheet.getRange(rowNo, LEDGER_COL.siteFolderId).getDisplayValue() || '').trim();
+  if (!folderId) return { ok: true, linked: false };
+
+  const ss = getAttendanceSpreadsheet_();
+  if (!ss) return { ok: true, linked: false };
+
+  const sh = ss.getSheetByName('출퇴근');
+  if (!sh) return { ok: true, linked: false };
+
+  const last = sh.getLastRow();
+  if (last < 2) return { ok: true, linked: true, workers: 0, days: 0, people: [] };
+
+  /* 뒤에서 3000줄만 본다. 여섯 명이 2년쯤 찍은 양이다. */
+  const width = sh.getLastColumn();
+  const start = Math.max(2, last - 3000 + 1);
+  const values = sh.getRange(start, 1, last - start + 1, width).getDisplayValues();
+  const head = sh.getRange(1, 1, 1, width).getDisplayValues()[0].map(String);
+
+  const cDate = head.indexOf('날짜');
+  const cName = head.indexOf('이름');
+  const cIn   = head.indexOf('출근시각');
+  const cFid  = head.indexOf('현장폴더ID');
+  if (cDate < 0 || cFid < 0) return { ok: true, linked: false };
+
+  const dayset = {};
+  const perPerson = {};
+  let workers = 0;
+  let first = '', lastDay = '';
+
+  values.forEach(function (r) {
+    if (String(r[cFid] || '').trim() !== folderId) return;
+    if (cIn >= 0 && !String(r[cIn] || '').trim()) return;      // 출근을 안 찍은 줄
+    const d = String(r[cDate] || '').trim().slice(0, 10);
+    if (!d) return;
+    workers += 1;                                              // 연인원 = 출근 찍은 줄 수
+    dayset[d] = true;
+    const nm = cName >= 0 ? String(r[cName] || '').trim() : '';
+    if (nm) perPerson[nm] = (perPerson[nm] || 0) + 1;
+    if (!first || d < first) first = d;
+    if (!lastDay || d > lastDay) lastDay = d;
+  });
+
+  const people = Object.keys(perPerson)
+    .map(function (n) { return { name: n, days: perPerson[n] }; })
+    .sort(function (a, b) { return b.days - a.days; });
+
+  return {
+    ok: true, linked: true,
+    workers: workers,                    // 연인원
+    days: Object.keys(dayset).length,    // 실제로 사람이 나온 날 수
+    from: first, to: lastDay,
+    people: people
+  };
+}
+
+/** 출퇴근 스프레드시트 — 스크립트 속성 ATTENDANCE_ID. 없으면 null */
+let requestAttendanceSs = null;
+function getAttendanceSpreadsheet_() {
+  if (requestAttendanceSs !== null) return requestAttendanceSs;
+  let id = '';
+  try { id = String(PropertiesService.getScriptProperties().getProperty('ATTENDANCE_ID') || '').trim(); }
+  catch (err) { id = ''; }
+  if (!id) { requestAttendanceSs = false; return null; }
+  try { requestAttendanceSs = SpreadsheetApp.openById(id); }
+  catch (err) { requestAttendanceSs = false; return null; }
+  return requestAttendanceSs;
+}
+
 
 /** 과거 유사현장 조회 (실제원가가 입력된 현장만) */
 function lookupSites_(params) {
@@ -2092,6 +2193,7 @@ function 속도_재기() {
   function 재기(이름, fn) {
     // 요청이 새로 시작된 것처럼 담아둔 것을 비운다
     requestSpreadsheet = null;
+    requestAttendanceSs = null;
     requestWorkboardSpreadsheet = null;
     requestSheets = {};
     requestLedgerValues = null;
