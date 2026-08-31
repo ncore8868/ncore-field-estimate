@@ -28,7 +28,7 @@
      같은 파일이 사람 수만큼 따로 쌓입니다.
    ========================================================================= */
 
-const CACHE_NAME = "ncore-field-estimate-pwa-v60";
+const CACHE_NAME = "ncore-field-estimate-pwa-v61";
 
 /* 캐시가 있을 때 네트워크를 기다려주는 시간 */
 const NET_WAIT_MS = 2500;
@@ -44,7 +44,6 @@ const CORE_ASSETS = [
   "./icon-512-v2.png",
   "./ncore-logo-v8.png",
   "./ncore-watermark-v8.png",
-  "./ncore-logo.png",
   "./ncore-doc.js",
   "./ncore-estimate-v2.js",
   "./ncore-stamp.png"

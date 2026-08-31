@@ -439,6 +439,16 @@
     drawing = false;
   }
 
+  /* 서명 이미지가 시트 칸 하나에 들어갈 수 있는 크기.
+     구글 시트는 칸 하나에 50,000자까지만 받습니다.
+     ★ 서명판은 화면 해상도의 2~3배로 크게 그립니다(선이 매끄럽게 보이려고).
+       예전에는 그 큰 그림을 줄이지 않고 그대로 보냈습니다. 선이 조금 많은
+       서명이면 한도를 넘겨서, **고객이 서명을 마친 마지막 순간에 실패**했습니다.
+       그때는 이미 서명본 PDF 와 '서명완료' 표시가 저장된 뒤라,
+       고객 화면에만 실패라고 뜨는 가장 나쁜 모양이었습니다.
+     서명은 선 몇 개라 가로 600px 이면 충분합니다. 견적서 PDF 도 같이 가벼워집니다. */
+  const SIGN_MAX_WIDTH = 600;
+
   /* 서명 이미지의 빈 여백을 잘라 서명칸에 꽉 차게 넣습니다. */
   function trimSignature(source) {
     const w = source.width;
@@ -463,10 +473,19 @@
     minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
     maxX = Math.min(w - 1, maxX + pad); maxY = Math.min(h - 1, maxY + pad);
 
+    const cropW = maxX - minX + 1;
+    const cropH = maxY - minY + 1;
+
+    /* 너무 크면 줄여서 담습니다 (비율은 그대로). */
+    const scale = Math.min(1, SIGN_MAX_WIDTH / cropW);
     const out = document.createElement("canvas");
-    out.width = maxX - minX + 1;
-    out.height = maxY - minY + 1;
-    out.getContext("2d").drawImage(source, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
+    out.width = Math.max(1, Math.round(cropW * scale));
+    out.height = Math.max(1, Math.round(cropH * scale));
+
+    const ctx = out.getContext("2d");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(source, minX, minY, cropW, cropH, 0, 0, out.width, out.height);
     return out.toDataURL("image/png");
   }
 

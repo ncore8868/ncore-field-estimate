@@ -300,7 +300,7 @@
         <div class="paper-inner">
           <header class="paper-head">
             <div class="paper-brand">
-              <img class="paper-logo" src="./ncore-logo.png" alt="N-CORE 로고" />
+              <img class="paper-logo" src="./ncore-logo-v8.png" alt="N-CORE 로고" />
               <h1 class="paper-title">위험성평가 및<br>안전작업 서약서</h1>
             </div>
             <div class="paper-meta">
@@ -366,14 +366,18 @@
 
 <div id="pinModal" class="modal" aria-hidden="false">
   <div class="modal-card pin-start-card">
-    <img class="pin-start-logo" src="./ncore-logo.png" alt="N-CORE 로고" />
+    <img class="pin-start-logo" src="./ncore-logo-v8.png" alt="N-CORE 로고" />
     <h2 class="pin-start-title">담당자 확인</h2>
-    <p class="pin-start-copy">등록된 PIN 번호를 입력하면 담당자명이 자동으로 확인됩니다.</p>
+    <p class="pin-start-copy">워크보드에서 쓰시는 번호와 PIN 을 넣어 주세요.</p>
     <div class="manager-preview"><span>담당자</span><strong id="pinManagerPreview">PIN 확인 후 자동 표시</strong></div>
     <div class="input-grid">
       <div class="input-field" style="text-align:left">
+        <label for="pinPhone">휴대폰 번호</label>
+        <input id="pinPhone" type="tel" inputmode="numeric" maxlength="13" autocomplete="off" />
+      </div>
+      <div class="input-field" style="text-align:left">
         <label for="pinInput">PIN 번호</label>
-        <input id="pinInput" type="password" inputmode="numeric" placeholder="PIN 4자리 입력" maxlength="4" autocomplete="off" />
+        <input id="pinInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" />
       </div>
       <button id="pinConfirmBtn" class="btn btn-primary" type="button">담당자 확인</button>
     </div>
@@ -570,6 +574,28 @@
      견적 프로그램(index.html)과 같은 방식입니다.
      주소창으로 부르는 방식이라 브라우저 보안 설정에 막히지 않습니다.
      --------------------------------------------------------------- */
+  /* ── 출입증 ────────────────────────────────────────────────
+     견적 화면(index.html)과 같은 것을 씁니다. 한쪽에서 로그인하면
+     같은 기기의 다른 쪽도 그대로 들어갑니다. */
+  const SAFETY_TOKEN_KEY = "ncore_session_token_v1";
+  const SAFETY_PHONE_KEY = "ncore_last_phone_v1";
+
+  function getToken(){
+    try { return localStorage.getItem(SAFETY_TOKEN_KEY) || ''; } catch(e){ return ''; }
+  }
+  function setToken(v){
+    try {
+      if(v) localStorage.setItem(SAFETY_TOKEN_KEY, v);
+      else localStorage.removeItem(SAFETY_TOKEN_KEY);
+    } catch(e){}
+  }
+  function prettyPhone(v){
+    const d = String(v||'').replace(/\D/g,'').slice(0,11);
+    if(d.length < 4) return d;
+    if(d.length < 8) return d.slice(0,3)+'-'+d.slice(3);
+    return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+  }
+
   function jsonp(params, timeout){
     return new Promise((resolve, reject) => {
       const endpoint = (window.NCORE_CONFIG && window.NCORE_CONFIG.appsScriptUrl) || '';
@@ -596,9 +622,20 @@
         if(script.parentNode) script.parentNode.removeChild(script);
       }
 
-      window[cbName] = data => { if(done) return; cleanup(); resolve(data || {}); };
+      window[cbName] = data => {
+        if(done) return;
+        cleanup();
+        /* 서버가 '다시 로그인해 주세요' 라고 하면 담당자 확인 창을 다시 띄웁니다.
+           그러지 않으면 '목록을 불러오지 못했습니다' 만 뜨고 왜인지 알 수 없습니다. */
+        if(data && data.code === 'NEED_LOGIN'){
+          setToken('');
+          try{ openModal(pinModal); showToast('담당자 확인을 다시 해 주세요.'); }catch(e){}
+        }
+        resolve(data || {});
+      };
 
       const query = new URLSearchParams(Object.assign({}, params, {
+        token: getToken(),          // ★ 출입증을 항상 같이 보냅니다
         callback: cbName,
         t: String(Date.now())
       }));
@@ -747,21 +784,44 @@
        화면에서 맞춰봤습니다. 인증 없이 개인정보를 내주는 통로라
        2026-08-27 계정 사고 뒤 서버에서 없앴습니다. 되살리지 마세요.
        PIN 은 화면으로 절대 내려오지 않습니다. */
-  async function loginByPin(pin){
-    const result = await jsonp({ action:'login', pin:pin }, 20000);
-    if(!result || !result.ok || !result.staffName){
-      throw new Error((result && result.message) || 'PIN 번호가 맞지 않습니다.');
+  async function loginByPin(phone, pin){
+    const result = await jsonp({ action:'login', phone:phone, pin:pin }, 15000);
+    if(!result || !result.ok || !result.token){
+      throw new Error((result && result.message) || '번호 또는 PIN 이 맞지 않습니다.');
     }
+    setToken(result.token);
+    try { localStorage.setItem(SAFETY_PHONE_KEY, phone); } catch(e){}
     return String(result.staffName).trim();
   }
 
   const pinConfirmBtn = $('#pinConfirmBtn');
   let pinChecking = false;
 
+  const pinPhone = $('#pinPhone');
+
+  /* 지난번에 쓴 번호를 미리 채워 둡니다. */
+  try {
+    const last = localStorage.getItem(SAFETY_PHONE_KEY) || '';
+    if(last && pinPhone) pinPhone.value = prettyPhone(last);
+  } catch(e){}
+
+  if(pinPhone){
+    pinPhone.addEventListener('input', ()=>{
+      const shaped = prettyPhone(pinPhone.value);
+      if(pinPhone.value !== shaped) pinPhone.value = shaped;
+    });
+  }
+
   pinConfirmBtn.addEventListener('click', async ()=>{
     if(pinChecking) return;
+    const phone = (pinPhone ? pinPhone.value : '').replace(/\D/g,'');
     const pin = pinInput.value.trim();
 
+    if(phone.length < 10){
+      showToast('휴대폰 번호를 정확히 입력해 주세요.');
+      if(pinPhone) pinPhone.focus();
+      return;
+    }
     if(!pin){
       showToast('PIN 번호를 입력해 주세요.');
       pinInput.focus();
@@ -773,12 +833,12 @@
     pinConfirmBtn.textContent = '확인 중...';
 
     try{
-      const name = await loginByPin(pin);
+      const name = await loginByPin(phone, pin);
       applyManager(name);
       closeModal(pinModal);
       showToast('담당자 확인 완료');
     }catch(err){
-      showToast(err.message || 'PIN 확인 실패');
+      showToast(err.message || '확인 실패');
       pinInput.value = '';
       pinInput.focus();
     }finally{
@@ -788,6 +848,7 @@
     }
   });
   pinInput.addEventListener('keydown', e=>{ if(e.key==='Enter') $('#pinConfirmBtn').click(); });
+  if(pinPhone) pinPhone.addEventListener('keydown', e=>{ if(e.key==='Enter') pinInput.focus(); });
 
   // date modal: default today, editable only before submission
   dateEditBtn.addEventListener('click', ()=>{
@@ -905,6 +966,7 @@
       // v3: 고른 현장. 비어 있으면 서버가 _현장미지정 폴더로 보관합니다.
       code:selectedSite.code,
       customerName:selectedSite.name,
+      token:getToken(),
       pdfBase64:await toBase64(files.pdfBlob)
     };
     const res = await fetch(endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
@@ -997,13 +1059,20 @@
     renderSitePick();
   }
 
+  /* 견적 화면에서 ?staff= 로 넘어오면 담당자 확인을 건너뜁니다.
+     ★ 다만 출입증이 있어야 넘어갑니다 (2026-08-31).
+       같은 기기의 견적 화면에서 로그인했으면 출입증이 이미 있습니다.
+       주소만 알고 들어온 경우에는 출입증이 없으므로 PIN 창이 뜹니다. */
   const handedStaff = getStaffFromUrl();
-  if (handedStaff) {
+  if (handedStaff && getToken()) {
     applyManager(handedStaff);
     closeModal(pinModal);
   } else {
     openModal(pinModal);
-    setTimeout(()=>pinInput.focus(),120);
+    setTimeout(()=>{
+      const first = getToken() ? pinInput : ($('#pinPhone') || pinInput);
+      first.focus();
+    },120);
   }
   if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
   // v2: 견적 프로그램과 같은 서비스워커를 공유합니다.

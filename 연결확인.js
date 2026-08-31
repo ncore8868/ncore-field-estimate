@@ -9,6 +9,35 @@
 function 연결확인() {
   var 줄 = [];
 
+  /* ★ 비밀값은 이제 코드가 아니라 스크립트 속성에 있습니다 (2026-08-31).
+     하나라도 비어 있으면 앱이 그 자리에서 멈추므로 여기서 먼저 봅니다. */
+  줄.push('── 스크립트 속성 ──');
+  [
+    ['SHEET_ID',            '필수', '견적 스프레드시트 (NCORE_견적)'],
+    ['WORKBOARD_ID',        '필수', '워크보드 스프레드시트 (UNIONONE_DATA)'],
+    ['ATTENDANCE_ID',       '선택', '출퇴근 스프레드시트 (없으면 참고줄만 안 뜸)'],
+    ['SIGN_SECRET',         '필수', '★ 고객 서명 링크 비밀키 — 반드시 넣어야 합니다'],
+    ['SESSION_SECRET',      '필수', '★ 출입증 비밀키 — 반드시 넣어야 합니다'],
+    ['SITE_ROOT_FOLDER_ID', '선택', '공유 드라이브 01_현장 폴더 (없으면 지금 값 그대로)'],
+    ['WORKBOARD_SALT',      '선택', 'PIN 소금값 (없으면 지금 값 그대로)'],
+    ['EXCEL_API_KEY',       '선택', '엑셀 내려받기 열쇠 (없으면 지금 값 그대로)'],
+    ['SIGN_SECRET_OLD',     '한시', '옛 서명키 — 보낸 링크가 다 처리되면 지우세요']
+  ].forEach(function (row) {
+    var key = row[0], 구분 = row[1], 설명 = row[2];
+    var 있음 = false;
+    try { 있음 = !!String(PropertiesService.getScriptProperties().getProperty(key) || '').trim(); }
+    catch (e) { 있음 = false; }
+
+    var 표시;
+    if (있음) 표시 = '들어 있음';
+    else if (구분 === '필수') 표시 = '★ 비어 있습니다 — 넣어야 앱이 돕니다';
+    else if (구분 === '한시') 표시 = '없음 (정상 — 이미 정리된 상태)';
+    else 표시 = '없음';
+
+    줄.push('   ' + (key + '                    ').slice(0, 20) + 표시 + '   · ' + 설명);
+  });
+  줄.push('');
+
   try {
     var ss = getSpreadsheet();
     줄.push('견적 시트      →  ' + ss.getName());
@@ -37,7 +66,7 @@ function 연결확인() {
   /* 폴더 상수는 2026-08-29 부터 SITE_ROOT_FOLDER_ID 하나뿐입니다.
      견적서·안전동의서·현장사진이 전부 현장 폴더 안으로 들어갑니다. */
   try {
-    var 현장root = DriveApp.getFolderById(SITE_ROOT_FOLDER_ID);
+    var 현장root = DriveApp.getFolderById(siteRootFolderId_());
     줄.push('현장 폴더      →  ' + 현장root.getName());
 
     var 연도 = 0, 낱개 = 0, 현장 = 0;
@@ -64,7 +93,10 @@ function 연결확인() {
   줄.push('견적서·동의서  →  현장 폴더 안 01_견적서 · 09_동의서 (별도 폴더 없음)');
 
   줄.push('getPinMap      →  없음 (정상)');
+  줄.push('staffList      →  없음 (정상 — 직원 명부를 내주던 통로였습니다)');
   줄.push('담당자관리 시트 →  안 씀 (정상)');
+  줄.push('신분 확인      →  로그인 밖 통로는 ' +
+          Object.keys(OPEN_ACTIONS).join(' · ') + ' 뿐 (그 외는 출입증 필요)');
 
   var 결과 = 줄.join('\n');
   Logger.log(결과);
@@ -84,7 +116,7 @@ function 연결확인() {
 function 미지정확인_() {
   var box = null;
   try {
-    var found = DriveApp.getFolderById(SITE_ROOT_FOLDER_ID).getFoldersByName(SITE_UNKNOWN_FOLDER);
+    var found = DriveApp.getFolderById(siteRootFolderId_()).getFoldersByName(SITE_UNKNOWN_FOLDER);
     box = found.hasNext() ? found.next() : null;
   } catch (e) {
     return '   _현장미지정  →  못 읽었습니다';

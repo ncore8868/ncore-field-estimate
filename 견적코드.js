@@ -37,9 +37,51 @@ const SPREADSHEET_ID = '';
 // 담당자를 이 앱에서 따로 관리하지 않고 워크보드 '직원' 시트 한 곳만 봅니다.
 const WORKBOARD_STAFF_SHEET = '직원';
 
+/* =========================================================
+   비밀값은 코드에 적지 않습니다  (2026-08-31)
+
+   ★ 이 파일은 깃허브 저장소에도 함께 올라갑니다.
+     예전에는 서명 비밀키·PIN 소금값이 이 파일에 글자 그대로 적혀 있어서,
+     저장소나 깃허브 페이지 주소를 아는 사람이면 그대로 읽을 수 있었습니다.
+     서명 비밀키 하나가 고객 전자서명 전체를 지탱하기 때문에
+     그 값이 알려지면 남의 견적서를 열고 서명까지 대신 올릴 수 있습니다.
+
+   이제 전부 [프로젝트 설정] > [스크립트 속성] 에서 읽습니다.
+   속성이 비어 있으면 앱이 조용히 넘어가지 않고 분명한 오류를 냅니다.
+
+   넣어야 하는 속성은 '연결확인()' 을 편집기에서 실행하면 목록으로 보여줍니다.
+   ========================================================= */
+
+/** 스크립트 속성 하나를 읽습니다. 한 요청에서 여러 번 물어도 한 번만 읽습니다. */
+let requestProps = null;
+function prop_(key) {
+  if (!requestProps) {
+    try { requestProps = PropertiesService.getScriptProperties().getProperties() || {}; }
+    catch (err) { requestProps = {}; }
+  }
+  return String(requestProps[key] || '').trim();
+}
+
+/** 반드시 있어야 하는 값. 없으면 무엇을 넣어야 하는지 알려주고 멈춥니다. */
+function mustProp_(key) {
+  const value = prop_(key);
+  if (!value) {
+    throw new Error(
+      '스크립트 속성 ' + key + ' 가 비어 있습니다. ' +
+      '앱스스크립트 편집기 [프로젝트 설정] > [스크립트 속성] 에 넣어 주세요.'
+    );
+  }
+  return value;
+}
+
+/** 속성이 있으면 그 값을, 없으면 지금까지 쓰던 값을 씁니다.
+    ★ 이 셋은 비면 앱이 통째로 멈추는 값이라 기본값을 남겨 둡니다.
+      (셋 다 그 자체로는 아무것도 열지 못하는 값입니다. 진짜 열쇠는 아래 둘입니다) */
+function propOr_(key, fallback) { return prop_(key) || fallback; }
+
 // PIN 을 되돌릴 수 없는 형태로 바꿀 때 쓰는 값입니다.
 // ★ 워크보드의 SALT 와 반드시 같아야 합니다. 다르면 PIN 이 전부 안 맞습니다.
-const WORKBOARD_SALT = 'ncore-workboard-2026';
+function workboardSalt_() { return propOr_('WORKBOARD_SALT', 'ncore-workboard-2026'); }
 
 // 워크보드 권한등급을 이 앱의 역할로 바꾸는 표
 const GRADE_ROLE = { 1: '현장', 2: '사무실', 3: '사무실', 9: '관리자' };
@@ -59,7 +101,7 @@ const SAFETY_LOG_SHEET_NAME = '안전동의서_기록';
       셋이 전부 같은 01_현장 을 가리켜서, 견적서가 연·월 폴더와 현장 폴더
       두 곳으로 갈라져 쌓였습니다. 이제 폴더 상수는 이 하나뿐입니다.
    ========================================================= */
-const SITE_ROOT_FOLDER_ID = '1aDNKQwWEFBb5PsFM4FvKgjWdFHwHLji1';   // 공유 드라이브 UNION ONE > 01_현장
+function siteRootFolderId_() { return propOr_('SITE_ROOT_FOLDER_ID', '1aDNKQwWEFBb5PsFM4FvKgjWdFHwHLji1'); }   // 공유 드라이브 UNION ONE > 01_현장
 const SITE_ROOT_FOLDER_NAME = '01_현장';
 
 /* 현장 폴더 안의 칸. 이것이 표준 구조입니다.
@@ -81,16 +123,21 @@ const SITE_CONSENT_FOLDER = '09_동의서';
    여기에 파일이 쌓이면 사람이 어느 현장인지 정해서 옮겨야 합니다. */
 const SITE_UNKNOWN_FOLDER = '_현장미지정';
 const START_COL = 3;
-const EXCEL_API_KEY = 'ncore8868';
+function excelApiKey_() { return propOr_('EXCEL_API_KEY', 'ncore8868'); }
 const CODE_PREFIX = 'NC';
 
-// 서명 링크 위조를 막는 비밀키입니다.
-// 견적번호가 NC-날짜-순번 규칙이라 이 값이 없으면 남의 견적서가 열립니다.
-//
-// ※ 이미 회사 전용 값이 들어가 있습니다. 그대로 두시면 됩니다.
-//    바꾸면 이미 고객에게 보낸 서명 링크가 전부 열리지 않게 됩니다.
-//    이 파일을 남에게 보여줄 일이 있으면 이 줄만 가려 주세요.
-const SIGN_SECRET = 'ncore-cVlQeZz4t3QoRKsa3H4BRal2';
+/* 서명 링크 위조를 막는 비밀키입니다.
+   견적번호가 NC-날짜-순번 규칙이라 이 값이 없으면 남의 견적서가 열립니다.
+
+   ★ 이 값은 이제 코드가 아니라 스크립트 속성 SIGN_SECRET 에 있습니다.
+
+   ★ 옛 키를 잠시 함께 받아 줍니다 (SIGN_SECRET_OLD).
+     키를 바꾸면 이미 고객에게 보낸 서명 링크가 전부 안 열리기 때문입니다.
+     새 링크는 언제나 새 키로만 만들고, 옛 키는 '읽고 서명받는 것' 에만 씁니다.
+     보낸 링크가 전부 처리되면 SIGN_SECRET_OLD 속성을 지우세요.
+     그 순간부터 옛 키는 아무 데도 쓸 수 없게 됩니다. */
+function signSecret_() { return mustProp_('SIGN_SECRET'); }
+function signSecretOld_() { return prop_('SIGN_SECRET_OLD'); }
 const SIGN_TOKEN_LENGTH = 12;
 
 const ESTIMATE_HEADERS = [
@@ -171,23 +218,39 @@ function doGet(e) {
   requestWorkboardSpreadsheet = null;
   requestSheets = {};
   requestLedgerValues = null;
+  requestBaseCodes = null;
   requestStaffRows = null;
+  requestProps = null;
   requestSiteFolders = {};
   const params = e && e.parameter ? e.parameter : {};
   const action = params.action || '';
   const callback = params.callback || '';
 
   try {
-    if (action === 'staffList') {
-      return outputJson({ ok: true, staff: getActiveStaffNames() }, callback);
+    /* ★★ 여기가 이 앱의 유일한 문입니다 (2026-08-31).
+       로그인 없이 열어 둘 통로가 아니면, 출입증부터 확인하고 들어갑니다.
+       예전에는 이 확인이 아예 없어서 배포 주소만 알면 전부 불러 갈 수 있었습니다. */
+    if (!OPEN_ACTIONS[action]) {
+      const me = requireStaff_(params);
+      if (!me) {
+        return outputJson({
+          ok: false, code: 'NEED_LOGIN',
+          message: '다시 로그인해 주세요.'
+        }, callback);
+      }
+      params.__me = me;                 // 아래 함수들이 '누가 부른 것인지' 를 쓸 수 있게
     }
 
+    /* ★ staffList 는 없앴습니다.
+       화면 어디에서도 부르지 않는데 **재직 직원 이름 전체**를 내주고 있었습니다.
+       인증 없이 사람 정보를 내주는 통로를 만들지 않는다 — 계정 사고 이후의 규칙입니다. */
+
     if (action === 'login') {
-      return outputJson(validateStaffPin(params.pin), callback);
+      return outputJson(loginStaff_(params), callback);
     }
 
     if (action === 'issueCode') {
-      return outputJson(issueEstimateCode_(params.staffName), callback);
+      return outputJson(issueEstimateCode_(staffNameOf_(params)), callback);
     }
 
     if (action === 'logSend') {
@@ -255,7 +318,7 @@ function doGet(e) {
     }
 
     if (action === 'excel') {
-      if ((params.key || '') !== EXCEL_API_KEY) {
+      if ((params.key || '') !== excelApiKey_()) {
         return ContentService.createTextOutput('INVALID_KEY')
           .setMimeType(ContentService.MimeType.TEXT);
       }
@@ -303,11 +366,23 @@ function doPost(e) {
   requestWorkboardSpreadsheet = null;
   requestSheets = {};
   requestLedgerValues = null;
+  requestBaseCodes = null;
   requestStaffRows = null;
+  requestProps = null;
   requestSiteFolders = {};
   try {
     const payload = parsePostPayload_(e);
     const action = String(payload.action || '').trim();
+
+    /* ★ 보내는 쪽(POST)도 같은 문을 지납니다.
+       고객이 쓰는 서명 올리기(saveSignature)만 예외이고, 그건 서명 열쇠로 확인합니다. */
+    if (!OPEN_ACTIONS[action]) {
+      const me = requireStaff_(payload);
+      if (!me) {
+        return outputJson({ ok: false, code: 'NEED_LOGIN', message: '다시 로그인해 주세요.' });
+      }
+      payload.__me = me;
+    }
 
     if (action === 'saveEstimate') {
       return outputJson(saveEstimate_(payload));
@@ -436,7 +511,9 @@ function saveEstimate_(payload) {
     (payload.staff && payload.staff.name) || payload.staffName || ''
   ).trim();
 
-  const staffName = resolveStaffPlainName(submittedStaffName);
+  /* 출입증에서 확인된 이름이 있으면 그것을 씁니다 (화면이 보낸 이름보다 우선). */
+  const staffName = (payload.__me && payload.__me.plainName) ||
+                    resolveStaffPlainName(submittedStaffName);
   if (!staffName) {
     return { ok: false, message: '작성자 정보가 없습니다. 로그인 후 다시 저장해 주세요.' };
   }
@@ -660,7 +737,9 @@ function getUnclaimedList_(params) {
  * 사무실이 얹은 수익금과 최종 견적금액·계약금액은 내보내지 않습니다.
  */
 function getMyReports_(params) {
-  const staff = normalizeStaffText(params.staffName);
+  /* '내가 낸 견적' 이므로 화면이 보낸 이름이 아니라 출입증의 이름으로 봅니다.
+     그래야 남의 이름을 적어 보내도 남의 것이 나오지 않습니다. */
+  const staff = normalizeStaffText(staffNameOf_(params));
   if (!staff) return { ok: false, message: '담당자 정보가 없습니다.' };
 
   const values = ledgerValues_();          // 요청당 한 번만 읽는다
@@ -790,7 +869,7 @@ function logEstimateSend_(params) {
     return { ok: false, message: '견적번호가 없어 발송기록을 저장할 수 없습니다.' };
   }
 
-  const staffName = resolveStaffPlainName(params.staffName) || String(params.staffName || '').trim();
+  const staffName = staffNameOf_(params);
   if (!staffName) {
     return { ok: false, message: '담당자 정보가 없습니다. 로그인 후 다시 시도해 주세요.' };
   }
@@ -912,7 +991,7 @@ function saveActualCost_(params) {
   const code = String(params.code || '').trim();
   if (!code) return { ok: false, message: '견적번호가 없습니다.' };
 
-  const staffName = resolveStaffPlainName(params.staffName) || String(params.staffName || '').trim();
+  const staffName = staffNameOf_(params);
   if (!staffName) return { ok: false, message: '담당자 정보가 없습니다. 로그인 후 다시 시도해 주세요.' };
 
   const lock = LockService.getScriptLock();
@@ -1123,7 +1202,8 @@ function lookupSites_(params) {
      경로가 바뀌면 이 구역만 고치면 됩니다.
    ========================================================= */
 function getSiteRootFolder_() {
-  if (SITE_ROOT_FOLDER_ID) return DriveApp.getFolderById(SITE_ROOT_FOLDER_ID);
+  const rootId = siteRootFolderId_();
+  if (rootId) return DriveApp.getFolderById(rootId);
   const folders = DriveApp.getFoldersByName(SITE_ROOT_FOLDER_NAME);
   return folders.hasNext() ? folders.next() : DriveApp.createFolder(SITE_ROOT_FOLDER_NAME);
 }
@@ -1277,11 +1357,11 @@ function getAddonBaseList_(params) {
   const limit = Math.min(Number(params.limit || 80) || 80, 300);
 
   // 원 견적별로 이미 만들어진 추가견적 건수를 세어 둡니다.
+  const bases = ledgerBaseCodes_();        // 원견적번호 한 칸만 따로 읽는다
   const addonCount = {};
-  for (const row of values) {
-    const base = String(row[LEDGER_COL.baseCode - 1] || '').trim();
+  bases.forEach(function (base) {
     if (base) addonCount[base] = (addonCount[base] || 0) + 1;
-  }
+  });
 
   const rows = [];
   for (let i = values.length - 1; i >= 0 && rows.length < limit; i--) {
@@ -1291,7 +1371,7 @@ function getAddonBaseList_(params) {
     if (String(row[LEDGER_COL.progress - 1] || '').trim() !== PROGRESS_FINAL) continue;
 
     // 추가견적에 또 추가견적을 붙이지는 않습니다. 원 견적에 모읍니다.
-    if (String(row[LEDGER_COL.baseCode - 1] || '').trim()) continue;
+    if (bases[i]) continue;
 
     rows.push({
       code: code,
@@ -1342,11 +1422,11 @@ function findByPhone_(params) {
   const limit = Math.min(Number(params.limit || 5) || 5, 20);
 
   // 원 견적별 추가견적 건수 (getAddonBaseList_ 와 같은 방식)
+  const bases = ledgerBaseCodes_();        // 원견적번호 한 칸만 따로 읽는다
   const addonCount = {};
-  for (const row of values) {
-    const base = String(row[LEDGER_COL.baseCode - 1] || '').trim();
+  bases.forEach(function (base) {
     if (base) addonCount[base] = (addonCount[base] || 0) + 1;
-  }
+  });
 
   const rows = [];
   for (let i = values.length - 1; i >= 0 && rows.length < limit; i--) {
@@ -1417,7 +1497,7 @@ function issueAddonCode_(params) {
 
     const seq = max + 1;
     const tz = getTimeZone_();
-    const staffName = resolveStaffPlainName(params.staffName) || String(params.staffName || '').trim();
+    const staffName = staffNameOf_(params);
 
     return {
       ok: true,
@@ -1491,7 +1571,7 @@ function getSignStatusList_(params) {
       signedAt: row[LEDGER_COL.signedAt - 1] || '',
       signMethod: row[LEDGER_COL.signMethod - 1] || '',
       signedFileUrl: row[LEDGER_COL.signedFileUrl - 1] || '',
-      baseCode: row[LEDGER_COL.baseCode - 1] || '',
+      baseCode: ledgerBaseCodes_()[i] || '',
       savedAt: row[LEDGER_COL.savedAt - 1] || ''
     });
   }
@@ -1506,9 +1586,9 @@ function getSignStatusList_(params) {
    비밀키로 만든 토큰을 링크에 함께 붙입니다.
    ========================================================= */
 
-/** 견적번호로 서명 링크 토큰을 만듭니다. */
-function makeSignToken_(code) {
-  const raw = Utilities.computeHmacSha256Signature(String(code || ''), SIGN_SECRET);
+/** 주어진 비밀키로 견적번호의 토큰을 만듭니다. */
+function signTokenWith_(code, secret) {
+  const raw = Utilities.computeHmacSha256Signature(String(code || ''), secret);
   let hex = '';
   for (let i = 0; i < raw.length; i++) {
     let b = raw[i];
@@ -1519,17 +1599,32 @@ function makeSignToken_(code) {
   return hex.slice(0, SIGN_TOKEN_LENGTH);
 }
 
-function verifySignToken_(code, token) {
-  const expected = makeSignToken_(code);
-  const given = String(token || '').trim().toLowerCase();
-  if (given.length !== expected.length) return false;
+/** 새 링크는 언제나 지금 키로만 만듭니다. */
+function makeSignToken_(code) {
+  return signTokenWith_(code, signSecret_());
+}
 
-  // 글자를 하나씩 비교하되 중간에 멈추지 않습니다.
+/** 글자를 하나씩 비교하되 중간에 멈추지 않습니다. */
+function sameToken_(expected, given) {
+  if (!expected || given.length !== expected.length) return false;
   let diff = 0;
   for (let i = 0; i < expected.length; i++) {
     if (expected.charAt(i) !== given.charAt(i)) diff++;
   }
   return diff === 0;
+}
+
+/** 지금 키로 확인하고, 안 맞으면 옛 키로 한 번 더 봅니다 (이미 보낸 링크용). */
+function verifySignToken_(code, token) {
+  const given = String(token || '').trim().toLowerCase();
+  if (!given) return false;
+
+  if (sameToken_(signTokenWith_(code, signSecret_()), given)) return true;
+
+  const older = signSecretOld_();
+  if (older && sameToken_(signTokenWith_(code, older), given)) return true;
+
+  return false;
 }
 
 function getSignToken_(params) {
@@ -1620,9 +1715,27 @@ function saveSignature_(payload) {
       return { ok: false, message: (saved && saved.message) || '서명본을 저장하지 못했습니다.' };
     }
 
-    // 서명 이미지는 견적서를 다시 열었을 때 그대로 보여 주기 위해 남깁니다.
-    if (payload.signImage) {
-      sheet.getRange(rowNo, LEDGER_COL.signImage).setValue(String(payload.signImage));
+    /* 서명 이미지는 견적서를 다시 열었을 때 그대로 보여 주기 위해 남깁니다.
+
+       ★ 이 칸이 실패해도 서명 자체는 실패로 만들지 않습니다 (2026-08-31).
+         구글 시트는 칸 하나에 50,000자까지만 받습니다. 예전에는 큰 서명이 오면
+         여기서 오류가 나면서 **저장이 다 끝난 뒤에 고객 화면에만 실패**라고 떴습니다.
+         (바로 위에서 서명본 PDF 와 '서명완료' 가 이미 저장됩니다)
+
+         진짜 기록은 드라이브의 서명본 PDF 입니다. 이 칸은 화면에 다시
+         보여주기 위한 편의일 뿐이므로, 편의 때문에 계약이 실패로 보이면 안 됩니다. */
+    const SHEET_CELL_MAX = 50000;
+    const signImage = String(payload.signImage || '');
+    if (signImage && signImage.length < SHEET_CELL_MAX) {
+      try {
+        sheet.getRange(rowNo, LEDGER_COL.signImage).setValue(signImage);
+      } catch (err) {
+        console.log('[서명] 서명 이미지 칸 저장 실패 — 서명본 PDF 는 저장되었습니다. ' +
+                    (err && err.message ? err.message : err));
+      }
+    } else if (signImage) {
+      console.log('[서명] 서명 이미지가 칸 한도를 넘어 담지 않았습니다 (' +
+                  signImage.length + '자). 서명본 PDF 는 저장되었습니다.');
     }
 
     return { ok: true, code: code, url: saved.url };
@@ -1871,14 +1984,37 @@ function getLedgerSheet_() {
  * 목록 화면들이 저마다 getLastRow + getDisplayValues 를 다시 부르고 있었습니다.
  * 돌려받은 배열은 고쳐 쓰지 마세요 (여러 곳이 같은 것을 봅니다).
  */
+/* 목록을 만들 때 실제로 쓰는 마지막 칸 (59 = 서명본링크).
+   그 뒤의 60 견적서데이터 · 61 고객서명 은 **목록에서 한 글자도 쓰지 않는데**
+   견적서 한 장 분량과 서명 이미지가 통째로 들어 있는 칸입니다.
+
+   ★ 예전에는 목록 화면을 열 때마다 이 두 칸까지 63칸을 전부 읽었습니다.
+     견적이 300건이면 견적서 300장 분량을 읽어 들이고 그대로 버렸습니다.
+     이 두 칸은 필요한 곳(고객이 서명 링크를 열 때)에서 그 한 줄만 따로 읽습니다. */
+const LEDGER_LIST_COLS = 59;
+
 function ledgerValues_() {
   if (requestLedgerValues) return requestLedgerValues;
   const sheet = getLedgerSheet_();
   const lastRow = sheet.getLastRow();
   requestLedgerValues = (lastRow < 2)
     ? []
-    : sheet.getRange(2, 1, lastRow - 1, LEDGER_HEADERS.length).getDisplayValues();
+    : sheet.getRange(2, 1, lastRow - 1, LEDGER_LIST_COLS).getDisplayValues();
   return requestLedgerValues;
+}
+
+/* 원견적번호(62번)만 쓰는 화면이 셋 있습니다.
+   무거운 두 칸을 건너뛰어야 해서 이 한 칸만 따로 읽습니다. */
+let requestBaseCodes = null;
+function ledgerBaseCodes_() {
+  if (requestBaseCodes) return requestBaseCodes;
+  const sheet = getLedgerSheet_();
+  const lastRow = sheet.getLastRow();
+  requestBaseCodes = (lastRow < 2)
+    ? []
+    : sheet.getRange(2, LEDGER_COL.baseCode, lastRow - 1, 1).getDisplayValues()
+        .map(function (r) { return String(r[0] || '').trim(); });
+  return requestBaseCodes;
 }
 
 function getSendLogSheet_() {
@@ -1971,7 +2107,7 @@ function getWorkboardSpreadsheet_() {
 
 /** PIN 을 되돌릴 수 없는 형태로 바꾼다 (워크보드와 같은 방식) */
 function hashPin_(phone, pin) {
-  const raw = WORKBOARD_SALT + '|' + normPhone_(phone) + '|' + String(pin);
+  const raw = workboardSalt_() + '|' + normPhone_(phone) + '|' + String(pin);
   const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, raw, Utilities.Charset.UTF_8);
   return Utilities.base64Encode(bytes);
 }
@@ -2036,69 +2172,11 @@ function readWorkboardStaff_() {
   return out;
 }
 
-/** 지금 쓸 수 있는 담당자 이름 목록 */
-function getActiveStaffNames() {
-  /* 앱을 열 때마다 부르는 길입니다.
-     예전에는 여기서 워크보드 스프레드시트를 열었습니다 (1~2초).
-     이름·직급뿐이라 잠깐 담아둡니다. PIN 은 담지 않습니다. */
-  if (EST_STAFF_CACHE_ON) {
-    try {
-      const hit = CacheService.getScriptCache().get(EST_STAFF_CACHE_KEY);
-      if (hit) return JSON.parse(hit);
-    } catch (e) { /* 없거나 깨졌으면 아래에서 읽는다 */ }
-  }
-
-  const names = readWorkboardStaff_().map(function (s) { return s.displayName; });
-
-  if (EST_STAFF_CACHE_ON) {
-    try {
-      CacheService.getScriptCache()
-        .put(EST_STAFF_CACHE_KEY, JSON.stringify(names), EST_STAFF_CACHE_SECONDS);
-    } catch (e) { /* 못 담아도 값은 이미 있다 */ }
-  }
-  return names;
-}
-
-function validateStaffPin(pin) {
-  const inputPin = String(pin || '').trim();
-  if (!/^\d{4}$/.test(inputPin)) {
-    return { ok: false, message: 'PIN 번호 4자리를 정확히 입력해 주세요.' };
-  }
-
-  let staffList;
-  try {
-    staffList = readWorkboardStaff_();
-  } catch (err) {
-    return { ok: false, message: err && err.message ? err.message : '직원 정보를 읽지 못했습니다.' };
-  }
-
-  if (!staffList.length) return { ok: false, message: '등록된 담당자가 없습니다.' };
-
-  /* PIN 은 사람마다 다른 값으로 섞여 저장되므로
-     한 사람씩 같은 방식으로 바꿔보고 맞는지 확인한다. */
-  const matched = staffList.filter(function (s) {
-    if (!s.pinHash || !s.phone) return false;
-    return hashPin_(s.phone, inputPin) === s.pinHash;
-  });
-
-  if (!matched.length) {
-    return { ok: false, message: 'PIN 번호가 맞지 않습니다. 워크보드에서 쓰시는 PIN을 입력해 주세요.' };
-  }
-  if (matched.length > 1) {
-    return { ok: false, message: '같은 PIN을 사용하는 담당자가 있습니다. 관리자에게 알려주세요.' };
-  }
-
-  const me = matched[0];
-  return {
-    ok: true,
-    staffName: me.plainName,
-    staffDisplayName: me.displayName,
-    role: me.role || '사무실',
-    staffList: staffList.map(function (s) { return s.displayName; })
-  };
-}
-
-
+/* ★ validateStaffPin() 은 없앴습니다 (2026-08-31).
+   PIN 네 자리만으로 직원 전체를 뒤져 사람을 찾던 옛 로그인입니다.
+   두 사람이 같은 PIN 을 고르면 두 사람 다 이 앱에 못 들어왔고,
+   전화번호가 없어서 아무 PIN 이나 넣어 보는 것을 막을 방법도 없었습니다.
+   지금은 loginStaff_(전화번호 + PIN) 하나만 씁니다. */
 function normalizeRole_(value) {
   const text = String(value || '').trim();
   if (!text) return '사무실';
@@ -2315,7 +2393,9 @@ function 파일이름_정리하기(미리보기) {
   requestWorkboardSpreadsheet = null;
   requestSheets = {};
   requestLedgerValues = null;
+  requestBaseCodes = null;
   requestStaffRows = null;
+  requestProps = null;
   requestSiteFolders = {};
 
   const 줄 = [];
