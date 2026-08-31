@@ -246,6 +246,10 @@ function doGet(e) {
       return outputJson(issueAddonCode_(params), callback);
     }
 
+    if (action === 'findByPhone') {
+      return outputJson(findByPhone_(params), callback);
+    }
+
     if (action === 'excel') {
       if ((params.key || '') !== EXCEL_API_KEY) {
         return ContentService.createTextOutput('INVALID_KEY')
@@ -262,11 +266,28 @@ function doGet(e) {
         .setMimeType(ContentService.MimeType.CSV);
     }
 
+    /* ★★ 모르는 action 은 실패로 돌려줍니다 (v54).
+       예전에는 여기서 무조건 { ok: true, message: 'Apps Script is running' } 을
+       돌려줬습니다. 그래서 화면이 없는 통로를 불러도 **성공으로 보였고**,
+       findByPhone 이 몇 달 동안 조용히 아무 일도 안 하고 있었습니다.
+       오타나 빠뜨린 통로가 앞으로는 바로 드러납니다.
+
+       ★ 살아있는지 확인하는 길은 남겨 둡니다 —
+         action 이 아예 없거나 'ping' 이면 지금처럼 ok: true 입니다.
+         브라우저로 배포 주소를 그냥 열었을 때 쓰는 길입니다. */
+    if (!action || action === 'ping') {
+      return outputJson({
+        ok: true,
+        app: 'N-CORE 현장 견적 + 안전동의서',
+        version: 'v24',
+        message: 'Apps Script is running'
+      }, callback);
+    }
+
     return outputJson({
-      ok: true,
-      app: 'N-CORE 현장 견적 + 안전동의서',
-      version: 'v24',
-      message: 'Apps Script is running'
+      ok: false,
+      code: 'UNKNOWN_ACTION',
+      message: '알 수 없는 요청입니다: ' + action
     }, callback);
   } catch (err) {
     return outputJson({ ok: false, message: err && err.message ? err.message : String(err) }, callback);
@@ -1187,6 +1208,61 @@ function getAddonBaseList_(params) {
       signStatus: row[LEDGER_COL.signStatus - 1] || '',
       siteFolderUrl: row[LEDGER_COL.siteFolderUrl - 1] || '',
       savedAt: row[LEDGER_COL.savedAt - 1] || '',
+      addonCount: addonCount[code] || 0
+    });
+  }
+
+  return { ok: true, rows: rows };
+}
+
+/**
+ * 같은 연락처로 이미 올라간 현장 찾기 (v54).
+ *
+ * 화면(ncore-estimate-v2.js 의 checkDuplicatePhone)이 저장 직전에 부릅니다.
+ * 이미 있는 현장이면 "같은 연락처의 현장이 이미 있습니다" 를 띄워
+ * 추가공사로 올려야 할 건이 새 견적으로 중복 등록되는 것을 막습니다.
+ *
+ * ★ 이 통로가 서버에 없어서 그 경고가 **한 번도 뜬 적이 없었습니다** (2026-08-30 점검).
+ *   화면은 멀쩡히 돌고 경고만 조용히 사라지는 형태였습니다.
+ *
+ * 받는 것   phone (하이픈이 있어도 됩니다) · limit
+ * 주는 것   { ok, rows: [{ code, customerName, address, savedAt,
+ *                          progress, contractStatus, addonCount }] }
+ *
+ * ★ 전화번호는 숫자만 남겨서 견줍니다. 시트에 '010-1234-5678' 로 들어 있어도 찾습니다.
+ */
+function findByPhone_(params) {
+  const want = String(params.phone || '').replace(/[^0-9]/g, '');
+  if (want.length < 9) return { ok: true, rows: [] };
+
+  const values = ledgerValues_();          // 요청당 한 번만 읽는다
+  if (!values.length) return { ok: true, rows: [] };
+
+  const limit = Math.min(Number(params.limit || 5) || 5, 20);
+
+  // 원 견적별 추가견적 건수 (getAddonBaseList_ 와 같은 방식)
+  const addonCount = {};
+  for (const row of values) {
+    const base = String(row[LEDGER_COL.baseCode - 1] || '').trim();
+    if (base) addonCount[base] = (addonCount[base] || 0) + 1;
+  }
+
+  const rows = [];
+  for (let i = values.length - 1; i >= 0 && rows.length < limit; i--) {
+    const row = values[i];
+    const code = String(row[LEDGER_COL.code - 1] || '').trim();
+    if (!code) continue;
+
+    const got = String(row[LEDGER_COL.phone - 1] || '').replace(/[^0-9]/g, '');
+    if (!got || got !== want) continue;
+
+    rows.push({
+      code: code,
+      customerName: row[LEDGER_COL.customerName - 1] || '',
+      address: row[LEDGER_COL.address - 1] || '',
+      savedAt: row[LEDGER_COL.savedAt - 1] || '',
+      progress: row[LEDGER_COL.progress - 1] || '',
+      contractStatus: row[LEDGER_COL.contractStatus - 1] || '',
       addonCount: addonCount[code] || 0
     });
   }
