@@ -8587,7 +8587,7 @@
         <div id="loginStatus" class="login-status"></div>
       </form>
 
-      <div id="startFoot" class="start-foot">N-CORE On-site Check System 2.00</div>
+      <div id="startFoot" class="start-foot">N-CORE On-site Check System</div>
     </div>
   </section>
 
@@ -9798,8 +9798,17 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyFrxJAlfs9hfHAKIczd-qvCtBLZZUR79T0Ve4qN_7YVe1-cZDJvI6-mZKOuyxIvk1d/exec"; // Apps Script 웹앱 URL (현장견적 수신시트 NEW / 2026-08-18 교체)
+    /* ★ 앱 판 번호 — 여기 한 곳만 고칩니다.
+       화면을 고쳐서 올릴 때마다 0.01 씩 올립니다 (0.14 → 0.15 → 0.16 …).
+       로그인 화면 맨 아래에 이 값이 그대로 나옵니다. */
+    const APP_VERSION = "0.14";
+
     const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
     const PHONE_STORAGE_KEY = "ncore_last_phone_v1";
+    /* ★ 역할(현장반장 / 사무실)도 같이 담아 둡니다 (2026-09-01).
+       담지 않으면 앱을 두 번째로 열 때 언제나 '사무실' 로 되돌아가,
+       현장반장에게 수익금 칸이 보였습니다. */
+    const ROLE_STORAGE_KEY = "ncore_current_staff_role_v1";
 
     // v25: 현장 필수정보 기준값
     const INDUSTRY_OPTIONS = [
@@ -10001,6 +10010,7 @@
           role: String(result.role || "사무실").trim() || "사무실"
         };
         localStorage.setItem(STAFF_STORAGE_KEY, state.auth.staffName);
+        try { localStorage.setItem(ROLE_STORAGE_KEY, state.auth.role); } catch (err) {}
         try { localStorage.setItem(PHONE_STORAGE_KEY, phone); } catch (err) {}
         testMode = testArmed;
         testArmed = false;
@@ -10035,6 +10045,7 @@
       const startScreen = document.getElementById("startScreen");
       const app = document.querySelector(".app");
       state.auth = { loggedIn: false, staffName: "", role: "사무실" };
+      try { localStorage.removeItem(ROLE_STORAGE_KEY); } catch (err) {}
       testMode = false;
       testArmed = false;
       applyRoleToUI();
@@ -13876,11 +13887,20 @@
     }
 
     if (getToken() && lastStaffName) {
+      /* 지난번에 확인된 역할을 되살립니다. 없으면 좁은 쪽(현장)으로 둡니다 —
+         잘못 넓히는 것보다 잘못 좁히는 편이 낫습니다. */
+      let lastRole = "";
+      try { lastRole = localStorage.getItem(ROLE_STORAGE_KEY) || ""; } catch (err) {}
+      state.auth.role = lastRole || "현장";
       state.auth.loggedIn = true;
       applyRoleToUI();
       updateStaffSessionUI();
       openAppAfterLogin();
     }
+
+    /* 판 번호는 APP_VERSION 한 곳에서만 옵니다 */
+    const footBox = document.getElementById("startFoot");
+    if (footBox) footBox.textContent = "N-CORE On-site Check System " + APP_VERSION;
 
     setLoginStatus("");
     setActive("labor");

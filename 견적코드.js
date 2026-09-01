@@ -192,16 +192,18 @@ let requestLedgerValues = null;
 let requestStaffRows = null;      // 워크보드 명부 — 요청당 한 번만 읽는다
 let requestSiteFolders = {};      // 현장 폴더 — 견적번호별로 요청당 한 번만 찾는다
 
-/* 담당자 이름 목록만 잠깐 담아둡니다 (2026-08-28).
+/* 재직자 목록을 잠깐 담아둡니다 (2026-08-28 · 2026-09-01 넓힘).
    앱을 열 때마다 워크보드 스프레드시트를 여느라 1~2초를 썼습니다.
 
-   ★ 이름·직급만 담습니다. PIN 해시와 재직상태 판정은 담지 않습니다.
-     로그인은 언제나 시트에서 새로 읽습니다 — 퇴사 처리한 사람이
-     담아둔 값 때문에 들어오는 일이 있으면 안 됩니다.
+   ★ 이름·직급·전화번호·등급만 담습니다. PIN해시는 담지 않습니다.
+     PIN 을 맞춰 보는 일(로그인)은 언제나 시트에서 새로 읽습니다 —
+     퇴사 처리한 사람이 담아둔 값 때문에 들어오는 일이 있으면 안 됩니다.
+   ★ 출입증 확인은 이 목록을 봅니다. 그래서 퇴사 처리하면
+     늦어도 아래 시간 안에 이 앱에서도 못 들어옵니다.
    ★ EST_STAFF_CACHE_ON = false 로 옛 방식으로 즉시 돌아갑니다. */
 const EST_STAFF_CACHE_ON = true;
-const EST_STAFF_CACHE_KEY = 'estimate_staff_names_v1';
-const EST_STAFF_CACHE_SECONDS = 600;
+const EST_STAFF_CACHE_KEY = 'estimate_active_staff_v2';
+const EST_STAFF_CACHE_SECONDS = 300;
 
 const SEND_HEADERS = [
   '발송일시','견적번호','회차','담당자','고객명','발송번호',
@@ -339,9 +341,10 @@ function doGet(e) {
        findByPhone 이 몇 달 동안 조용히 아무 일도 안 하고 있었습니다.
        오타나 빠뜨린 통로가 앞으로는 바로 드러납니다.
 
-       ★ 살아있는지 확인하는 길은 남겨 둡니다 —
-         action 이 아예 없거나 'ping' 이면 지금처럼 ok: true 입니다.
-         브라우저로 배포 주소를 그냥 열었을 때 쓰는 길입니다. */
+       ★ 살아있는지 확인하는 길은 ?action=ping 하나입니다 (2026-09-01).
+         배포 주소를 그냥 열면 이제 위쪽 문에서 막혀
+         '다시 로그인해 주세요' 가 나옵니다 — 그것도 서버가 살아있다는 뜻입니다.
+         앱 이름·판 번호조차 아무나 볼 이유가 없습니다. */
     if (!action || action === 'ping') {
       return outputJson({
         ok: true,
@@ -2170,6 +2173,184 @@ function readWorkboardStaff_() {
 
   requestStaffRows = out;
   return out;
+}
+
+/* =========================================================
+   출입증  (2026-09-01)
+
+   ★ 이 앱의 문지기입니다. doGet · doPost 가 여기를 먼저 지납니다.
+
+   · 로그인은 전화번호 + PIN 입니다.
+     PIN 을 맞춰 볼 때는 워크보드 '직원' 시트를 **그때 바로** 읽습니다.
+     담아둔 값으로 맞춰 보면 퇴사 처리한 사람이 들어올 수 있습니다.
+   · 로그인에 성공하면 출입증을 하나 줍니다. 기기에 담아 두고 모든 요청에
+     같이 보내기 때문에 두 번째부터는 PIN 을 묻지 않습니다.
+   · 출입증에 들어 있는 것은 전화번호와 만료시각뿐이고,
+     SESSION_SECRET 으로 서명합니다. 비밀키를 모르면 만들어 낼 수 없습니다.
+   · SESSION_SECRET 을 바꾸면 전 직원이 PIN 을 한 번씩 다시 넣습니다
+     (고객에게 보낸 서명 링크와는 아무 상관이 없습니다 — 그쪽은 SIGN_SECRET).
+   ========================================================= */
+
+/** 로그인 없이 열어 둘 통로. 여기 없는 것은 전부 출입증이 있어야 합니다.
+
+    · login          로그인 그 자체
+    · ping           살아 있는지 보는 길
+    · signDoc        고객이 문자로 받은 링크로 견적서를 여는 길
+    · saveSignature  고객이 서명을 올리는 길
+
+    뒤의 둘은 고객이 쓰는 통로라 로그인할 수 없습니다.
+    대신 링크에 붙은 서명 열쇠(SIGN_SECRET)로 확인합니다.
+
+    ★ 여기에 통로를 더하는 것은 '주소만 알면 누구나 부를 수 있게 한다' 는 뜻입니다.
+      계정 사고의 원인이 그것이었습니다. 더하기 전에 다시 생각하세요. */
+const OPEN_ACTIONS = { login: 1, ping: 1, signDoc: 1, saveSignature: 1 };
+
+/** 출입증을 얼마나 오래 인정할지.
+    현장 태블릿이 아침마다 PIN 을 다시 치지 않도록 넉넉히 둡니다. */
+const SESSION_DAYS = 30;
+
+function sessionSecret_() { return mustProp_('SESSION_SECRET'); }
+
+/** 전화번호와 만료시각을 비밀키로 서명합니다 (서명 링크와 같은 방식). */
+function passSignature_(phone, expText) {
+  const raw = Utilities.computeHmacSha256Signature(phone + '|' + expText, sessionSecret_());
+  let hex = '';
+  for (let i = 0; i < raw.length; i++) {
+    let b = raw[i];
+    if (b < 0) b += 256;
+    const part = b.toString(16);
+    hex += (part.length === 1 ? '0' : '') + part;
+  }
+  return hex.slice(0, 40);
+}
+
+/** 출입증 한 장을 만듭니다. 모양은 전화번호.만료시각.서명 입니다. */
+function makePass_(phone) {
+  const p = normPhone_(phone);
+  const expText = String(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+  return p + '.' + expText + '.' + passSignature_(p, expText);
+}
+
+/** 출입증에서 전화번호를 꺼냅니다.
+    서명이 안 맞거나 기한이 지났으면 빈 값입니다. */
+function passPhone_(token) {
+  const parts = String(token || '').trim().split('.');
+  if (parts.length !== 3) return '';
+
+  const phone = normPhone_(parts[0]);
+  const expText = String(parts[1] || '');
+  const exp = Number(expText);
+  if (!phone || !exp || Date.now() > exp) return '';
+
+  const given = String(parts[2] || '').trim().toLowerCase();
+  if (!sameToken_(passSignature_(phone, expText), given)) return '';
+
+  return phone;
+}
+
+/* 재직자 목록을 잠깐 담아 둡니다.
+   출입증을 확인할 때마다 워크보드 스프레드시트를 여느라 1~2초를 쓰던 자리입니다.
+
+   ★ 담는 것은 이름·직급·전화번호·등급뿐입니다. PIN해시는 담지 않습니다.
+     PIN 을 맞춰 보는 일(로그인)은 언제나 시트를 직접 읽습니다.
+   ★ 퇴사 처리하면 늦어도 EST_STAFF_CACHE_SECONDS 안에 이 앱에서도 못 들어옵니다. */
+function liteStaff_(s) {
+  return {
+    plainName: s.plainName, displayName: s.displayName, rawName: s.rawName,
+    role: s.role, grade: s.grade, phone: s.phone, dept: s.dept, rank: s.rank
+  };
+}
+
+function activeStaffLite_() {
+  /* 이 요청에서 이미 시트를 읽었으면 그것을 씁니다 */
+  if (requestStaffRows) return requestStaffRows.map(liteStaff_);
+
+  if (EST_STAFF_CACHE_ON) {
+    try {
+      const hit = CacheService.getScriptCache().get(EST_STAFF_CACHE_KEY);
+      if (hit) {
+        const rows = JSON.parse(hit);
+        if (rows && rows.length) return rows;
+      }
+    } catch (err) {
+      quiet_('activeStaffLite_ 읽기', err);   // 담아둔 값이 이상하면 시트에서 읽습니다
+    }
+  }
+
+  const rows = readWorkboardStaff_().map(liteStaff_);
+
+  if (EST_STAFF_CACHE_ON) {
+    try {
+      CacheService.getScriptCache()
+        .put(EST_STAFF_CACHE_KEY, JSON.stringify(rows), EST_STAFF_CACHE_SECONDS);
+    } catch (err) {
+      quiet_('activeStaffLite_ 담기', err);   // 못 담아도 이번 요청은 그대로 됩니다
+    }
+  }
+
+  return rows;
+}
+
+/** 출입증을 확인하고 '누가 부른 것인지' 를 돌려줍니다.
+    출입증이 없거나·위조됐거나·기한이 지났거나·퇴사했으면 null 입니다. */
+function requireStaff_(params) {
+  const phone = passPhone_(params && params.token);
+  if (!phone) return null;
+
+  const rows = activeStaffLite_();
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].phone === phone) return rows[i];
+  }
+
+  /* 재직자 목록에 없습니다 — 퇴사·승인대기입니다 */
+  return null;
+}
+
+/** 전화번호 + PIN 으로 로그인하고 출입증을 발급합니다.
+    화면은 이 응답의 token 을 기기에 담아 두고 계속 씁니다. */
+function loginStaff_(params) {
+  const phone = normPhone_(params && params.phone);
+  const pin = String((params && params.pin) || '').trim();
+
+  if (phone.length < 10) return { ok: false, message: '휴대폰 번호를 확인해 주세요.' };
+  if (!/^\d{4}$/.test(pin)) return { ok: false, message: 'PIN 번호 4자리를 확인해 주세요.' };
+
+  /* ★ PIN 판정은 언제나 시트에서 새로 읽습니다. 담아둔 값을 쓰지 않습니다. */
+  requestStaffRows = null;
+  const rows = readWorkboardStaff_();
+
+  let me = null;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].phone === phone) { me = rows[i]; break; }
+  }
+
+  /* 없는 번호인지 PIN 이 틀린 것인지 알려주지 않습니다.
+     번호를 하나씩 넣어 보며 누가 다니는지 알아낼 수 없게 합니다. */
+  if (!me || !me.pinHash || !sameToken_(me.pinHash, hashPin_(phone, pin))) {
+    return { ok: false, message: '번호 또는 PIN 이 맞지 않습니다.' };
+  }
+
+  return {
+    ok: true,
+    token: makePass_(phone),
+    staffName: me.plainName,
+    displayName: me.displayName,
+    role: me.role,
+    grade: me.grade
+  };
+}
+
+/** 이 요청을 누가 보냈는지. 출입증에서 확인된 이름만 씁니다.
+    화면이 보낸 이름은 믿지 않습니다 — 남의 이름을 적어 보낼 수 있기 때문입니다. */
+function staffNameOf_(params) {
+  const me = params && params.__me;
+  return (me && me.plainName) ? me.plainName : '';
+}
+
+/** 조용히 실패하지 않는다 — 삼킨 오류를 실행 기록에 남깁니다. */
+function quiet_(where, err) {
+  try { console.log('[조용한 오류] ' + where + ' : ' + (err && err.message ? err.message : err)); }
+  catch (e) { /* 기록조차 못 하면 그냥 넘어갑니다 */ }
 }
 
 /* ★ validateStaffPin() 은 없앴습니다 (2026-08-31).
