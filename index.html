@@ -7579,6 +7579,20 @@
       align-content: stretch;
     }
 
+    /* 묶음 이름 — 격자 한 줄을 통째로 차지한다.
+       ★ 현장반장 화면에서는 숨긴다 (세 장뿐이라 묶을 것이 없다) */
+    .menu-group {
+      grid-column: 1 / -1;
+      align-self: end;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: #9A948C;
+      padding: 0 2px 2px;
+    }
+    .menu-group:first-child { margin-top: 0; }
+    body.role-field .menu-group { display: none; }
+
     .menu-card {
       min-width: 0;
       border: 1px solid var(--line);
@@ -9203,17 +9217,22 @@
         </div>
       </header>
 
+      <!-- ★ 메뉴는 '일이 일어나는 순서' 로 묶습니다 (2026-09-01).
+           예전에는 만드는 일과 보는 일이 번갈아 나오고,
+           맨 끝 단계인 '공사완료 입력' 이 '추가견적 작성'·'서명 현황' 보다 앞에 있었습니다.
+
+           ★ 추가견적 작성·서명 현황 두 장은 ncore-estimate-v2.js 가
+             '안전동의서' **바로 앞에** 끼워 넣습니다. 그래서 여기 순서만 맞추면 됩니다.
+             안전동의서를 옮기면 그 두 장도 같이 따라갑니다 — 주의하세요.
+
+           ★ 묶음 이름은 현장반장 화면에서는 숨깁니다 (반장은 세 장뿐이라 묶을 것이 없습니다). -->
       <section class="menu-content" id="menuContent">
+        <div class="menu-group">견적</div>
+
         <button type="button" class="panel menu-card primary" id="menuNewEstimate">
           <span class="menu-card-no">01</span>
           <span class="menu-card-title">새 견적 작성</span>
           <span class="menu-card-desc">현장 정보를 입력하고 견적서를 작성해 고객에게 발송합니다.</span>
-        </button>
-
-        <button type="button" class="panel menu-card" id="menuMyReports">
-          <span class="menu-card-no">02</span>
-          <span class="menu-card-title">내 현장견적</span>
-          <span class="menu-card-desc">내가 제출한 현장견적과 계약 진행 상태를 확인합니다.</span>
         </button>
 
         <button type="button" class="panel menu-card office-only" id="menuFieldReport">
@@ -9222,16 +9241,27 @@
           <span class="menu-card-desc">현장반장이 올린 현장견적에 수익금과 작업범위를 더해 견적서를 만듭니다.</span>
         </button>
 
-        <button type="button" class="panel menu-card office-only" id="menuActualCost">
+        <div class="menu-group" id="menuGrpContract">계약 · 공사</div>
+
+        <!-- 여기 앞에 v2.js 가 [추가견적 작성] [서명 현황] 을 끼워 넣습니다 -->
+        <button type="button" class="panel menu-card" id="menuSafety">
           <span class="menu-card-no">03</span>
+          <span class="menu-card-title">안전동의서</span>
+          <span class="menu-card-desc">작업자에게 안전수칙을 확인받고 서명을 받습니다.</span>
+        </button>
+
+        <button type="button" class="panel menu-card office-only" id="menuActualCost">
+          <span class="menu-card-no">04</span>
           <span class="menu-card-title">공사완료 입력</span>
           <span class="menu-card-desc">공사가 끝난 현장의 실제 원가와 최종 계약금액을 입력합니다.</span>
         </button>
 
-        <button type="button" class="panel menu-card office-only" id="menuLookup">
-          <span class="menu-card-no">04</span>
-          <span class="menu-card-title">과거 현장 조회</span>
-          <span class="menu-card-desc">비슷한 조건의 지난 현장이 실제로 얼마나 들었는지 확인합니다.</span>
+        <div class="menu-group">조회</div>
+
+        <button type="button" class="panel menu-card" id="menuMyReports">
+          <span class="menu-card-no">05</span>
+          <span class="menu-card-title">내 현장견적</span>
+          <span class="menu-card-desc">내가 제출한 현장견적과 계약 진행 상태를 확인합니다.</span>
         </button>
 
         <button type="button" class="panel menu-card office-only" id="menuUnclaimed">
@@ -9240,10 +9270,10 @@
           <span class="menu-card-desc">견적은 나갔는데 계약이 안 된 현장을 확인합니다.</span>
         </button>
 
-        <button type="button" class="panel menu-card" id="menuSafety">
-          <span class="menu-card-no">05</span>
-          <span class="menu-card-title">안전동의서</span>
-          <span class="menu-card-desc">작업자에게 안전수칙을 확인받고 서명을 받습니다.</span>
+        <button type="button" class="panel menu-card office-only" id="menuLookup">
+          <span class="menu-card-no">07</span>
+          <span class="menu-card-title">과거 현장 조회</span>
+          <span class="menu-card-desc">비슷한 조건의 지난 현장이 실제로 얼마나 들었는지 확인합니다.</span>
         </button>
       </section>
 
@@ -9801,7 +9831,7 @@
     /* ★ 앱 판 번호 — 여기 한 곳만 고칩니다.
        화면을 고쳐서 올릴 때마다 0.01 씩 올립니다 (0.14 → 0.15 → 0.16 …).
        로그인 화면 맨 아래에 이 값이 그대로 나옵니다. */
-    const APP_VERSION = "0.14";
+    const APP_VERSION = "0.15";
 
     const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
     const PHONE_STORAGE_KEY = "ncore_last_phone_v1";

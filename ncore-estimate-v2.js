@@ -895,13 +895,18 @@
       loadSignStatus();
     });
 
-    if (safety) {
-      menu.insertBefore(addonCard, safety);
-      menu.insertBefore(signCard, safety);
-    } else {
-      menu.appendChild(addonCard);
-      menu.appendChild(signCard);
-    }
+    /* ★ 메뉴는 묶음(견적 / 계약·공사 / 조회)으로 나뉘어 있습니다 (2026-09-01).
+       · 추가견적 작성 → '견적' 묶음 끝  = '계약 · 공사' 이름표 **앞**
+       · 서명 현황     → '계약 · 공사' 첫 자리 = 안전동의서 **앞**
+       두 장을 같은 자리에 넣으면 묶음이 어긋납니다. */
+    const contractTitle = document.getElementById("menuGrpContract");
+
+    if (contractTitle) menu.insertBefore(addonCard, contractTitle);
+    else if (safety) menu.insertBefore(addonCard, safety);
+    else menu.appendChild(addonCard);
+
+    if (safety) menu.insertBefore(signCard, safety);
+    else menu.appendChild(signCard);
   }
 
   /* ---------- 서명 현황 ---------- */

@@ -28,7 +28,7 @@
      같은 파일이 사람 수만큼 따로 쌓입니다.
    ========================================================================= */
 
-const CACHE_NAME = "ncore-field-estimate-pwa-v62";
+const CACHE_NAME = "ncore-field-estimate-pwa-v63";
 
 /* 캐시가 있을 때 네트워크를 기다려주는 시간 */
 const NET_WAIT_MS = 2500;
