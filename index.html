@@ -4753,7 +4753,7 @@
       content: "";
       position: absolute;
       inset: 96px 18px 28px;
-      background-image: url("./ncore-watermark-v7.png");
+      background-image: url("./ncore-watermark-v8.png");
       background-repeat: no-repeat;
       background-position: center center;
       background-size: min(430px, 58%) auto;
@@ -5017,7 +5017,7 @@
       content: "";
       position: absolute;
       inset: 210px 42px 82px;
-      background-image: url("./ncore-watermark-v7.png");
+      background-image: url("./ncore-watermark-v8.png");
       background-repeat: no-repeat;
       background-position: center center;
       background-size: 430px auto;
@@ -5901,7 +5901,7 @@
     }
 
     .estimate-head-logo {
-      content: url("./ncore-watermark-v7.png") !important;
+      content: url("./ncore-watermark-v8.png") !important;
       width: 292px !important;
       height: auto !important;
       max-width: 292px !important;
@@ -5918,7 +5918,7 @@
     }
 
     .pdf-brand img {
-      content: url("./ncore-watermark-v7.png") !important;
+      content: url("./ncore-watermark-v8.png") !important;
       width: 252px !important;
       height: auto !important;
       max-width: 252px !important;
@@ -6004,7 +6004,7 @@
     }
 
     .estimate-watermark {
-      content: url("./ncore-watermark-v7.png") !important;
+      content: url("./ncore-watermark-v8.png") !important;
       top: 84% !important;
       opacity: .038 !important;
       z-index: 0 !important;
@@ -6012,7 +6012,7 @@
     }
 
     .pdf-watermark {
-      content: url("./ncore-watermark-v7.png") !important;
+      content: url("./ncore-watermark-v8.png") !important;
       top: 84% !important;
       opacity: .036 !important;
       z-index: 0 !important;
@@ -9107,11 +9107,11 @@
       <section class="estimate-content">
         <section class="panel estimate-doc">
           <div class="estimate-paper">
-            <img class="estimate-watermark" src="./ncore-watermark-v7.png" alt="" aria-hidden="true" />
+            <img class="estimate-watermark" src="./ncore-watermark-v8.png" alt="" aria-hidden="true" />
             <div class="estimate-paper-head">
               <div class="estimate-head-brand">
                 <div class="estimate-head-logo-wrap">
-                  <img class="estimate-head-logo" src="./ncore-watermark-v7.png" alt="N-CORE" />
+                  <img class="estimate-head-logo" src="./ncore-watermark-v8.png" alt="N-CORE" />
                 </div>
                 <div class="estimate-head-title-wrap">
                   <h1 class="estimate-doc-title">현장 견적서</h1>
@@ -9831,7 +9831,7 @@
     /* ★ 앱 판 번호 — 여기 한 곳만 고칩니다.
        화면을 고쳐서 올릴 때마다 0.01 씩 올립니다 (0.14 → 0.15 → 0.16 …).
        로그인 화면 맨 아래에 이 값이 그대로 나옵니다. */
-    const APP_VERSION = "0.15";
+    const APP_VERSION = "0.16";
 
     const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
     const PHONE_STORAGE_KEY = "ncore_last_phone_v1";
@@ -11694,8 +11694,8 @@
         .filter(Boolean);
     }
 
-    const NCORE_LOGO_DATA_URI = "./ncore-watermark-v7.png";
-    const NCORE_LOGO_BOX_URI = "./ncore-watermark-v7.png";
+    const NCORE_LOGO_DATA_URI = "./ncore-watermark-v8.png";
+    const NCORE_LOGO_BOX_URI = "./ncore-watermark-v8.png";
 
     function buildPdfRenderPage() {
       calc();
