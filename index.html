@@ -9831,7 +9831,7 @@
     /* ★ 앱 판 번호 — 여기 한 곳만 고칩니다.
        화면을 고쳐서 올릴 때마다 0.01 씩 올립니다 (0.14 → 0.15 → 0.16 …).
        로그인 화면 맨 아래에 이 값이 그대로 나옵니다. */
-    const APP_VERSION = "0.16";
+    const APP_VERSION = "0.17";
 
     const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
     const PHONE_STORAGE_KEY = "ncore_last_phone_v1";
@@ -13903,30 +13903,32 @@
       showLoginScreen();
     });
 
-    /* ★ 기기를 기억합니다 (2026-08-31).
-       예전에는 이름만 담아 두어서 **열 때마다 PIN 을 다시 쳤습니다.**
-       워크보드·출퇴근은 이미 기기를 기억하는데 이 앱만 안 그랬습니다.
-       고객 앞에서 PIN 치고 기다리는 장면이 이걸로 없어집니다.
+    /* ★★ 앱을 열면 **언제나 PIN 을 받습니다** (2026-09-02 대표님 지시).
+     *
+     *  2026-08-31 에는 출입증(30일)이 있으면 그냥 들여보냈습니다.
+     *  그런데 이 앱이 도는 곳은 **현장 공용 태블릿**입니다.
+     *  누가 마지막에 썼든 앱만 열면 그 사람으로 들어가지는 것은 위험합니다.
+     *  견적 금액과 고객 정보가 들어 있는 앱입니다.
+     *
+     *  대신 **번호는 미리 채워 둡니다.** 번호는 잘 안 바뀌고 11자리라
+     *  장갑 낀 손으로 치기 번거롭습니다. 사람이 할 일은 PIN 네 자리뿐입니다.
+     *
+     *  ★ 지난번 출입증은 여기서 버립니다. 안 버리면 로그인 화면을 띄워 놓고도
+     *    뒤에서 도는 요청이 그 출입증으로 통과해 버립니다. */
+    try { setToken(""); } catch (err) {}
+    try { localStorage.removeItem(ROLE_STORAGE_KEY); } catch (err) {}
+    state.auth.loggedIn = false;
+    state.auth.role = "현장";
 
-       출입증이 만료됐거나 퇴사 처리되면 서버가 '다시 로그인해 주세요' 로 답하고
-       그때 handleNeedLogin 이 로그인 화면을 다시 띄웁니다. */
-    const lastStaffName = localStorage.getItem(STAFF_STORAGE_KEY) || "";
-    if (lastStaffName) {
-      state.auth.staffName = lastStaffName;
-      updateStaffSessionUI();
-    }
+    const startPhoneBox = document.getElementById("loginPhone");
+    let startLastPhone = "";
+    try { startLastPhone = localStorage.getItem(PHONE_STORAGE_KEY) || ""; } catch (err) {}
+    if (startPhoneBox && startLastPhone) startPhoneBox.value = prettyPhone(startLastPhone);
 
-    if (getToken() && lastStaffName) {
-      /* 지난번에 확인된 역할을 되살립니다. 없으면 좁은 쪽(현장)으로 둡니다 —
-         잘못 넓히는 것보다 잘못 좁히는 편이 낫습니다. */
-      let lastRole = "";
-      try { lastRole = localStorage.getItem(ROLE_STORAGE_KEY) || ""; } catch (err) {}
-      state.auth.role = lastRole || "현장";
-      state.auth.loggedIn = true;
-      applyRoleToUI();
-      updateStaffSessionUI();
-      openAppAfterLogin();
-    }
+    /* 번호가 이미 채워져 있으면 PIN 칸으로 바로 커서를 보냅니다 */
+    setTimeout(() => {
+      document.getElementById(startLastPhone ? "loginPin" : "loginPhone")?.focus();
+    }, 80);
 
     /* 판 번호는 APP_VERSION 한 곳에서만 옵니다 */
     const footBox = document.getElementById("startFoot");
