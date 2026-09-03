@@ -28,46 +28,88 @@
      같은 파일이 사람 수만큼 따로 쌓입니다.
    ========================================================================= */
 
-const CACHE_NAME = "ncore-field-estimate-pwa-v65";
+const CACHE_NAME = "ncore-field-estimate-pwa-v68";
+
+/* ★★ 글꼴과 그림은 **따로 담습니다** (2026-09-02).
+   글꼴 하나가 1.24MB 인데, 화면을 한 글자만 고쳐도 위의 판 번호가 올라가고
+   그러면 예전 칸을 통째로 지우느라 **글꼴을 다시 받았습니다.**
+   지금까지 66번 올렸으니 태블릿마다 80MB 를 헛되이 받은 셈입니다.
+   현장에서 LTE 로 여는 앱이라 이 시간이 그대로 고객 앞에서 흘러갑니다.
+
+   이 칸은 판 번호를 올려도 지우지 않습니다.
+   ★ 그림·글꼴을 진짜로 바꿀 때는 **파일 이름에 판을 붙이세요**
+     (`ncore-logo-v8.png` → `ncore-logo-v9.png`). 아래 목록만 고치면
+     이름이 빠진 옛 파일은 저절로 지워집니다. */
+const ASSET_CACHE = "ncore-field-estimate-assets-v1";
+
+const ASSETS = [
+  "./PretendardVariable.woff2",
+  "./icon-192-v2.png",
+  "./icon-512-v2.png",
+  "./ncore-logo-v8.png",
+  "./ncore-watermark-v8.png",
+  "./ncore-stamp.png"
+];
+
+/** 이 주소가 '따로 담는 것' 인가 */
+function isAsset(pathname) {
+  for (let i = 0; i < ASSETS.length; i++) {
+    if (pathname.endsWith(ASSETS[i].replace("./", "/"))) return true;
+  }
+  return false;
+}
 
 /* 캐시가 있을 때 네트워크를 기다려주는 시간 */
 const NET_WAIT_MS = 2500;
 
+/* 화면 파일 — 고칠 때마다 새로 받아야 하는 것 */
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./safety.html",
   "./sign.html",
   "./manifest.webmanifest",
-  "./PretendardVariable.woff2",
-  "./icon-192-v2.png",
-  "./icon-512-v2.png",
-  "./ncore-logo-v8.png",
-  "./ncore-watermark-v8.png",
   "./ncore-doc.js",
-  "./ncore-estimate-v2.js",
-  "./ncore-stamp.png"
+  "./ncore-estimate-v2.js"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) =>
+    Promise.all([
+      caches.open(CACHE_NAME).then((cache) =>
         Promise.all(CORE_ASSETS.map((url) => cache.add(url).catch(() => null)))
+      ),
+      /* ★ 이미 담겨 있으면 다시 받지 않습니다 */
+      caches.open(ASSET_CACHE).then((cache) =>
+        Promise.all(ASSETS.map((url) =>
+          cache.match(url, { ignoreSearch: true })
+            .then((있음) => (있음 ? null : cache.add(url).catch(() => null)))
+        ))
       )
-      .then(() => self.skipWaiting())
+    ]).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((keys) =>
+    Promise.all([
+      /* 옛 판의 화면 칸만 지웁니다 — 글꼴 칸은 남겨 둡니다 */
+      caches.keys().then((keys) =>
         Promise.all(
-          keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+          keys
+            .filter((key) => key !== CACHE_NAME && key !== ASSET_CACHE)
+            .map((key) => caches.delete(key))
         )
-      )
-      .then(() => self.clients.claim())
+      ),
+      /* 목록에서 빠진 옛 그림은 치웁니다 (이름에 판이 붙어 있으므로) */
+      caches.open(ASSET_CACHE).then((cache) =>
+        cache.keys().then((reqs) =>
+          Promise.all(reqs.map((r) =>
+            isAsset(new URL(r.url).pathname) ? null : cache.delete(r)
+          ))
+        )
+      ).catch(() => null)
+    ]).then(() => self.clients.claim())
   );
 });
 
@@ -143,9 +185,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 로고 · 도장 · 폰트 · 아이콘은 캐시 우선
+  /* 로고 · 도장 · 글꼴 · 아이콘은 캐시 우선.
+     ★ 담아 두는 칸이 화면 칸과 다릅니다 (판을 올려도 안 지워집니다) */
+  const 칸 = isAsset(url.pathname) ? ASSET_CACHE : CACHE_NAME;
   event.respondWith(
-    caches.open(CACHE_NAME).then((cache) =>
+    caches.open(칸).then((cache) =>
       cache.match(cacheKey(request), { ignoreSearch: true }).then((cached) => {
         const network = fetch(request)
           .then((response) => {

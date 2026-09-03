@@ -708,7 +708,7 @@
       margin-top: 20px;
       font-size: 13px;
       font-weight: 800;
-      color: rgba(17,17,17,.54);
+      color: rgba(17,17,17,.62);
       letter-spacing: 0.2px;
     }
 
@@ -9831,7 +9831,7 @@
     /* ★ 앱 판 번호 — 여기 한 곳만 고칩니다.
        화면을 고쳐서 올릴 때마다 0.01 씩 올립니다 (0.14 → 0.15 → 0.16 …).
        로그인 화면 맨 아래에 이 값이 그대로 나옵니다. */
-    const APP_VERSION = "0.17";
+    const APP_VERSION = "0.19";
 
     const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
     const PHONE_STORAGE_KEY = "ncore_last_phone_v1";
@@ -10874,13 +10874,14 @@
 
 
     /* =========================================================
-       v32: 현장사진
-       고른 사진을 폰 안에서 긴 변 1600px · JPEG 85%로 줄여 보관합니다.
-       원본은 폰에 그대로 남고, 줄인 것만 드라이브에 올라갑니다.
+       v32: 현장사진  (2026-09-03에 규칙을 바꿨습니다)
+       ★★ 5MB 이하는 **손대지 않고 원본 그대로** 올립니다.
+         예전에는 무엇이든 긴 변 1600px · JPEG 85% 로 줄여서,
+         현장 사진 속 균열·배관 번호·계량기 숫자가 뭉개졌습니다.
+         고객 앞에서 보여줄 사진이라 이것이 특히 나빴습니다.
+       5MB 를 넘을 때만 5MB 미만이 되는 만큼만 줄입니다.
        ========================================================= */
     const PHOTO_MAX_COUNT = 30;
-    const PHOTO_MAX_SIDE = 1600;
-    const PHOTO_QUALITY = 0.85;
 
     function formatBytes(bytes) {
       const n = Number(bytes) || 0;
@@ -10888,45 +10889,232 @@
       return (Math.round(n / 1024 / 1024 * 10) / 10) + "MB";
     }
 
-    function compressImageFile(file) {
-      return new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(file);
-        const img = new Image();
+    /* ===== 사진 맞추기 시작 — 세 앱이 **글자까지 같은** 코드입니다 =====
+       여기를 고치면 워크보드 · 현장견적 · 출퇴근 **세 곳을 다** 고치세요.
+       `node _점검/사진시험.js` 가 세 벌이 어긋나면 바로 알려 줍니다.
 
-        img.onload = () => {
-          try {
-            let w = img.naturalWidth || img.width;
-            let h = img.naturalHeight || img.height;
-            const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(w, h));
-            w = Math.max(1, Math.round(w * scale));
-            h = Math.max(1, Math.round(h * scale));
+       ★★ 규칙은 둘뿐입니다.
+           5MB 이하  →  **손대지 않는다.** 원본 그대로 올린다
+           5MB 초과  →  원본 화질을 최대한 지키면서 5MB 미만이 되는 만큼만 줄인다
 
-            const canvas = document.createElement("canvas");
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext("2d");
-            ctx.fillStyle = "#FFFFFF";
-            ctx.fillRect(0, 0, w, h);
-            ctx.drawImage(img, 0, 0, w, h);
+       ★ 품질을 먼저 낮추고, 그래도 안 될 때만 크기를 한 단계씩 줄입니다.
+         품질을 0.70 아래로 내리는 것은 **마지막 크기에서만** 합니다 —
+         그 아래로 내리면 글씨가 뭉개져 영수증·도면을 읽을 수 없습니다.
 
-            canvas.toBlob((blob) => {
-              URL.revokeObjectURL(url);
-              if (!blob) { reject(new Error("사진을 변환하지 못했습니다.")); return; }
-              resolve({ blob: blob, thumb: canvas.toDataURL("image/jpeg", 0.5) });
-            }, "image/jpeg", PHOTO_QUALITY);
-          } catch (err) {
-            URL.revokeObjectURL(url);
-            reject(err);
-          }
-        };
+       ★ 사진 방향(EXIF)은 그대로 둡니다.
+         · 5MB 이하는 원본을 그대로 보내므로 EXIF 가 통째로 살아 있습니다.
+         · 5MB 초과는 `imageOrientation:'from-image'` 로 **돌려서 푼 뒤** 그려서,
+           방향이 그림 자체에 박힙니다 (EXIF 표가 없어도 바로 서 있습니다).
+    */
+    var PHOTO_FIT_LIMIT = 5 * 1024 * 1024;   /* 5MB */
 
-        img.onerror = () => {
-          URL.revokeObjectURL(url);
-          reject(new Error("사진을 읽지 못했습니다."));
-        };
+    /* 이 형식은 PC·폰 어디서나 그대로 열립니다. 그래서 손대지 않고 보냅니다.
+       ★ HEIC·TIFF·BMP 는 여기 없습니다 — 아이폰 HEIC 을 그대로 올리면
+         사무실 PC 에서 안 열립니다. 크기가 작아도 JPEG 으로 바꿉니다. */
+    var PHOTO_PASS = { 'image/jpeg': 1, 'image/jpg': 1, 'image/png': 1, 'image/webp': 1 };
 
+    var PHOTO_Q_TOP = 0.92;   /* 먼저 이 품질로 해 본다 */
+    var PHOTO_Q_MID = 0.70;   /* 여기까지는 글씨가 읽힌다 */
+    var PHOTO_Q_LOW = 0.45;   /* 마지막 크기에서만 여기까지 */
+    var PHOTO_SCALES = [1, 0.85, 0.7, 0.55, 0.45, 0.35];
+    var PHOTO_SEARCH = 3;     /* 이분 탐색 횟수 (품질 눈금 약 0.03) */
+
+    function photoPass_(type) {
+      return !!PHOTO_PASS[String(type || '').toLowerCase()];
+    }
+
+    /** 이름 끝을 .jpg 로 (형식을 바꿨으니 이름도 맞춰 준다) */
+    function photoJpgName_(name) {
+      var n = String(name || '사진');
+      var i = n.lastIndexOf('.');
+      if (i > 0 && n.length - i <= 6) n = n.substring(0, i);
+      return n + '.jpg';
+    }
+
+    /** EXIF 방향을 살려서 그림을 푼다 */
+    function photoDecode_(file) {
+      return new Promise(function (res, rej) {
+        var p = null;
+        if (typeof createImageBitmap === 'function') {
+          try { p = createImageBitmap(file, { imageOrientation: 'from-image' }); }
+          catch (e) { p = null; }
+        }
+        if (p && p.then) {
+          p.then(res, function () { photoDecodeImg_(file).then(res, rej); });
+          return;
+        }
+        photoDecodeImg_(file).then(res, rej);
+      });
+    }
+
+    /* <img> 로 푸는 길. 요즘 브라우저는 <img> 에도 EXIF 방향을 적용합니다 */
+    function photoDecodeImg_(file) {
+      return new Promise(function (res, rej) {
+        var url = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function () { URL.revokeObjectURL(url); res(img); };
+        img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('사진을 읽지 못했습니다.')); };
         img.src = url;
       });
+    }
+
+    function photoCanvas_(img, scale) {
+      var w0 = img.naturalWidth || img.width;
+      var h0 = img.naturalHeight || img.height;
+      var w = Math.max(1, Math.round(w0 * scale));
+      var h = Math.max(1, Math.round(h0 * scale));
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      var g = c.getContext('2d');
+      g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, w, h);   /* 투명한 곳이 검게 나오지 않게 */
+      g.drawImage(img, 0, 0, w, h);
+      return c;
+    }
+
+    /** 캔버스를 JPEG 덩어리로. 화면을 붙잡지 않게 toBlob 을 씁니다 */
+    function photoBlob_(canvas, q) {
+      return new Promise(function (res) {
+        if (!canvas.toBlob) {
+          try {
+            var u = canvas.toDataURL('image/jpeg', q);
+            var s = atob(u.slice(u.indexOf(',') + 1));
+            var a = new Uint8Array(s.length);
+            for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+            res(new Blob([a], { type: 'image/jpeg' }));
+          } catch (e) { res(null); }
+          return;
+        }
+        canvas.toBlob(function (b) { res(b || null); }, 'image/jpeg', q);
+      });
+    }
+
+    /** 이 크기에서 **한도 안에 들어오는 가장 높은 품질**을 찾는다.
+        못 들어오면 null (부르는 쪽이 크기를 한 단계 줄인다) */
+    function photoBest_(canvas, cap, floorQ) {
+      return photoBlob_(canvas, PHOTO_Q_TOP).then(function (top) {
+        if (!top) return null;
+        if (top.size < cap) return { blob: top, q: PHOTO_Q_TOP };
+
+        return photoBlob_(canvas, floorQ).then(function (low) {
+          if (!low || low.size >= cap) return null;      /* 이 크기로는 안 된다 */
+
+          /* 들어오기는 한다 — 이제 **가장 높은 품질**을 찾는다 (최소한의 압축) */
+          var lo = floorQ, hi = PHOTO_Q_TOP, best = { blob: low, q: floorQ };
+          var 한번 = function (n) {
+            if (n <= 0) return Promise.resolve(best);
+            var mid = Math.round((lo + hi) / 2 * 100) / 100;
+            if (mid <= lo || mid >= hi) return Promise.resolve(best);
+            return photoBlob_(canvas, mid).then(function (b) {
+              if (b && b.size < cap) { best = { blob: b, q: mid }; lo = mid; }
+              else { hi = mid; }
+              return 한번(n - 1);
+            });
+          };
+          return 한번(PHOTO_SEARCH);
+        });
+      });
+    }
+
+    /**
+     * 사진 한 장을 규칙에 맞춰 돌려준다.
+     *   { blob, type, name, w, h, q, changed, from, size }
+     * 못 하면 null — 부르는 쪽이 **반드시 사람에게 알려야** 합니다.
+     */
+    function photoFit(file, limit) {
+      var cap = Number(limit) > 0 ? Number(limit) : PHOTO_FIT_LIMIT;
+      return new Promise(function (res) {
+        if (!file) { res(null); return; }
+        var from = Number(file.size) || 0;
+
+        /* ① 5MB 이하이고 어디서나 열리는 형식이면 — 아무것도 하지 않는다 */
+        if (photoPass_(file.type) && from <= cap) {
+          res({
+            blob: file, type: String(file.type).toLowerCase(),
+            name: file.name || '사진', w: 0, h: 0, q: 1,
+            changed: false, from: from, size: from
+          });
+          return;
+        }
+
+        /* ② 넘으면 — 품질부터, 그래도 안 되면 크기를 한 단계씩 */
+        photoDecode_(file).then(function (img) {
+          var i = 0;
+          var 다음 = function () {
+            if (i >= PHOTO_SCALES.length) {
+              if (img && img.close) img.close();
+              res(null); return;
+            }
+            var s = PHOTO_SCALES[i];
+            var 마지막 = (i === PHOTO_SCALES.length - 1);
+            i += 1;
+            var c = photoCanvas_(img, s);
+            /* 품질 0.70 아래로는 **마지막 크기에서만** 내려갑니다 */
+            photoBest_(c, cap, 마지막 ? PHOTO_Q_LOW : PHOTO_Q_MID).then(function (r) {
+              if (!r) { 다음(); return; }
+              if (img && img.close) img.close();
+              res({
+                blob: r.blob, type: 'image/jpeg', name: photoJpgName_(file.name),
+                w: c.width, h: c.height, q: r.q,
+                changed: true, from: from, size: r.blob.size
+              });
+            }, function () { 다음(); });
+          };
+          다음();
+        }, function () { res(null); });
+      });
+    }
+
+    /** 덩어리를 data URL 로 (형식 표시가 앞에 붙습니다) */
+    function photoDataUrl(blob) {
+      return new Promise(function (res) {
+        var fr = new FileReader();
+        fr.onload = function () { res(String(fr.result || '')); };
+        fr.onerror = function () { res(''); };
+        fr.readAsDataURL(blob);
+      });
+    }
+    /* ===== 사진 맞추기 끝 ===== */
+
+    /** 미리보기용 **작은** 그림을 따로 만든다 (긴 변 360px).
+        ★★ 이 앱은 사진을 30장까지 받습니다. 원본(최대 5MB)을 미리보기로 그대로
+          그리면 태블릿이 30장을 전부 펼쳐 놓게 되어 메모리가 터집니다.
+          고객 앞에서 앱이 죽는 것이 이 앱에서 가장 나쁜 일입니다.
+        ★ 못 만들면 빈 값 — 미리보기가 안 보일 뿐 올리는 데는 지장이 없습니다. */
+    const PHOTO_THUMB_SIDE = 360;
+
+    /** 미리보기 주소를 되돌린다. 안 되돌리면 사진을 지워도 메모리가 안 줄어듭니다 */
+    function freeThumb(photo) {
+      if (photo && photo.thumb && photo.thumb.indexOf("blob:") === 0) {
+        try { URL.revokeObjectURL(photo.thumb); } catch (e) {}
+      }
+      if (photo) photo.thumb = "";
+    }
+
+    async function makeThumbUrl(blob) {
+      try {
+        const img = await photoDecode_(blob);
+        const w0 = img.naturalWidth || img.width;
+        const h0 = img.naturalHeight || img.height;
+        const s = Math.min(1, PHOTO_THUMB_SIDE / Math.max(w0, h0));
+        const c = photoCanvas_(img, s);
+        if (img.close) img.close();
+        const small = await photoBlob_(c, 0.7);
+        return small ? URL.createObjectURL(small) : "";
+      } catch (e) {
+        return "";
+      }
+    }
+
+    /** 고른 사진 한 장을 규칙에 맞춰 준비한다.
+        → { blob, mime, name, thumb } */
+    async function prepareImageFile(file) {
+      const r = await photoFit(file);
+      if (!r) throw new Error("사진을 준비하지 못했습니다.");
+      return {
+        blob: r.blob, mime: r.type,
+        name: r.changed ? r.name : (file.name || "사진.jpg"),
+        thumb: await makeThumbUrl(r.blob), changed: r.changed
+      };
     }
 
     function getPhotoTotalSize() {
@@ -10951,7 +11139,7 @@
       grid.querySelectorAll("[data-photo-del]").forEach(btn => {
         btn.disabled = !!state.baseLocked;
         btn.addEventListener("click", () => {
-          state.photos.splice(Number(btn.dataset.photoDel), 1);
+          freeThumb(state.photos.splice(Number(btn.dataset.photoDel), 1)[0]);
           renderPhotos();
         });
       });
@@ -10996,6 +11184,7 @@
       }
 
       status.classList.add("busy");
+      let 못담음 = 0;
 
       for (let i = 0; i < target.length; i++) {
         const file = target[i];
@@ -11003,10 +11192,14 @@
         setPhotoProgress(i, target.length);
 
         try {
-          const result = await compressImageFile(file);
-          state.photos.push({ name: file.name || ("photo" + (i + 1)), blob: result.blob, thumb: result.thumb });
+          const result = await prepareImageFile(file);
+          state.photos.push({
+            name: result.name || ("photo" + (i + 1)),
+            blob: result.blob, mime: result.mime, thumb: result.thumb
+          });
         } catch (err) {
           console.error(err);
+          못담음 += 1;
         }
 
         await new Promise(r => setTimeout(r, 10));
@@ -11014,19 +11207,8 @@
 
       setPhotoProgress(0, 0);
       renderPhotos();
-    }
-
-    function blobToBase64(blob) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = String(reader.result || "");
-          const comma = result.indexOf(",");
-          resolve(comma >= 0 ? result.slice(comma + 1) : result);
-        };
-        reader.onerror = () => reject(new Error("사진을 읽지 못했습니다."));
-        reader.readAsDataURL(blob);
-      });
+      /* ★ 조용히 빠뜨리지 않습니다 — 예전에는 못 읽은 사진이 아무 말 없이 사라졌습니다 */
+      if (못담음) alert(못담음 + "장은 담지 못했습니다. 다시 촬영해 주세요.");
     }
 
     async function uploadPhotos(code, customerName) {
@@ -11044,7 +11226,11 @@
         }
         setPhotoProgress(i, total);
 
-        const base64 = await blobToBase64(photo.blob);
+        /* ★ 공통 함수(photoDataUrl)를 그대로 씁니다.
+           같은 일을 하는 함수를 두 벌 두면 한쪽만 고치게 됩니다. */
+        const dataUrl = await photoDataUrl(photo.blob);
+        const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+        if (!base64) throw new Error("사진을 읽지 못했습니다.");
 
         const response = await fetch(GOOGLE_SHEET_API_URL, {
           method: "POST",
@@ -11055,6 +11241,8 @@
             code: code,
             customerName: customerName || "",
             fileName: photo.name || ("photo" + (i + 1)),
+            /* ★ 형식을 그대로 알려 줍니다 — 5MB 이하는 원본이라 PNG·WebP 일 수 있습니다 */
+            mimeType: photo.mime || "image/jpeg",
             index: i + 1,
             total: total,
             base64: base64
@@ -11090,6 +11278,7 @@
       clearBtn.addEventListener("click", () => {
         if (!state.photos.length) return;
         if (!window.confirm("추가한 사진을 모두 지울까요?")) return;
+        state.photos.forEach(freeThumb);
         state.photos = [];
         renderPhotos();
       });
@@ -11822,38 +12011,6 @@
       }
     }
 
-
-    async function copyTextToClipboardSafe(text) {
-      const value = String(text || "").trim();
-      if (!value) return false;
-
-      if (navigator.clipboard && window.isSecureContext) {
-        try {
-          await navigator.clipboard.writeText(value);
-          return true;
-        } catch (err) {
-          console.warn("clipboard api failed", err);
-        }
-      }
-
-      try {
-        const textarea = document.createElement("textarea");
-        textarea.value = value;
-        textarea.setAttribute("readonly", "");
-        textarea.style.position = "fixed";
-        textarea.style.left = "-9999px";
-        textarea.style.top = "-9999px";
-        document.body.appendChild(textarea);
-        textarea.select();
-        textarea.setSelectionRange(0, textarea.value.length);
-        const ok = document.execCommand("copy");
-        textarea.remove();
-        return ok;
-      } catch (err) {
-        console.warn("clipboard fallback failed", err);
-        return false;
-      }
-    }
 
     function getShareImageSafeFileName() {
       const name = (state.project.customerName || state.savedEstimate?.project?.customerName || "고객").replace(/[\\/:*?"<>|]/g, "").trim() || "고객";
