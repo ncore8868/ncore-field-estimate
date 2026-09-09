@@ -8557,6 +8557,21 @@
        ========================================================= */
     .bottom-status { display: none !important; }
     .menu-card-no { display: none !important; }
+    /* ★★ 목록 한 줄은 **언제나 같은 높이** (2026-09-09 대표님 지시).
+       왼쪽이 3줄/4줄, 오른쪽이 1단/2단으로 갈려 목록마다 줄 높이가 들쭉날쭉했습니다.
+       자리를 먼저 잡아 두고 값만 채웁니다. */
+    .site-row-main { min-height: 66px; align-content: start; }
+    .site-row-right { min-height: 52px; align-content: start; }
+    /* 과거 현장 조회의 메모는 한 줄로 — 긴 메모 하나가 카드를 서너 줄 늘렸습니다 */
+    .lookup-card .site-row-sub.memo { margin-top: 9px; }
+    /* 새로고침은 주된 행동이 아닙니다 — 52px 주황 단추가 [조회하기] 와 같아 보였습니다 */
+    #unclaimedRefresh, #myRefresh, #fieldRefresh, #pendingRefresh, #nc2SignRefresh, #nc2AddonRefresh {
+      height: 40px !important; font-size: 15px !important; border-radius: 12px !important;
+      background: #FFFFFF !important; color: #555 !important;
+      border: 1px solid rgba(17,17,17,.2) !important; box-shadow: none !important;
+    }
+    /* 보내기 상태 줄은 진행 중일 때만 — 평소 안내문은 두지 않습니다 */
+    #pdfActionStatus:empty { display: none !important; }
     body:not(.show-help) .brand-text .sub,
     body:not(.show-help) .project-sub,
     body:not(.show-help) .project-field-label span,
@@ -8573,6 +8588,8 @@
     body:not(.show-help) .estimate-send-note,
     body:not(.show-help) .menu-card-desc,
     body:not(.show-help) .ratio-sub,
+    body:not(.show-help) .work-sub,
+    body:not(.show-help) .actual-field-label span,
     body:not(.show-help) .estimate-doc-sub { display: none !important; }
     .help-toggle {
       margin-left: 8px; width: 32px; height: 32px; flex: none;
@@ -9273,7 +9290,7 @@
           </div>
 
           <div class="estimate-pdf-actions single-action">
-            <div id="pdfActionStatus" class="estimate-pdf-status">전송하기를 누르면 현장 위치를 확인하고 발송기록을 남긴 뒤 문자 앱을 엽니다.</div>
+            <div id="pdfActionStatus" class="estimate-pdf-status"></div>
           </div>
         </aside>
       </section>
@@ -9916,7 +9933,7 @@
     /* ★ 앱 판 번호 — 여기 한 곳만 고칩니다.
        화면을 고쳐서 올릴 때마다 0.01 씩 올립니다 (0.14 → 0.15 → 0.16 …).
        로그인 화면 맨 아래에 이 값이 그대로 나옵니다. */
-    const APP_VERSION = "0.20";
+    const APP_VERSION = "0.21";
 
     const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
     const PHONE_STORAGE_KEY = "ncore_last_phone_v1";
@@ -13794,7 +13811,7 @@
               <div class="lookup-cell"><div class="lookup-cell-label">예상·실제 차이</div><div class="lookup-cell-value ${row.costDiff > 0 ? "diff-over" : "diff-under"}">${row.costDiff > 0 ? "+" : ""}${escapePdfHtml(formatMoney(row.costDiff))}</div></div>
               <div class="lookup-cell"><div class="lookup-cell-label">완료일</div><div class="lookup-cell-value">${escapePdfHtml(String(row.doneAt || "-").slice(0, 10))}</div></div>
             </div>
-            ${row.memo ? `<div class="site-row-sub" style="margin-top:9px;white-space:normal;">메모: ${escapePdfHtml(row.memo)}</div>` : ""}
+            ${row.memo ? `<div class="site-row-sub memo">메모: ${escapePdfHtml(row.memo)}</div>` : ""}
           </div>
         `).join("");
       } catch (err) {
@@ -14024,8 +14041,7 @@
             <span class="site-row-main">
               <span class="site-row-code">${escapePdfHtml(row.code)} · ${escapePdfHtml(row.staff || "-")}</span>
               <span class="site-row-title">${escapePdfHtml(row.customerName || "-")} · ${escapePdfHtml(row.address || "-")}</span>
-              <span class="site-row-sub">${escapePdfHtml(row.industry || "-")} · ${escapePdfHtml(String(row.pyeong || 0))}평 · ${escapePdfHtml(row.sendStatus || "발송 전")}</span>
-              <span class="site-row-phone">${escapePdfHtml(row.phone || "연락처 없음")}</span>
+              <span class="site-row-sub">${escapePdfHtml(row.industry || "-")} · ${escapePdfHtml(String(row.pyeong || 0))}평 · ${escapePdfHtml(row.sendStatus || "발송 전")} · ${escapePdfHtml(row.phone || "연락처 없음")}</span>
             </span>
             <span class="site-row-right">
               <span class="site-row-amount">${escapePdfHtml(formatWon(row.totalAmount))}</span>

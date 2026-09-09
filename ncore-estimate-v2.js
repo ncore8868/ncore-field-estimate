@@ -970,15 +970,16 @@
             '<span class="site-row-sub">' +
               (done ? "서명 " + D.esc(row.signedAt || "-") + " · " + D.esc(row.signMethod || "")
                     : "발송 " + D.esc(row.sendStatus || "발송 전")) +
+              /* 서명본 열기는 이 줄 끝에 — 오른쪽에 세 번째 단으로 두면 그 줄만 높아진다 (2026-09-09) */
+              (row.signedFileUrl
+                ? ' · <a class="nc2-open-link" href="' + D.esc(row.signedFileUrl) +
+                  '" target="_blank" rel="noopener">서명본 열기</a>'
+                : "") +
             "</span>" +
           "</span>" +
           '<span class="site-row-right">' +
             '<span class="site-row-amount">' + D.esc(formatWon(row.totalAmount)) + "</span>" +
             chip(done ? "서명완료" : "서명대기", done ? "done" : "wait") +
-            (row.signedFileUrl
-              ? '<a class="nc2-open-link" href="' + D.esc(row.signedFileUrl) +
-                '" target="_blank" rel="noopener">서명본 열기</a>'
-              : "") +
           "</span>" +
         "</div>";
       }).join("");
