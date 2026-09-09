@@ -303,41 +303,58 @@
         method: "tablet"
       };
       renderEstimatePage();
+      /* ★ 서명이 끝나면 서명본은 저절로 저장합니다 (2026-09-09).
+         예전에는 서명 뒤에 [서명본 저장] 을 사람이 또 눌러야 했습니다. */
+      saveSignedCopy();
     });
   });
 
   /* ---------------------------------------------------------------
      8. 오른쪽 버튼 — 서명본 저장 · 서명 링크 문자
      --------------------------------------------------------------- */
+  /* ★ 보내는 길은 [고객에게 보내기] 하나에서 고릅니다 (2026-09-09).
+     예전에는 아래 [전송하기] · 오른쪽 [고객 폰으로 서명 링크 보내기] · [서명본 저장] 셋이
+     같은 무게로 있었고 둘은 똑같이 문자 앱을 열었습니다. 고객이 옆에서 보는 화면입니다.
+     선택판은 화면 아래에 떠서 [고객 화면] 으로 오른쪽 판을 가려도 그대로 씁니다. */
   function injectButtons() {
-    const holder = document.querySelector("#page5 .estimate-pdf-actions");
-    if (!holder || document.getElementById("nc2SignedSaveBtn")) return;
+    if (document.getElementById("nc2SendMenu")) { updateSignedButton(); return; }
 
-    const linkBtn = document.createElement("button");
-    linkBtn.type = "button";
-    linkBtn.id = "nc2SignLinkBtn";
-    linkBtn.className = "estimate-pdf-btn secondary";
-    linkBtn.textContent = "고객 폰으로 서명 링크 보내기";
-    linkBtn.addEventListener("click", sendSignLink);
+    const menu = document.createElement("div");
+    menu.id = "nc2SendMenu";
+    menu.className = "nc2-send-menu";
+    menu.innerHTML =
+      '<button type="button" id="nc2TabletSignBtn" class="primary">태블릿에서 서명 받기</button>' +
+      '<button type="button" id="nc2SignLinkBtn">고객 폰으로 서명 링크 보내기</button>' +
+      '<button type="button" id="nc2PhotoSendBtn">견적서 사진으로 문자 보내기</button>' +
+      '<button type="button" id="nc2SignedSaveBtn">서명본 다시 저장</button>' +
+      '<button type="button" id="nc2SendMenuClose" class="quiet">닫기</button>';
+    document.body.appendChild(menu);
 
-    const saveBtn = document.createElement("button");
-    saveBtn.type = "button";
-    saveBtn.id = "nc2SignedSaveBtn";
-    saveBtn.className = "estimate-pdf-btn primary";
-    saveBtn.textContent = "서명본 저장";
-    saveBtn.addEventListener("click", saveSignedCopy);
+    const close = function () { menu.classList.remove("show"); };
+    document.getElementById("nc2TabletSignBtn").addEventListener("click", function () {
+      close();
+      const box = document.querySelector('#page5 [data-nc2-sign="customer"]');
+      if (box) { box.scrollIntoView({ block: "center", behavior: "smooth" }); box.click(); }
+      else alert("견적서에 서명 칸이 없습니다. 저장을 먼저 완료해 주세요.");
+    });
+    document.getElementById("nc2SignLinkBtn").addEventListener("click", function () { close(); sendSignLink(); });
+    document.getElementById("nc2PhotoSendBtn").addEventListener("click", function () {
+      close();
+      if (typeof window.createAndSharePdf === "function") window.createAndSharePdf();
+    });
+    document.getElementById("nc2SignedSaveBtn").addEventListener("click", function () { close(); saveSignedCopy(); });
+    document.getElementById("nc2SendMenuClose").addEventListener("click", close);
 
-    holder.insertBefore(linkBtn, holder.firstChild);
-    holder.insertBefore(saveBtn, holder.firstChild);
-
+    window.nc2SendMenu = function () { menu.classList.toggle("show"); };
     updateSignedButton();
   }
 
   function updateSignedButton() {
     const btn = document.getElementById("nc2SignedSaveBtn");
     if (!btn) return;
+    btn.hidden = !isSigned();               // 서명 전에는 고를 것이 아니므로 아예 안 보인다
     btn.disabled = !isSigned();
-    btn.textContent = isSigned() ? "서명본 저장" : "태블릿 서명 후 저장할 수 있습니다";
+    btn.textContent = "서명본 다시 저장";
   }
 
   function lockWhenSigned() {
@@ -432,6 +449,8 @@
         btn.textContent = "고객 폰으로 서명 링크 보내기";
         showLinkBox(link);
       }, 1200);
+      /* 선택판을 닫았으므로 링크 상자가 있는 오른쪽 판이 보이게 고객 화면을 푼다 */
+      document.body.classList.remove("customer-view");
     } catch (err) {
       console.error(err);
       btn.disabled = false;
@@ -513,12 +532,13 @@
         { type: "application/pdf" });
       downloadPdfFile(file);
 
-      btn.textContent = "서명본 저장 완료";
-      if (status) status.textContent = "서명본이 현장 폴더 01_견적서에 저장되었습니다.";
+      btn.disabled = false;
+      btn.textContent = "서명본 다시 저장";
+      if (status) status.textContent = "서명본이 현장 폴더에 저장되었습니다.";
     } catch (err) {
       console.error(err);
       btn.disabled = false;
-      btn.textContent = "서명본 저장";
+      btn.textContent = "서명본 다시 저장";
       if (status) status.textContent = "서명본 저장에 실패했습니다. 통신 상태를 확인해 주세요.";
       alert(err.message || "서명본 저장 중 오류가 발생했습니다.");
     }

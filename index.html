@@ -8550,6 +8550,87 @@
         opacity: .58;
       }
     }
+
+    /* =========================================================
+       2026-09-09 정돈 — 안내문 숨김 · 고객 화면 · 금액 나누기 접기 · 폐기물 3줄 · 보내기 선택판
+       (새 규칙은 여기에만 더합니다. 위의 재정의 사슬에 끼워 넣지 마세요)
+       ========================================================= */
+    .bottom-status { display: none !important; }
+    .menu-card-no { display: none !important; }
+    body:not(.show-help) .brand-text .sub,
+    body:not(.show-help) .project-sub,
+    body:not(.show-help) .project-field-label span,
+    body:not(.show-help) .cat-desc,
+    body:not(.show-help) .panel-note,
+    body:not(.show-help) .hint,
+    body:not(.show-help) .project-guide-card,
+    body:not(.show-help) .project-guide-list,
+    body:not(.show-help) .detail-sub,
+    body:not(.show-help) .row-label span,
+    body:not(.show-help) .scope-sub,
+    body:not(.show-help) .final-sub,
+    body:not(.show-help) .final-notice,
+    body:not(.show-help) .estimate-send-note,
+    body:not(.show-help) .menu-card-desc,
+    body:not(.show-help) .ratio-sub,
+    body:not(.show-help) .estimate-doc-sub { display: none !important; }
+    .help-toggle {
+      margin-left: 8px; width: 32px; height: 32px; flex: none;
+      border-radius: 50%; border: 1px solid rgba(17,17,17,.2);
+      background: #fff; color: #555; font: inherit; font-weight: 900; font-size: 14px; cursor: pointer;
+    }
+    body.show-help .help-toggle { background: #111; color: #fff; }
+    .cv-btn {
+      margin-left: 8px; height: 34px; padding: 0 12px; flex: none;
+      border-radius: 999px; border: 1px solid rgba(17,17,17,.2);
+      background: #fff; color: #333; font: inherit; font-weight: 800; font-size: 13px; cursor: pointer;
+    }
+    body.customer-view .cv-btn { background: #111; color: #fff; border-color: #111; }
+    body.customer-view .estimate-side,
+    body.customer-view #staffSessionPill,
+    body.customer-view .estimate-doc-meta-row.internal,
+    body.customer-view #page1 [data-section="profit"],
+    body.customer-view #page1 .summary-item.office-only,
+    body.customer-view #page1 .summary-card,
+    body.customer-view .internal-reset-btn,
+    body.customer-view .help-toggle,
+    body.customer-view .step-pill { display: none !important; }
+    body.customer-view #page5 .estimate-content { grid-template-columns: minmax(0, 1fr) !important; }
+    .ratio-fold { margin-top: 18px; border-top: 1px solid rgba(17,17,17,.12); }
+    .ratio-fold-head {
+      width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      min-height: 48px; padding: 10px 4px; border: 0; background: transparent;
+      font: inherit; font-weight: 800; font-size: 14px; color: #333; cursor: pointer; text-align: left;
+    }
+    .ratio-fold-head .arrow { transition: transform .2s; }
+    .ratio-fold.open .ratio-fold-head .arrow { transform: rotate(180deg); }
+    .ratio-fold:not(.open) .ratio-content { display: none !important; }
+    .ratio-fold .ratio-content { padding: 0 !important; margin: 0 !important; }
+    .ratio-fold-head.warn { color: #C0392B; }
+    .final-vat { margin-top: 4px; font-size: 13px; color: var(--muted, #666); }
+    .status-chip.done { border-color: rgba(17,17,17,.16); background: #fff; color: var(--muted, #666); }
+    .waste-grid {
+      display: grid; grid-template-columns: minmax(90px, 120px) repeat(3, minmax(0, 1fr));
+      gap: 10px 10px; align-items: center;
+    }
+    .waste-grid .wh { font-size: 13px; color: var(--muted, #666); text-align: center; font-weight: 800; }
+    .waste-grid .wl { font-weight: 900; font-size: 14px; }
+    .waste-grid .counter { min-width: 0; }
+    .waste-grid .counter button { min-width: 40px; width: 40px; }
+    .nc2-send-menu {
+      position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom));
+      transform: translateX(-50%); width: min(92%, 440px); z-index: 60;
+      background: #fff; border: 1px solid rgba(17,17,17,.14); border-radius: 18px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.18); padding: 10px; display: none;
+    }
+    .nc2-send-menu.show { display: grid; gap: 8px; }
+    .nc2-send-menu button {
+      min-height: 52px; border-radius: 12px; border: 1px solid rgba(17,17,17,.14);
+      background: #fff; font: inherit; font-weight: 800; font-size: 15px; cursor: pointer;
+    }
+    .nc2-send-menu button.primary { background: #111; color: #fff; border-color: #111; }
+    .nc2-send-menu button.quiet { border: 0; color: #666; min-height: 44px; }
+    .nc2-send-menu button:disabled { opacity: .5; }
 </style>
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#E97132" />
@@ -8618,13 +8699,13 @@
         <div class="brand">
           <div class="logo-mark">N-CORE</div>
           <div class="brand-text">
-            <div class="title">현장 정보 화면</div>
+            <div class="title">현장 정보</div>
             <div class="sub">견적서 작성과 공유에 필요한 기본 정보를 입력합니다.</div>
           </div>
         </div>
         <div class="step-pill">
           <span>진행 단계</span>
-          <strong>01 / 06</strong>
+          <strong>01 / 05</strong>
           <span class="step-dot"></span>
           <strong>현장 정보</strong>
         </div>
@@ -8648,7 +8729,7 @@
                 <strong>고객 / 상호명</strong>
                 <span>견적서와 폴더 이름에 사용됩니다</span>
               </span>
-              <input id="projectCustomerName" class="project-input korean-input" type="text" lang="ko" inputmode="text" autocapitalize="off" spellcheck="false" placeholder="예: 홍길동" autocomplete="name" tabindex="1" />
+              <input id="projectCustomerName" class="project-input korean-input" type="text" lang="ko" inputmode="text" autocapitalize="off" spellcheck="false" autocomplete="name" tabindex="1" />
             </label>
 
             <div class="project-field">
@@ -8657,7 +8738,7 @@
                 <span>숫자를 직접 입력합니다</span>
               </span>
               <div class="pyeong-wrap">
-                <input id="sitePyeong" class="pyeong-input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
+                <input id="sitePyeong" class="pyeong-input" type="text" inputmode="numeric" pattern="[0-9]*" />
                 <span class="pyeong-unit">평</span>
               </div>
             </div>
@@ -8667,7 +8748,7 @@
                 <strong>현장주소</strong>
                 <span>공사 현장 위치</span>
               </span>
-              <input id="projectAddress" class="project-input korean-input" type="text" lang="ko" inputmode="text" autocapitalize="off" spellcheck="false" placeholder="예: 대구 수성구 ..." autocomplete="street-address" tabindex="2" />
+              <input id="projectAddress" class="project-input korean-input" type="text" lang="ko" inputmode="text" autocapitalize="off" spellcheck="false" autocomplete="street-address" tabindex="2" />
             </label>
 
             <div class="project-field wide">
@@ -8723,7 +8804,7 @@
                 <strong>연락처</strong>
                 <span>견적서 발송 번호 · 사무실 입력</span>
               </span>
-              <input id="projectPhone" class="project-input phone-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="13" autocapitalize="off" spellcheck="false" placeholder="010-0000-0000" autocomplete="tel-national" tabindex="3" />
+              <input id="projectPhone" class="project-input phone-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="13" autocapitalize="off" spellcheck="false" autocomplete="tel-national" tabindex="3" />
             </label>
           </div>
         </section>
@@ -8762,13 +8843,13 @@
       <div class="brand">
         <div class="logo-mark">N-CORE</div>
         <div class="brand-text">
-          <div class="title">내부 정보 화면</div>
+          <div class="title">내부 정보</div>
           <div class="sub">현장 기준값을 입력하고 다음 단계로 이동합니다.</div>
         </div>
       </div>
       <div class="step-pill">
         <span>진행 단계</span>
-        <strong>02 / 06</strong>
+        <strong>02 / 05</strong>
         <span class="step-dot"></span>
         <strong>내부 정보</strong>
       </div>
@@ -8879,7 +8960,7 @@
         <div class="brand">
           <div class="logo-mark">N-CORE</div>
           <div class="brand-text">
-            <div class="title">항목 기준 화면</div>
+            <div class="title">항목 기준</div>
             <div class="sub">작업 항목별 기준 비율을 설정합니다.</div>
           </div>
         </div>
@@ -8938,13 +9019,13 @@
         <div class="brand">
           <div class="logo-mark">N-CORE</div>
           <div class="brand-text">
-            <div class="title">작업 범위 화면</div>
+            <div class="title">작업 범위</div>
             <div class="sub">현장에서 확인한 작업 범위를 정리합니다.</div>
           </div>
         </div>
         <div class="step-pill">
           <span>진행 단계</span>
-          <strong>04 / 06</strong>
+          <strong>03 / 05</strong>
           <span class="step-dot"></span>
           <strong>작업 범위</strong>
         </div>
@@ -9029,13 +9110,13 @@
         <div class="brand">
           <div class="logo-mark">N-CORE</div>
           <div class="brand-text">
-            <div class="title">확인 내용 화면</div>
+            <div class="title">확인 내용</div>
             <div class="sub">선택된 작업 범위와 확인 금액을 정리합니다.</div>
           </div>
         </div>
         <div class="step-pill">
           <span>진행 단계</span>
-          <strong>05 / 06</strong>
+          <strong>04 / 05</strong>
           <span class="step-dot"></span>
           <strong>확인 내용</strong>
         </div>
@@ -9057,9 +9138,12 @@
         </section>
 
         <aside class="panel final-side">
+          <!-- 고객은 견적서에서 부가세 포함 금액을 봅니다. 여기서 500만 원을 보고
+               견적서에서 550만 원을 보면 헷갈리므로 이름을 정확히 적고 포함 금액도 한 줄 (2026-09-09) -->
           <div id="finalAmountCard" class="final-amount-card">
-            <div class="label">확인 금액</div>
+            <div class="label">공급가 (부가세 별도)</div>
             <div id="finalAmount" class="amount">0원</div>
+            <div id="finalVat" class="final-vat"></div>
           </div>
 
           <div class="final-mini-card">
@@ -9092,13 +9176,13 @@
         <div class="brand">
           <div class="logo-mark">N-CORE</div>
           <div class="brand-text">
-            <div class="title">견적서 화면</div>
+            <div class="title">견적서</div>
             <div class="sub">견적 내용을 확인합니다.</div>
           </div>
         </div>
         <div class="step-pill">
           <span>진행 단계</span>
-          <strong>06 / 06</strong>
+          <strong>05 / 05</strong>
           <span class="step-dot"></span>
           <strong>견적서</strong>
         </div>
@@ -9125,7 +9209,8 @@
                 </div>
               </div>
               <div class="estimate-doc-meta">
-                <div class="estimate-doc-meta-row">
+                <!-- .internal 은 [고객 화면] 에서 감춰집니다 (2026-09-09) -->
+                <div class="estimate-doc-meta-row internal">
                   <span>작성자</span>
                   <strong id="estimateStaffName">-</strong>
                 </div>
@@ -9141,11 +9226,11 @@
                   <span>현장주소</span>
                   <strong id="estimateAddress">-</strong>
                 </div>
-                <div class="estimate-doc-meta-row">
+                <div class="estimate-doc-meta-row internal">
                   <span>저장일시</span>
                   <strong id="estimateSavedAt">-</strong>
                 </div>
-                <div class="estimate-doc-meta-row">
+                <div class="estimate-doc-meta-row internal">
                   <span>선택항목</span>
                   <strong id="estimateScopeCount">0개</strong>
                 </div>
@@ -9196,7 +9281,7 @@
       <nav class="bottom-nav">
         <button id="page5Prev" class="nav-btn prev">이전</button>
         <div class="bottom-status">현재 단계: <strong>견적서</strong> 위치 확인 · 발송기록 후 문자 발송</div>
-        <button id="page5Send" class="nav-btn next">전송하기</button>
+        <button id="page5Send" class="nav-btn next">고객에게 보내기</button>
       </nav>
     </section>
 
@@ -9235,7 +9320,8 @@
           <span class="menu-card-desc">현장 정보를 입력하고 견적서를 작성해 고객에게 발송합니다.</span>
         </button>
 
-        <button type="button" class="panel menu-card office-only" id="menuFieldReport">
+        <!-- 사무실이 매일 여는 두 장(새 견적 · 현장견적 처리)만 크게 (2026-09-09). 번호는 CSS 가 감춥니다 -->
+        <button type="button" class="panel menu-card primary office-only" id="menuFieldReport">
           <span class="menu-card-no">02</span>
           <span class="menu-card-title">현장견적 처리</span>
           <span class="menu-card-desc">현장반장이 올린 현장견적에 수익금과 작업범위를 더해 견적서를 만듭니다.</span>
@@ -9548,7 +9634,7 @@
                 <strong>인력비</strong>
                 <span>실제 지급 인건비</span>
               </span>
-              <input id="actualLabor" class="actual-money" type="text" inputmode="numeric" placeholder="0" />
+              <input id="actualLabor" class="actual-money" type="text" inputmode="numeric" />
             </div>
 
             <div class="actual-field">
@@ -9556,7 +9642,7 @@
                 <strong>장비비</strong>
                 <span>실제 장비 사용료</span>
               </span>
-              <input id="actualEquip" class="actual-money" type="text" inputmode="numeric" placeholder="0" />
+              <input id="actualEquip" class="actual-money" type="text" inputmode="numeric" />
             </div>
 
             <div class="actual-field">
@@ -9564,7 +9650,7 @@
                 <strong>폐기물비</strong>
                 <span>실제 처리·운반비</span>
               </span>
-              <input id="actualWaste" class="actual-money" type="text" inputmode="numeric" placeholder="0" />
+              <input id="actualWaste" class="actual-money" type="text" inputmode="numeric" />
             </div>
 
             <div class="actual-field">
@@ -9572,7 +9658,7 @@
                 <strong>기타비</strong>
                 <span>그 밖의 실제 비용</span>
               </span>
-              <input id="actualEtc" class="actual-money" type="text" inputmode="numeric" placeholder="0" />
+              <input id="actualEtc" class="actual-money" type="text" inputmode="numeric" />
             </div>
 
             <div class="actual-field">
@@ -9580,7 +9666,7 @@
                 <strong>계약금액</strong>
                 <span>최종 계약된 금액</span>
               </span>
-              <input id="actualContract" class="actual-money" type="text" inputmode="numeric" placeholder="0" />
+              <input id="actualContract" class="actual-money" type="text" inputmode="numeric" />
             </div>
 
             <div class="actual-field wide">
@@ -9588,7 +9674,7 @@
                 <strong>메모</strong>
                 <span>추가 작업·특이사항</span>
               </span>
-              <textarea id="actualMemo" class="actual-memo" placeholder="예: 지하 반출 추가, 폐기물 예상보다 2회 증가"></textarea>
+              <textarea id="actualMemo" class="actual-memo"></textarea>
             </div>
 
             <div class="actual-field wide" style="display:block;">
@@ -9702,10 +9788,9 @@
 
   <div id="exitModal" class="modal-backdrop">
     <div class="modal-card">
-      <div class="modal-title">메인 메뉴로 이동합니다.</div>
+      <div class="modal-title">메인 메뉴로 갈까요?</div>
       <div class="modal-text">
-        현재 입력 중인 내용은 저장되지 않습니다.<br />
-        메인 메뉴로 이동하시겠습니까?
+        작성 중인 내용은 이 기기에 임시저장됩니다. 사진은 다시 골라야 합니다.
       </div>
       <div class="modal-actions">
         <button id="exitCancel" class="modal-btn cancel">계속 입력</button>
@@ -9753,7 +9838,7 @@
       </div>
       <div class="modal-actions">
         <button id="scopeMissingCancel" class="modal-btn cancel">항목 선택하기</button>
-        <button id="scopeMissingContinue" class="modal-btn confirm">표시 없이 진행</button>
+        <button id="scopeMissingContinue" class="modal-btn confirm">그대로 진행</button>
       </div>
     </div>
   </div>
@@ -9788,7 +9873,7 @@
             <strong id="confirmLocation">-</strong>
           </div>
           <div class="confirm-info-row">
-            <span>총금액</span>
+            <span>공급가 (부가세 별도)</span>
             <strong id="confirmTotalAmount">0원</strong>
           </div>
           <div class="confirm-info-row">
@@ -9831,7 +9916,7 @@
     /* ★ 앱 판 번호 — 여기 한 곳만 고칩니다.
        화면을 고쳐서 올릴 때마다 0.01 씩 올립니다 (0.14 → 0.15 → 0.16 …).
        로그인 화면 맨 아래에 이 값이 그대로 나옵니다. */
-    const APP_VERSION = "0.19";
+    const APP_VERSION = "0.20";
 
     const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
     const PHONE_STORAGE_KEY = "ncore_last_phone_v1";
@@ -10462,10 +10547,10 @@
                 <div class="money-quick-wrap">
                   <input id="profitAmount" class="money-input" inputmode="numeric" value="${getProfitAmount() ? getProfitAmount().toLocaleString("ko-KR") : ""}" placeholder="0" />
                   <div class="quick-money-grid">
-                    <button class="quick-money-btn" data-profit-add="-500000">&lt;&lt; -50</button>
-                    <button class="quick-money-btn" data-profit-add="-100000">&lt; -10</button>
-                    <button class="quick-money-btn" data-profit-add="100000">+10 &gt;</button>
-                    <button class="quick-money-btn" data-profit-add="500000">+50 &gt;&gt;</button>
+                    <button class="quick-money-btn" data-profit-add="-500000">−50만</button>
+                    <button class="quick-money-btn" data-profit-add="-100000">−10만</button>
+                    <button class="quick-money-btn" data-profit-add="100000">+10만</button>
+                    <button class="quick-money-btn" data-profit-add="500000">+50만</button>
                   </div>
                 </div>
               </div>
@@ -10553,10 +10638,10 @@
                 <div class="money-quick-wrap">
                   <input id="extraAmount" class="money-input" inputmode="numeric" value="${state.extra.amount ? state.extra.amount.toLocaleString("ko-KR") : ""}" placeholder="0" />
                   <div class="quick-money-grid">
-                    <button class="quick-money-btn" data-extra-add="-500000"><< -50</button>
-                    <button class="quick-money-btn" data-extra-add="-100000">< -10</button>
-                    <button class="quick-money-btn" data-extra-add="100000">+10 ></button>
-                    <button class="quick-money-btn" data-extra-add="500000">+50 >></button>
+                    <button class="quick-money-btn" data-extra-add="-500000">−50만</button>
+                    <button class="quick-money-btn" data-extra-add="-100000">−10만</button>
+                    <button class="quick-money-btn" data-extra-add="100000">+10만</button>
+                    <button class="quick-money-btn" data-extra-add="500000">+50만</button>
                   </div>
                 </div>
               </div>
@@ -10591,6 +10676,36 @@
         document.getElementById("extraMemo").addEventListener("input", (e) => {
           state.extra.memo = e.target.value;
         });
+      } else if (sectionKey === "waste") {
+        /* ★ 폐기물은 종류 3줄 × 톤수 3칸 (2026-09-09).
+           예전에는 `1톤 목재 … 5톤 폐콘크리트` 아홉 줄이 세로로 늘어서 태블릿 한 화면을 넘겼고,
+           이름도 톤수가 앞이라 실제로 정하는 차례(종류 → 톤수)와 달랐습니다.
+           칸 이름(key)과 누르는 방식(data-action)은 그대로라 저장·계산은 손대지 않았습니다. */
+        const kinds = [["Wood", "목재"], ["Mixed", "혼합폐기물"], ["Concrete", "폐콘크리트"]];
+        const tons = [["truck1", "1톤"], ["truck25", "2.5톤"], ["truck5", "5톤"]];
+        const cell = (key) => {
+          const v = state.waste[key] ?? 0;
+          return `<div class="counter">
+              <button data-action="dec" data-group="waste" data-key="${key}" data-min="0">−</button>
+              <div class="value"><span>${v}</span><span class="unit">회</span></div>
+              <button data-action="inc" data-group="waste" data-key="${key}">+</button>
+            </div>`;
+        };
+        detail.innerHTML = `
+          <div class="detail-header">
+            <div>
+              <h1 class="detail-title">${section.title}</h1>
+              <div class="detail-sub">${section.sub}</div>
+            </div>
+            <div class="amount-badge">${section.badge}</div>
+          </div>
+          <div class="detail-body">
+            <div class="waste-grid">
+              <div></div>${tons.map(t => `<div class="wh">${t[1]}</div>`).join("")}
+              ${kinds.map(k => `<div class="wl">${k[1]}</div>` + tons.map(t => cell(t[0] + k[0])).join("")).join("")}
+            </div>
+          </div>
+        `;
       } else {
         detail.innerHTML = `
           <div class="detail-header">
@@ -11493,7 +11608,7 @@
       saveDraftSoon();
     }
 
-    function validateProjectInputs() {
+    function validateProjectInputs(opts) {
       readProjectInputs();
       if (testMode) return true;
       if (!state.project.customerName) {
@@ -11502,7 +11617,8 @@
         return false;
       }
       // 연락처는 사무실만 입력합니다. 현장반장 화면에는 칸 자체가 없습니다.
-      if (!isFieldStaff() && !state.project.phone) {
+      // (저장 확인 창에서 그 자리에 넣을 수 있게 skipPhone 으로 건너뛸 수 있습니다)
+      if (!(opts && opts.skipPhone) && !isFieldStaff() && !state.project.phone) {
         alert("연락처를 입력해 주세요.");
         document.getElementById("projectPhone").focus();
         return false;
@@ -11634,15 +11750,20 @@
         return;
       }
 
-      if (!validateProjectInputs()) {
+      /* ★ 연락처가 비어 있어도 첫 화면으로 튕기지 않습니다 (2026-09-09).
+         반장이 올린 건은 연락처가 비어서 오고 사무실은 02 화면부터 시작하므로,
+         저장 직전에 01 로 튕긴 뒤 [다음] 을 네 번 눌러 돌아와야 했습니다.
+         지금은 확인 창의 연락처 줄이 입력칸이 됩니다. */
+      const phoneMissing = !isFieldStaff() && !state.project.phone;
+      if (!validateProjectInputs({ skipPhone: phoneMissing })) {
         showPage(0);
         return;
       }
 
       const zeroRatio = findSelectedZeroRatioCategories();
       if (zeroRatio.length) {
-        alert(zeroRatio.join(", ") + " 항목이 선택되었지만 기준 비율이 0%입니다.\n항목 기준 화면에서 해당 대분류 금액 비율을 먼저 설정해 주세요.");
-        showPage(2);
+        alert(zeroRatio.join(", ") + " 의 금액 비율이 0% 입니다.\n아래 '금액 나누기' 에서 비율을 먼저 정해 주세요.");
+        ratioOpen();
         return;
       }
 
@@ -11656,7 +11777,9 @@
       calc();
 
       document.getElementById("confirmCustomerName").textContent = state.project.customerName || "-";
-      document.getElementById("confirmPhone").textContent = state.project.phone || "-";
+      const phoneEl = document.getElementById("confirmPhone");
+      if (state.project.phone) phoneEl.textContent = state.project.phone;
+      else phoneEl.innerHTML = '<input id="confirmPhoneInput" class="send-field" type="tel" inputmode="numeric" maxlength="13" autocomplete="tel-national">';
       document.getElementById("confirmAddress").textContent = state.project.address || "-";
       document.getElementById("confirmSiteInfo").textContent = getSiteSummaryText();
       document.getElementById("confirmLocation").textContent = getLocationSummaryText();
@@ -12003,11 +12126,11 @@
 
       if (shareBtn) {
         shareBtn.disabled = loading;
-        shareBtn.textContent = loading ? "처리 중..." : "전송하기";
+        shareBtn.textContent = loading ? "처리 중..." : "고객에게 보내기";
       }
 
       if (status) {
-        status.textContent = message || "전송하기를 누르면 현장 위치를 확인하고 발송기록을 남긴 뒤 문자 앱을 엽니다.";
+        status.textContent = message || "";
       }
     }
 
@@ -12138,7 +12261,7 @@
               message: message
             });
           },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 120000 }
         );
       });
     }
@@ -12188,27 +12311,22 @@
         return;
       }
 
-      // 1) 발송 시점의 현장 위치를 다시 확인합니다.
-      setPdfActionState(true, "발송 위치를 확인하고 있습니다...");
-      if (sendStatus) sendStatus.textContent = "위치 확인 중";
+      // 1) 발송 시점의 현장 위치.
+      //    ★ 2분 안에 잡아 둔 위치가 있으면 그대로 씁니다 (2026-09-09). 예전에는 매번 새로 잡느라
+      //      고객 앞에서 최대 10초를 서 있었고, 못 잡으면 '회사 기록에 위치미확인 발송으로 남습니다'
+      //      확인창이 고객 눈앞에 떴습니다. 기록은 그대로 남기되 **묻지 않습니다.**
+      setPdfActionState(true, "보낼 준비를 하고 있습니다...");
+      if (sendStatus) sendStatus.textContent = "준비 중";
 
-      const sendLocation = await checkLocationForSend();
+      const known = state.location || {};
+      const fresh = known.status === "ok" && known.checkedAt &&
+        (Date.now() - new Date(known.checkedAt).getTime()) < 120000;
+      const sendLocation = fresh
+        ? { status: "ok", lat: known.lat, lng: known.lng, accuracy: known.accuracy, checkedAt: known.checkedAt, message: "" }
+        : await checkLocationForSend();
 
-      if (sendLocation.status !== "ok") {
-        const proceed = window.confirm(
-          "현장 위치를 확인하지 못했습니다.\n(" + (sendLocation.message || "원인 불명") + ")\n\n" +
-          "이대로 발송하면 회사 기록에 '위치미확인 발송'으로 남습니다.\n계속 발송할까요?"
-        );
-
-        if (!proceed) {
-          if (sendStatus) sendStatus.textContent = "전송 전";
-          setPdfActionState(false, "발송을 취소했습니다. 위치 확인 후 다시 시도해 주세요.");
-          return;
-        }
-      }
-
-      // 2) 견적서 PNG를 만들어 태블릿에 저장합니다.
-      setPdfActionState(true, "견적서 PNG를 만들고 있습니다...");
+      // 2) 견적서 사진을 만들어 태블릿에 저장합니다.
+      setPdfActionState(true, "견적서 사진을 만들고 있습니다...");
 
       let file;
       try {
@@ -12258,7 +12376,7 @@
         window.setTimeout(() => {
           if (sendStatus) sendStatus.textContent = "발송기록 완료" + seqText;
           setPdfActionState(false,
-            "PNG 저장과 발송기록이 완료되었습니다 (" + locText + "). 문자 앱에서 최근 이미지로 첨부해 주세요."
+            "견적서 사진을 저장했고 발송 기록을 남겼습니다 (" + locText + "). 문자 앱에서 최근 사진으로 첨부해 주세요."
           );
         }, 900);
       }, 450);
@@ -12365,6 +12483,11 @@
       const totalSelected = getSelectedScopeTotal();
 
       document.getElementById("finalAmount").textContent = formatWon(getDisplayTotalAmount());
+      const vatEl = document.getElementById("finalVat");
+      if (vatEl) {
+        const withVat = Math.round(Number(getDisplayTotalAmount()) * 1.1);
+        vatEl.textContent = withVat ? ("부가세 포함 " + withVat.toLocaleString("ko-KR") + "원") : "";
+      }
       document.getElementById("finalScopeCount").textContent = totalSelected + "개";
       document.getElementById("finalRatioCount").textContent = activeRatios.length + "개";
 
@@ -12601,6 +12724,7 @@
 
     function showScreen(id) {
       document.body.classList.toggle("on-menu", id === "pageMenu");
+      document.body.classList.remove("customer-view");     // 고객 화면은 그 화면을 떠나면 풀린다
       hideAllScreens();
       const el = document.getElementById(id);
       if (el) el.classList.add("active");
@@ -12609,6 +12733,7 @@
 
     function showPage(pageNo) {
       document.body.classList.remove("on-menu");
+      document.body.classList.remove("customer-view");
       hideAllScreens();
       page0.classList.toggle("active", pageNo === 0);
       page1.classList.toggle("active", pageNo === 1);
@@ -12620,8 +12745,33 @@
       if (pageNo === 0) syncProjectInputsFromState();
       if (pageNo === 2) renderRatioPage();
       if (pageNo === 3) renderScopePage();
-      if (pageNo === 4) renderFinalPage();
+      if (pageNo === 4) { renderRatioPage(); renderFinalPage(); }
       if (pageNo === 5) renderEstimatePage();
+    }
+
+    /* ★★ '항목 기준' 은 독립 단계가 아니라 확인 화면의 접기입니다 (2026-09-09 대표님 결정).
+       인건비+수익을 견적서 항목으로 나누는 내부 셈법이라, 기본값(90 / 0 / 10)이 이미 100% 여서
+       대부분 그냥 [다음] 을 누르는 화면이었는데 `03 / 06` 으로 박혀 있어 '해야 할 일' 로 읽혔습니다.
+       page2 의 판을 통째로 page4 로 옮겨 답니다 — 칸 이름(id)이 그대로라 renderRatioPage 는 손대지 않았습니다.
+       page2 자체는 남아 있지만 어디서도 가지 않습니다. */
+    (function mountRatioFold() {
+      const rc = document.querySelector("#page2 .ratio-content");
+      const host = document.querySelector("#page4 .final-main");
+      if (!rc || !host) return;
+      const wrap = document.createElement("div");
+      wrap.id = "ratioFold";
+      wrap.className = "ratio-fold";
+      wrap.innerHTML =
+        '<button type="button" class="ratio-fold-head" id="ratioFoldBtn">' +
+          '<span id="ratioFoldText">금액 나누기</span><span class="arrow">▾</span></button>';
+      host.appendChild(wrap);
+      wrap.appendChild(rc);
+      document.getElementById("ratioFoldBtn").addEventListener("click", () => wrap.classList.toggle("open"));
+    })();
+
+    function ratioOpen() {
+      const w = document.getElementById("ratioFold");
+      if (w) { w.classList.add("open"); w.scrollIntoView({ block: "center", behavior: "smooth" }); }
     }
 
     function getRatioTotal() {
@@ -12659,6 +12809,16 @@
       }
 
       state.previousRatioTotal = ratioTotal;
+
+      /* 접힌 제목에 지금 비율을 요약한다 — 펼치기 전에도 무엇이 들었는지 보이게 */
+      const foldText = document.getElementById("ratioFoldText");
+      const foldBtn = document.getElementById("ratioFoldBtn");
+      if (foldText) {
+        foldText.textContent = "금액 나누기 · " +
+          ratioItems.map(item => item.label + " " + (state.ratios[item.key] || 0) + "%").join(" · ") +
+          (ratioTotal === 100 ? "" : " · 합계 " + ratioTotal + "%");
+      }
+      if (foldBtn) foldBtn.classList.toggle("warn", ratioTotal !== 100);
 
       const messageEl = document.getElementById("ratioMessage");
       if (ratioTotal === 100) {
@@ -12757,7 +12917,7 @@
         submitFieldReport();
         return;
       }
-      showPage(2);
+      showPage(3);                       // 항목 기준(page2)은 확인 화면의 접기로 내렸다 (2026-09-09)
     });
 
     document.getElementById("page2Prev").addEventListener("click", () => {
@@ -12817,8 +12977,9 @@
       renderSelectedScopeList();
     });
 
+    /* 뒤로 가는 데 확인창을 띄우지 않습니다 (2026-09-09). 아무것도 잃지 않는 이동입니다. */
     document.getElementById("page3Prev").addEventListener("click", () => {
-      internalMoveModal.classList.add("show");
+      showPage(1);
     });
 
     document.getElementById("internalMoveCancel").addEventListener("click", () => {
@@ -12837,8 +12998,9 @@
     document.getElementById("page3Next").addEventListener("click", () => {
       const zeroRatio = findSelectedZeroRatioCategories();
       if (zeroRatio.length) {
-        alert(zeroRatio.join(", ") + " 항목이 선택되었지만 기준 비율이 0%입니다.\n항목 기준 화면에서 해당 대분류 금액 비율을 먼저 설정해 주세요.");
-        showPage(2);
+        alert(zeroRatio.join(", ") + " 의 금액 비율이 0% 입니다.\n다음 화면의 '금액 나누기' 에서 비율을 먼저 정해 주세요.");
+        showPage(4);
+        ratioOpen();
         return;
       }
 
@@ -12901,6 +13063,15 @@
     });
 
     document.getElementById("saveConfirm").addEventListener("click", async () => {
+      /* 확인 창에서 연락처를 넣었으면 여기서 받아 둡니다 (2026-09-09) */
+      const phoneIn = document.getElementById("confirmPhoneInput");
+      if (phoneIn) {
+        const v = formatPhoneNumber(phoneIn.value);
+        if (!String(v || "").replace(/\D/g, "")) { alert("연락처를 입력해 주세요."); phoneIn.focus(); return; }
+        state.project.phone = v;
+        const pf = document.getElementById("projectPhone");
+        if (pf) pf.value = v;
+      }
       document.getElementById("saveConfirmModal").classList.remove("show");
 
       const saveBtn = document.getElementById("page4Save");
@@ -12935,7 +13106,7 @@
         console.error(err);
         saveBtn.textContent = "저장 실패";
         saveBtn.disabled = false;
-        alert("구글시트 저장 중 오류가 발생했습니다. Apps Script URL과 배포 권한을 확인해 주세요.");
+        alert("저장하지 못했습니다.\n통신 상태를 확인한 뒤 잠시 후 다시 눌러 주세요.");
         return;
       }
 
@@ -12994,9 +13165,14 @@
       showPage(4);
     });
 
+    /* ★ 보내는 버튼은 하나 (2026-09-09). 예전에는 [전송하기] · [고객 폰으로 서명 링크 보내기] ·
+       [서명본 저장] 셋이 있었고 둘은 똑같이 문자 앱을 열었습니다. 지금은 [고객에게 보내기] 하나를
+       누르면 선택판(태블릿 서명 · 폰 서명 링크 · 견적서 사진) 이 뜹니다 (ncore-estimate-v2.js). */
     document.getElementById("page5Send").addEventListener("click", () => {
-      createAndSharePdf();
+      if (typeof window.nc2SendMenu === "function") window.nc2SendMenu();
+      else createAndSharePdf();
     });
+    window.createAndSharePdf = createAndSharePdf;
 
     const sendCancelBtn = document.getElementById("sendCancel");
     if (sendCancelBtn) {
@@ -13095,6 +13271,36 @@
     }
 
     /* ---------- 메뉴 번호 자동정리 ---------- */
+    /* ★ 도움말 `?` 와 [고객 화면] 스위치 (2026-09-09).
+       안내문(부제·칸 아래 회색 글·안내 카드·설명 목록)은 기본으로 감춥니다 — 워크보드와 같은 규칙.
+       `?` 를 누르면 전부 보이고, 기억해 둡니다.
+       [고객 화면] 은 견적서·내부 정보 화면에서 회사 것(저장 상태·담당자 알약·수익금·안내)을 한 번에 가립니다.
+       반장 화면을 가리는 body.role-field 와 같은 방식이라 새 구조가 아닙니다. */
+    (function mountHelpAndCustomerView() {
+      document.querySelectorAll(".screen .topbar").forEach(tb => {
+        const h = document.createElement("button");
+        h.type = "button"; h.className = "help-toggle"; h.title = "도움말"; h.textContent = "?";
+        h.addEventListener("click", () => {
+          const on = document.body.classList.toggle("show-help");
+          try { localStorage.setItem("ncore_show_help", on ? "1" : ""); } catch (e) {}
+        });
+        tb.appendChild(h);
+      });
+      try { if (localStorage.getItem("ncore_show_help") === "1") document.body.classList.add("show-help"); } catch (e) {}
+
+      ["page1", "page5"].forEach(id => {
+        const tb = document.querySelector("#" + id + " .topbar");
+        if (!tb) return;
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "cv-btn office-only"; b.textContent = "고객 화면";
+        b.addEventListener("click", () => {
+          const on = document.body.classList.toggle("customer-view");
+          document.querySelectorAll(".cv-btn").forEach(x => { x.textContent = on ? "직원 화면으로" : "고객 화면"; });
+        });
+        tb.appendChild(b);
+      });
+    })();
+
     function renumberMenu() {
       let no = 1;
       document.querySelectorAll("#menuContent .menu-card").forEach(card => {
@@ -13609,11 +13815,12 @@
     function updateRoleLabels() {
       const field = isFieldStaff();
 
+      /* 사무실 흐름은 다섯 단계 (2026-09-09 · 항목 기준을 확인 화면의 접기로 내렸습니다) */
       const p0 = document.querySelectorAll("#page0 .step-pill strong");
-      if (p0.length) p0[0].textContent = field ? "01 / 02" : "01 / 06";
+      if (p0.length) p0[0].textContent = field ? "01 / 02" : "01 / 05";
 
       const p1 = document.querySelectorAll("#page1 .step-pill strong");
-      if (p1.length) p1[0].textContent = field ? "02 / 02" : "02 / 06";
+      if (p1.length) p1[0].textContent = field ? "02 / 02" : "02 / 05";
 
       const nextBtn = document.getElementById("page1Next");
       if (nextBtn) nextBtn.textContent = field ? "현장견적 제출" : "다음";
@@ -13632,7 +13839,7 @@
 
       const p1title = document.querySelector("#page1 .brand-text .title");
       const p1sub = document.querySelector("#page1 .brand-text .sub");
-      if (p1title) p1title.textContent = field ? "현장 산정 화면" : "내부 정보 화면";
+      if (p1title) p1title.textContent = field ? "현장 산정" : "내부 정보";
       if (p1sub) {
         p1sub.textContent = field
           ? "현장에서 확인한 인원·장비·폐기물을 입력합니다."
@@ -13835,13 +14042,24 @@
     }
 
     /* ---------- 내 현장견적 ---------- */
-    function progressChip(row) {
+    /* ★ 상태는 사다리 하나로 (2026-09-09).
+       시트에는 진행상태·계약상태가 따로 있고 화면마다 그중 하나만 칩으로 보여 줘서
+       `현장견적 접수 · 견적작성 완료 · 계약 · 계약완료 …` 이름이 열 벌이 넘었습니다.
+       반장은 어느 것이 '내 일이 끝난 것' 인지 알 수 없었습니다.
+       시트 값은 그대로이고 화면에서만 한 줄로 계산합니다 — 색은 쓰지 않습니다
+       (손댈 것은 미계약 화면의 N일 경과 칩이 따로 말합니다). */
+    function stageOf(row) {
       const contract = String(row.contractStatus || "").trim();
       const progress = String(row.progress || "").trim();
+      if (contract === "계약완료") return "공사완료";
+      if (contract) return "계약";
+      if (progress === "취소") return "취소";
+      if (progress === "견적작성 완료") return "견적 나감";
+      return "접수";
+    }
 
-      if (contract) return '<span class="status-chip done">' + escapePdfHtml(contract) + '</span>';
-      if (progress === "견적작성 완료") return '<span class="status-chip done">견적작성 완료</span>';
-      return '<span class="status-chip wait">' + escapePdfHtml(progress || "접수") + '</span>';
+    function progressChip(row) {
+      return '<span class="status-chip wait">' + escapePdfHtml(stageOf(row)) + '</span>';
     }
 
     async function loadMyReports() {
