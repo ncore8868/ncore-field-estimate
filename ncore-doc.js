@@ -324,6 +324,12 @@
 
     const availW = host.clientWidth || PAPER_W;
     const panel = maxHeightEl || host.closest(".estimate-doc");
+    /* ★★ 판 높이는 견적서를 원래 크기로 편 채로 잽니다 (2026-09-15 · '견적서가 작게 나온다').
+       세로 화면에서는 판 높이가 **지난번에 줄여 둔 견적서 높이**를 따라갑니다.
+       그걸 그대로 재면 한 번 작아진 견적서가 다시는 커지지 않았습니다
+       (가로로 들었다 세로로 돌리면 절반 크기에 머물렀습니다).
+       화면 높이에 맞춰 둔 가로 큰 화면에서는 판이 원래 화면 높이로 재어져 전과 같습니다. */
+    host.style.height = PAPER_H + "px";
     const availH = panel ? panel.clientHeight - 32 : 0;
 
     let k = availW / PAPER_W;
