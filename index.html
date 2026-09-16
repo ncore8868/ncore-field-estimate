@@ -3222,7 +3222,7 @@
         height: auto !important;
         overflow-x: hidden !important;
         overflow-y: auto !important;
-        overscroll-behavior-y: auto;
+        overscroll-behavior-y: contain;   /* 당겨서 새로고침 막기 (2026-09-16) */
         touch-action: pan-y;
       }
 
@@ -8043,7 +8043,7 @@
         min-height: 100dvh;
         overflow-x: hidden !important;
         overflow-y: auto !important;
-        overscroll-behavior-y: auto;
+        overscroll-behavior-y: contain;   /* 당겨서 새로고침 막기 (2026-09-16) */
         touch-action: pan-y;
       }
 
@@ -8500,7 +8500,7 @@
     @media (max-width: 1100px), (max-height: 819px), (orientation: portrait) {
       html, body {
         scroll-behavior: auto;
-        overscroll-behavior-y: auto !important;
+        overscroll-behavior-y: contain !important;   /* 당겨서 새로고침 막기 (2026-09-16) */
       }
 
       /* 화면 전체가 흐르는 상태에서는 안쪽 스크롤을 만들지 않습니다. */
@@ -9933,7 +9933,7 @@
     /* ★ 앱 판 번호 — 여기 한 곳만 고칩니다.
        화면을 고쳐서 올릴 때마다 0.01 씩 올립니다 (0.14 → 0.15 → 0.16 …).
        로그인 화면 맨 아래에 이 값이 그대로 나옵니다. */
-    const APP_VERSION = "0.22";
+    const APP_VERSION = "0.23";
 
     const STAFF_STORAGE_KEY = "ncore_current_staff_name_v1";
     const PHONE_STORAGE_KEY = "ncore_last_phone_v1";
